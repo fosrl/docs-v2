@@ -74,6 +74,76 @@ Below is an example if you're working on the Pangolin repository.
 
 ## Pangolin Development Setup
 
+Choose your preferred development approach. We strongly recommend **Docker Compose** for the most consistent experience across all platforms.
+
+### Windows Development Considerations
+
+<Warning>
+Windows users with Docker Desktop + WSL2: File change detection may not work properly when project files are stored on the Windows filesystem.
+</Warning>
+
+<Tabs>
+<Tab title="WSL2 Filesystem (Recommended)">
+  **Best performance and compatibility**
+
+
+  - **Where to store your project files:**
+    - For best performance, always store your project inside the Linux filesystem of your Docker or Default WSL2 instance, e.g. `/home/<user>/pangolin`.
+    - If other WSL instances are used, ensure the Docker Desktop WSL integration is enabled for that distribution.
+    - For further information, see Link Section below.
+
+  - **Accessing WSL2 files from Windows:**
+    - You can access your WSL2 home directory from Windows using the UNC path: `\\wsl$\<DistroName>\home\<user>\pangolin` (replace `<DistroName>` with your actual WSL distribution, e.g. `Ubuntu-22.04`).
+    - This path works in Windows Explorer, VS Code, and other Windows applications. You can drag & drop files, create shortcuts, or map a network drive for convenience.
+    - **Note:** This UNC path is for Windows tools only. Do not use it for Docker container mounts.
+
+  - **How to mount WSL2 files in Docker containers:**
+    - Always use the absolute Linux path from inside WSL2 for Docker volumes. This is the only method fully supported and recommended by Docker.
+    - **Correct Docker Compose example:**
+      ```yaml
+      services:
+        app:
+          volumes:
+            - /home/<user>/pangolin:/app
+      ```
+    - **Correct docker run example:**
+      ```bash
+      docker run -v /home/<user>/pangolin:/app my-image
+      ```
+    - **Never use `\\wsl$` or Windows paths** (e.g. `/mnt/c/...`) for Docker volumes when running with the WSL2 backend. This is not supported and can lead to poor performance or errors.
+    - File watchers and hot reload works natively when your project is inside the WSL2 filesystem and mounted using the Linux path.
+
+  <Note> You may want to use the [VS Code Remote - WSL extension](https://code.visualstudio.com/docs/remote/wsl) or [VS Code Remote - SSH Extension](https://code.visualstudio.com/docs/remote/ssh) to open your project folder directly in VSCode from the WSL/Remote Filesystem for seamless Development. </Note>
+
+
+  **Reference Links**
+  - [WSL Docker Best Practices](https://docs.docker.com/desktop/features/wsl/best-practices/)
+  - [Use WSL for Development](https://docs.docker.com/desktop/features/wsl/use-wsl/)
+  - [WSL2 Setup](https://docs.docker.com/desktop/features/wsl/)
+</Tab>
+
+<Tab title="Windows Filesystem + Polling (Workaround)">
+  If you need to keep your files on the native Windows filesystem (`C:\Users\...`), enable **Polling Mode** for file watchers. 
+
+  Enable polling mode by adding the following environment variables to your `docker-compose.yml` or `.env` file:
+
+  For `.env`:
+  ```env
+    WATCHPACK_POLLING=true
+    CHOKIDAR_USEPOLLING=true
+  ```
+  
+  For `docker-compose.yml`:
+  ```yaml
+  environment:
+    - WATCHPACK_POLLING=true
+    - CHOKIDAR_USEPOLLING=true
+  ```
+
+  <Note>This increases CPU usage but ensures file watchers work properly. Polling mode is not required when working directly on the WSL filesystem.</Note>
+</Tab>
+</Tabs>
+
 ### Option 1: Docker Compose (Recommended)
 
 <CardGroup cols={2}>
