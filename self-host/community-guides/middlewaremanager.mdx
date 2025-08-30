@@ -1,0 +1,171 @@
+---
+title: "Middleware Manager"
+---
+
+<Note>  
+This is a community guide and not officially supported. For issues, contributions, or bug reports, please use the [official GitHub repository](https://github.com/hhftechnology/middleware-manager).  
+</Note>  
+
+## What is Middleware Manager?
+
+The **Middleware Manager** is a microservice that extends your existing traefik deployments.  
+It provides a **web UI** to attach Traefik middlewares to resources without editing Pangolin itself.  
+
+:warning: **Security Warning**  
+Middlewares can strengthen security but also create vulnerabilities if misconfigured.  
+* Test in staging before production.  
+* Misusing forward authentication can leak credentials.  
+* Bad rate limiter configs may be bypassed.  
+* Header misconfigurations can expose apps to XSS/CSRF.  
+* Stacking too many middlewares impacts performance.  
+* Always check provider references (`@http` vs `@file`).  
+
+---
+
+
+### Key Use Cases
+* External authentication (Authelia, Authentik, JWT)  
+* Security headers and CSP policies  
+* Geographic IP blocking  
+* Rate limiting / DDoS protection  
+* Redirects & path rewrites  
+* CrowdSec and other security tool integrations  
+
+---
+
+## Prerequisites
+* A running **Pangolin v1.0.0+**  
+* Docker + Docker Compose  
+* Basic Traefik knowledge  
+* Admin access to your Pangolin host  
+
+---
+
+## Step 1: Add Middleware Manager Service
+
+Update your `docker-compose.yml`:
+
+```yaml
+middleware-manager:
+  image: hhftechnology/middleware-manager:latest
+  container_name: middleware-manager
+  restart: unless-stopped
+  volumes:
+    - ./data:/data
+    - ./config/traefik/rules:/conf
+    - ./config/middleware-manager/templates.yaml:/app/config/templates.yaml  # Optional custom templates
+  environment:
+    - PANGOLIN_API_URL=http://pangolin:3001/api/v1
+    - TRAEFIK_CONF_DIR=/conf
+    - DB_PATH=/data/middleware.db
+    - PORT=3456
+  ports:
+    - "3456:3456"
+````
+
+---
+
+## Step 2: Create Required Directories
+
+```bash
+mkdir -p ./config/traefik/rules
+mkdir -p ./config/middleware-manager
+```
+
+Move any dynamic configs into `./config/traefik/rules`.
+
+---
+
+## Step 3: Update Traefik Volumes & Providers
+
+In your `traefik` service:
+
+```yaml
+volumes:
+  - ./config/traefik:/etc/traefik:ro
+  - ./config/letsencrypt:/letsencrypt
+  - ./config/traefik/logs:/var/log/traefik
+  - ./config/traefik/rules:/rules   # required
+```
+
+In `traefik_config.yml`:
+
+```yaml
+providers:
+  file:
+    directory: "/rules"
+    watch: true
+```
+
+---
+
+
+## Step 4: Start Services
+
+```bash
+docker compose up -d
+```
+
+---
+
+## Step 5: Access the UI
+
+Middleware Manager runs at:
+👉 [http://localhost:3456](http://localhost:3456)
+
+---
+
+## Common Middleware Examples
+
+### Rate Limiting
+
+```yaml
+middlewares:
+  - id: "rate-limit"
+    type: "rateLimit"
+    config:
+      average: 100
+      burst: 50
+```
+
+### Security Headers
+
+```yaml
+middlewares:
+  - id: "security-headers"
+    type: "headers"
+    config:
+      customResponseHeaders:
+        Server: ""
+        X-Powered-By: ""
+      browserXSSFilter: true
+      contentTypeNosniff: true
+      forceSTSHeader: true
+      stsSeconds: 63072000
+```
+
+---
+
+## Troubleshooting
+
+* **Service does not exist** → Check `@http` or `@file` suffix in references
+* **Middleware does not exist** → Verify config and required plugins
+* **No changes applied** → Check Traefik logs, middleware priority, restart services
+* **UI not showing resources** → Confirm `PANGOLIN_API_URL` and network connectivity
+* **Database errors** → Check `./data` permissions, or reset `middleware.db`
+* **CrowdSec errors → Ensure the crowdsec container is running; middlewares fail if the service is down.
+* **Protecting Pangolin itself** → Apply middlewares (e.g. geoblock, headers) directly on the websecure entryPoint to cover all traffic.
+* **Applying to many services** → Attach middleware to entryPoints instead of individual resources to cover all subdomains at once.
+* **TCP / SMTP with STARTTLS** → Not supported. Traefik cannot handle STARTTLS negotiation (only implicit TLS like SMTPS on 465).
+
+---
+
+## Final Notes
+
+The Middleware Manager gives you a UI to work with Traefik’s powerful middleware ecosystem.
+
+* Start with simple configs → test thoroughly → expand gradually.
+* Use templates where possible.
+* Always validate in staging before production.
+
+

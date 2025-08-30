@@ -1,0 +1,216 @@
+---
+title: "Traefik Log Dashboard"
+---
+
+<Note>  
+This is a community guide and is not officially supported. For issues or advanced configuration, please visit the [official repository](https://github.com/hhftechnology/traefik-log-dashboard).  
+</Note>  
+
+If you’re already using the **Pangolin stack with Traefik as your reverse proxy**, you have powerful routing in place. But raw log files and scattered metrics make it difficult to truly understand traffic patterns.
+
+The **Enhanced Traefik Log Dashboard** adds **real-time monitoring, OpenTelemetry support, and geolocation analytics**, giving you a full picture of your traffic.
+
+## Features
+
+* **OpenTelemetry OTLP Support**: Real-time traces from Traefik v3+
+* **Hybrid Monitoring**: Combine OTLP traces with traditional log parsing
+* **Geolocation**: MaxMind GeoIP integration with automatic updates
+* **Analytics**: Live request rates, response times, error tracking
+* **Production Ready**: Resource limits, health checks, optimized GC/memory
+
+## Prerequisites
+
+* Docker + Docker Compose
+* Traefik v3.0+ (for OTLP) or v2.x (logs only)
+* A working Pangolin stack
+
+## Step 1: Configure Traefik
+
+### For OTLP + Logs (Recommended)
+
+Update `./config/traefik/traefik_config.yml`:
+
+```yaml
+log:
+  level: INFO
+  filePath: "/var/log/traefik/traefik.log"
+  format: json
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: json
+
+tracing:
+  otlp:
+    http:
+      endpoint: "http://log-dashboard-backend:4318/v1/traces"
+  sampleRate: 0.1 # Adjust as needed - 0.1 for 10% sampling
+  globalAttributes:
+    environment: "production"
+    service.version: "v3.0"
+    deployment.environment: "pangolin"
+```
+
+### For Logs Only
+
+```yaml
+log:
+  level: INFO
+  filePath: "/var/log/traefik/traefik.log"
+
+accessLog:
+  filePath: "/var/log/traefik/access.log"
+  format: json
+```
+
+## Step 2: Add Dashboard Services
+
+Extend your existing `docker-compose.yml` with:
+
+```yaml
+  log-dashboard-backend:
+    image: ghcr.io/hhftechnology/traefik-log-dashboard-backend:latest
+    container_name: log-dashboard-backend
+    restart: unless-stopped
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+    volumes:
+      - ./config/traefik/logs:/logs:ro
+      - ./config/maxmind:/maxmind:ro
+    environment:
+      - PORT=3001
+      - TRAEFIK_LOG_FILE=/logs/access.log
+      - OTLP_ENABLED=true
+      - OTLP_GRPC_PORT=4317
+      - OTLP_HTTP_PORT=4318
+      - USE_MAXMIND=true
+      - MAXMIND_DB_PATH=/maxmind/GeoLite2-City.mmdb
+      - MAXMIND_FALLBACK_ONLINE=true
+      - GOGC=50
+      - GOMEMLIMIT=500MiB
+
+  log-dashboard-frontend:
+    image: ghcr.io/hhftechnology/traefik-log-dashboard-frontend:latest
+    container_name: log-dashboard-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - BACKEND_SERVICE=log-dashboard-backend
+      - BACKEND_PORT=3001
+    depends_on:
+      - log-dashboard-backend
+```
+
+## Step 3: Setup MaxMind GeoIP (Optional but Recommended)
+
+1. Create a free MaxMind account → [GeoLite2 signup](https://www.maxmind.com/en/geolite2/signup)
+2. Generate a license key
+3. Create directory:
+
+```bash
+mkdir -p ./config/maxmind
+export MAXMIND_LICENSE_KEY=your_key_here
+```
+
+4. (Optional) Add updater service:
+
+```yaml
+  maxmind-updater:
+    image: alpine:latest
+    container_name: maxmind-db-updater
+    volumes:
+      - ./config/maxmind:/data
+    environment:
+      - MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY}
+    command: >
+      sh -c "
+        apk add --no-cache wget tar &&
+        cd /data &&
+        wget -O GeoLite2-City.tar.gz 'https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key=$MAXMIND_LICENSE_KEY&suffix=tar.gz' &&
+        tar -xzf GeoLite2-City.tar.gz --strip-components=1 '*/GeoLite2-City.mmdb' &&
+        rm -f GeoLite2-City.tar.gz
+      "
+```
+
+## Step 4: Launch Stack
+
+```bash
+docker compose up -d
+docker compose ps
+```
+
+## Step 5: Access the Dashboard
+
+* **Frontend UI** → [http://localhost:3000](http://localhost:3000)
+
+## Key Features
+
+* **Real-time statistics** (requests, response times, error rates)
+* **Interactive world map** (request origins via MaxMind)
+* **Service insights** (performance by router/service)
+* **Hybrid monitoring** (OTLP + logs together)
+
+## Performance Tuning
+
+For production or high-traffic environments, you may want to adjust settings to optimize resource usage and throughput.
+
+### Reduce OTLP Sampling
+Lower sampling to avoid overwhelming storage and dashboards:
+
+```yaml
+tracing:
+  sampleRate: 0.1  # 10% sampling in production
+````
+
+### Prefer gRPC over HTTP
+
+For lower latency and higher throughput, enable gRPC instead of HTTP:
+
+```yaml
+tracing:
+  otlp:
+    grpc:
+      endpoint: "log-dashboard-backend:4317"
+      insecure: true
+```
+
+### Tune Backend Memory
+
+Set environment variables in `log-dashboard-backend`:
+
+```yaml
+environment:
+  - GOGC=20        # More aggressive garbage collection
+  - GOMEMLIMIT=1GiB # Hard memory limit
+```
+
+### Resource Limits
+
+Add CPU and memory constraints to containers:
+
+```yaml
+deploy:
+  resources:
+    limits:
+      cpus: "1.0"
+      memory: 512M
+    reservations:
+      cpus: "0.2"
+      memory: 128M
+```
+
+These adjustments help keep the dashboard responsive while minimizing resource overhead.
+
+
+## Troubleshooting
+
+* **OTLP not showing** → Check Traefik `tracing` config + ports `4317/4318`
+* **Logs not loading** → Ensure Traefik logs in JSON, volume mounted correctly
+* **GeoIP errors** → Verify `MAXMIND_LICENSE_KEY` and DB path
+* **Maxmind download errors** → Check license key validity by trying url with key directly in your browser
+* **Docker logs for Traefik not showing** →  Use `docker exec -it traefik tail -f /var/log/traefik/traefik.log` instead of `docker logs traefik -f` to see real-time logs on the command line.
+
+---
+
