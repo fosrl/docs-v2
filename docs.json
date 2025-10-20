@@ -124,7 +124,8 @@
                   "self-host/community-guides/metrics",
                   "self-host/community-guides/homeassistant",
                   "self-host/community-guides/middlewaremanager",
-                  "self-host/community-guides/traefiklogsdashboard"
+                  "self-host/community-guides/traefiklogsdashboard",
+                  "self-host/community-guides/geolite2automation"
                 ]
               },
               "self-host/telemetry",
