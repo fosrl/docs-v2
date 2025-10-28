@@ -84,7 +84,8 @@
                 ]
               },
               "manage/domains",
-              "manage/integration-api"
+              "manage/integration-api",
+              "manage/branding"
             ]
           },
           {

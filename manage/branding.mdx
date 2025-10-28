@@ -1,0 +1,312 @@
+---
+title: "Branding"
+description: "Learn how to customize the look your Pangolin dashboard and login pages with custom branding"
+---
+
+<Note>
+Branding is only available in Enterprise Edition.
+</Note>
+
+Pangolin allows you to customize the appearance of your dashboard with your own branding, including colors, logos, and custom text for authentication pages. Branding is configured through the `privateConfig.yml` file.
+
+<Warning>
+Branding is currently available for the entire application only. Organization-specific branding will be available in a future release. Let us know if this is a priority for you.
+</Warning>
+
+## Setting up Branding
+
+To get started, create a `privateConfig.yml` file next to your existing `config.yml` file:
+
+```yaml title="privateConfig.yml"
+branding:
+  app_name: "MyApp"
+  
+  logo:
+    light_path: "/branding/logo-light.svg"
+    dark_path: "/branding/logo-dark.svg"
+  
+  favicon_path: "/branding/favicon.ico"
+  
+  colors:
+    light:
+      primary: "hsl(212, 65%, 35%)"
+      ring: "hsl(212, 65%, 35%)"
+      primary-foreground: "hsl(0 0% 98%)"
+    dark:
+      primary: "hsl(212, 65%, 45%)"
+      ring: "hsl(212, 65%, 35%)"
+      primary-foreground: "hsl(0 0% 98%)"
+```
+
+## Mounting Branding Assets
+
+For image assets like logos and backgrounds, you need to mount a volume to the Pangolin container to make them accessible to the application:
+
+```yaml title="docker-compose.yml"
+volumes:
+  - ./config:/app/config
+  - ./branding:/app/public/branding
+```
+
+Your folder structure should look like this:
+
+```
+.
+├── config/
+│   ├── config.yml
+│   └── privateConfig.yml
+└── branding/
+    ├── logo-light.svg
+    ├── logo-dark.svg
+    └── favicon.ico
+```
+
+## Reference
+
+All branding configuration options are optional. Only specify the sections you want to customize.
+
+### Application Name
+
+<ResponseField name="app_name" type="string">
+  The name of your application that appears in various places throughout the UI.
+
+  **Example**: `"MyApp"`
+</ResponseField>
+
+### Background Image
+
+<ResponseField name="background_image_path" type="string">
+  Path to a custom background image used on authentication pages.
+
+  **Example**: `"/branding/backgrounds/bg.png"`
+
+  <Note>
+    Requires mounting a volume to `/app/public`.
+  </Note>
+</ResponseField>
+
+### Colors
+
+<ResponseField name="colors" type="object">
+  Custom color scheme that overrides the default Tailwind classes for shadcn components.
+
+  Colors can be provided in OKLCH or HSL format for example and apply to both light and dark modes.
+
+  **Color Reference**: Available color properties include `background`, `foreground`, `card`, `card-foreground`, `popover`, `popover-foreground`, `primary`, `primary-foreground`, `secondary`, `secondary-foreground`, `muted`, `muted-foreground`, `accent`, `accent-foreground`, `destructive`, `destructive-foreground`, `border`, `input`, `ring`, `radius`, and `chart-1` through `chart-5`.
+
+  **Example**:
+  ```yaml
+  colors:
+    light:
+      primary: "hsl(212, 65%, 35%)"
+      background: "hsl(212, 65%, 35%)"
+      foreground: "hsl(0 0% 98%)"
+    dark:
+      primary: "hsl(212, 65%, 45%)"
+      background: "hsl(212, 65%, 35%)"
+      foreground: "hsl(0 0% 98%)"
+  ```
+
+  <Tip>
+    For a complete list of Tailwind color classes used by shadcn components, refer to the [shadcn/ui documentation](https://ui.shadcn.com/docs/theming).
+  </Tip>
+</ResponseField>
+
+### Logo
+
+<ResponseField name="logo" type="object">
+  Logo configuration for different parts of the application.
+
+  <Expandable title="Logo">
+    <ResponseField name="light_path" type="string">
+      Path to the logo image used in light mode.
+
+      **Example**: `"/branding/logo-light.svg"`
+    </ResponseField>
+
+    <ResponseField name="dark_path" type="string">
+      Path to the logo image used in dark mode.
+
+      **Example**: `"/branding/logo-dark.svg"`
+    </ResponseField>
+
+    <ResponseField name="auth_page" type="object">
+      Logo dimensions for authentication pages.
+
+      <Expandable title="Auth Page">
+        <ResponseField name="width" type="integer">
+          Logo width in pixels.
+
+          **Example**: `200`
+        </ResponseField>
+
+        <ResponseField name="height" type="integer">
+          Logo height in pixels.
+
+          **Example**: `80`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="navbar" type="object">
+      Logo dimensions for the navigation bar.
+
+      <Expandable title="Navbar">
+        <ResponseField name="width" type="integer">
+          Logo width in pixels.
+
+          **Example**: `150`
+        </ResponseField>
+
+        <ResponseField name="height" type="integer">
+          Logo height in pixels.
+
+          **Example**: `60`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Favicon
+
+<ResponseField name="favicon_path" type="string">
+  Path to a custom favicon.
+
+  **Example**: `"/branding/favicon.ico"`
+
+  <Note>
+    Requires mounting a volume to `/app/public`.
+  </Note>
+</ResponseField>
+
+### Footer
+
+<ResponseField name="footer" type="array of objects">
+  Custom footer links displayed at the bottom of the page.
+
+  **Example**:
+  ```yaml
+  footer:
+    - text: "Privacy Policy"
+      href: "https://example.com/privacy"
+    - text: "Terms of Service"
+      href: "https://example.com/terms"
+  ```
+
+  <ResponseField name="text" type="string">
+    The display text for the footer link.
+  </ResponseField>
+
+  <ResponseField name="href" type="string">
+    The URL or path for the footer link.
+  </ResponseField>
+</ResponseField>
+
+### Login Page
+
+<ResponseField name="login_page" type="object">
+  Custom text for the login page.
+
+  <Expandable title="Login Page">
+    <ResponseField name="title_text" type="string">
+      The main title text displayed on the login page.
+
+      **Example**: `"Welcome Back!"`
+    </ResponseField>
+
+    <ResponseField name="subtitle_text" type="string">
+      The subtitle text displayed below the title.
+
+      **Example**: `"Sign in to continue to your account"`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Signup Page
+
+<ResponseField name="signup_page" type="object">
+  Custom text for the signup page.
+
+  <Expandable title="Signup Page">
+    <ResponseField name="title_text" type="string">
+      The main title text displayed on the signup page.
+
+      **Example**: `"Create Your Account"`
+    </ResponseField>
+
+    <ResponseField name="subtitle_text" type="string">
+      The subtitle text displayed below the title.
+
+      **Example**: `"Join us and get started today"`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Resource Auth Page
+
+<ResponseField name="resource_auth_page" type="object">
+  Configuration for the resource authentication page shown to users when accessing protected resources.
+
+  <Expandable title="Resource Auth Page">
+    <ResponseField name="show_logo" type="boolean">
+      Whether to display the logo on the resource auth page.
+
+      **Default**: `true`
+    </ResponseField>
+
+    <ResponseField name="hide_powered_by" type="boolean">
+      Whether to hide the "Powered by Pangolin" text on the resource auth page.
+
+      **Default**: `false`
+    </ResponseField>
+
+    <ResponseField name="title_text" type="string">
+      The main title text displayed on the resource auth page.
+
+      **Example**: `"Access Restricted"`
+    </ResponseField>
+
+    <ResponseField name="subtitle_text" type="string">
+      The subtitle text displayed below the title.
+
+      **Example**: `"Please sign in to view this resource"`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Emails
+
+<ResponseField name="emails" type="object">
+  Email customization settings.
+
+  <Expandable title="Emails">
+    <ResponseField name="signature" type="string">
+      Custom signature appended to sent emails.
+
+      **Example**: `"Best regards,\nThe MyApp Team"`
+
+      <Note>
+        Use `\n` for line breaks in the signature.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="colors" type="object">
+      Email color scheme.
+
+      <Expandable title="Colors">
+        <ResponseField name="primary" type="string">
+          Primary color for email elements.
+
+          **Example**: `"oklch(0.6717 0.1946 41.93)"`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Applying Changes
+
+<Warning>
+After creating or modifying `privateConfig.yml`, you must restart the Pangolin container for changes to take effect.
+</Warning>
