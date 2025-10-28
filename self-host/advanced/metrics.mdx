@@ -1,0 +1,795 @@
+---
+title: "Metrics"
+description: "Enable and consume OpenTelemetry & vendor specific metrics"
+---
+
+We provide metrics in the **OpenTelemetry** (OTel) format and additionally support the following vendor backends:
+
+* **Prometheus** (native scrape and via OTel Collector)
+
+## Why Metrics & OTel
+
+Observability enables:
+
+1. **Incident detection** (latency spikes, reconnect storms)
+2. **Capacity planning** (bytes, active sessions)
+3. **User‑experience SLAs** (p95 tunnel latency, auth latency)
+4. **Faster RCA** (dimensions like `error_type`, `result`)
+
+OpenTelemetry provides a **vendor‑neutral** pipeline so you can change backends without retouching instrumented code.
+
+## Availability
+
+Newt exposes metrics starting from specific releases, but metrics are disabled in their default configuration.
+
+- Newt: metrics implemented since Newt 1.6.0 (disabled by default)
+
+## Open Telemetry
+
+Push metrics and traces to an **OTel Collector** or any backend that accepts OTLP.
+
+<Tip>
+If you only enable Prometheus scrape, leave `*_METRICS_OTLP_ENABLED=false` and omit OTLP vars.
+</Tip>
+
+<Note>
+The OTel Collector commonly uses port <code>4317</code> for gRPC and <code>4318</code> for HTTP. Set <code>OTEL_EXPORTER_OTLP_PROTOCOL</code> to <code>http/protobuf</code> for HTTP or <code>grpc</code> for gRPC, and point <code>OTEL_EXPORTER_OTLP_ENDPOINT</code> accordingly.
+For further customization, see the [OTel Collector documentation](https://opentelemetry.io/docs/collector/).
+</Note>
+
+<AccordionGroup>
+<Accordion title="Newt Configuration">
+<Tabs>
+	<Tab title="Environment Variables">
+		```text
+		NEWT_METRICS_OTLP_ENABLED=true         # enable OTLP exporter
+		OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+		OTEL_EXPORTER_OTLP_INSECURE=true       # or false + TLS vars
+		OTEL_METRIC_EXPORT_INTERVAL=15s
+		# Optional auth / TLS
+		OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20XYZ
+		OTEL_EXPORTER_OTLP_CERTIFICATE=/etc/otel/ca.pem
+		```
+	</Tab>
+  	<Tab title="CLI Args">
+		```text
+		newt \
+			--metrics-otlp-enabled=true \ # alias for otel
+			--otel=true \
+			--otel-exporter-otlp-endpoint=otel-collector:4317 \
+			--otel-exporter-otlp-insecure=true \
+			--otel-metric-export-interval=15s \
+			--otel-exporter-otlp-headers=authorization=Bearer%20XYZ \
+			--otel-exporter-otlp-certificate=/etc/otel/ca.pem
+		```
+	 See the [CLI reference](../../manage/sites/configure-site) for all available flags.
+	</Tab>
+</Tabs>
+</Accordion>
+
+<Accordion title="Newt Configuration Examples">
+<Tabs>
+  <Tab title="CLI (gRPC)">
+
+		```bash
+		# Enable OTLP exporters and point to your Collector's gRPC receiver.
+		export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
+		export OTEL_EXPORTER_OTLP_PROTOCOL="grpc"
+
+		newt \
+		--otlp=true
+		--id saz281jfa8z37zg
+		--secret ssfdfsder33rrerrwe
+		--endpoint http://pangolin.example.com
+		```
+
+  </Tab>
+  <Tab title="Docker Compose">
+
+		```yaml title="docker-compose.metrics.yaml"
+		services:
+			otel-collector:
+				image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest # DO NOT use 'latest' in production
+				command: ["--config=/etc/otel/config.yaml"]
+				volumes:
+					- ./otel-config.yaml:/etc/otel/config.yaml:ro
+				ports:
+				- "4317:4317"   # gRPC
+				- "4318:4318"   # HTTP
+				- "8888:8888"   # Prometheus exporter (from the Collector) - Optional
+
+			newt:
+				image: fosrl/newt:latest # DO NOT use 'latest' in production
+				environment:
+					NEWT_METRICS_OTLP_ENABLED: "true"
+					OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+					OTEL_EXPORTER_OTLP_INSECURE: "true"
+					PANGOLIN_ENDPOINT: https://example.com
+					NEWT_ID: heresmynewtid
+					NEWT_SECRET: yoursupersecretkeyhere
+		```
+
+		```yaml title="otel-config.yaml"
+		receivers:
+		otlp:
+			protocols:
+			grpc:
+				endpoint: 0.0.0.0:4317
+			http:
+				endpoint: 0.0.0.0:4318
+
+		processors: {}
+
+		# Example exporters:
+		exporters:
+			otlp:
+				endpoint: otel-collector:4317
+				insecure: true
+			prometheus:
+				endpoint: "0.0.0.0:8889"
+
+		service:
+		pipelines:
+			metrics:
+			receivers: [otlp]
+			processors: []
+			exporters: [prometheus]
+		```
+
+		Forward to Remote Write Backend
+
+		```yaml title="otel-config-remote.yaml"
+		exporters:
+			prometheusremotewrite:
+				endpoint: https://prom-remote.example.com/api/v1/write
+				headers:
+					X-Scope-OrgID: tenant-a
+				tls:
+					insecure_skip_verify: false
+		service:
+			pipelines:
+				metrics/remote:
+					receivers: [otlp]
+					processors: [batch]
+					exporters: [prometheusremotewrite]
+		```
+		<Note>
+		Combine exporters (e.g. local Prometheus + remote write) to retain fast local dashboards and ship long‑term retention externally.
+		</Note>
+
+	</Tab>
+</Tabs>
+</Accordion>
+</AccordionGroup>
+
+
+## Prometheus (without OTel Collector)
+
+<AccordionGroup>
+<Accordion title="Newt Configuration">
+
+Each service listens on an admin HTTP address (example Newt default `:2112`).
+
+<Tabs>
+	<Tab title="Environment Variables">
+		```text
+		NEWT_METRICS_PROMETHEUS_ENABLED=true   # /metrics endpoint
+		NEWT_ADMIN_ADDR=:2112                  # admin HTTP address
+		```
+	</Tab>
+  	<Tab title="CLI Args">
+		```text
+		newt \
+			--metrics-prometheus-enabled=true \ # alias for metrics
+			--metrics=true
+			--admin-addr=:2112 \
+		```
+	 See the [CLI reference](../../manage/sites/configure-site) for all available flags.
+	</Tab>
+</Tabs>
+</Accordion>
+
+<Accordion title="Newt Configuration Examples">
+<Tabs>
+	<Tab title="CLI">
+		```bash
+		newt \
+			--metrics-prometheus-enabled=true \
+			--admin-addr=:2112 \
+			--id saz281jfa8z37zg \
+			--secret ssfdfsder33rrerrwe \
+			--endpoint https://pangolin.example.com
+		```
+	</Tab>
+	<Tab title="Docker Compose">
+  		```yaml title="docker-compose.metrics.yaml"
+		services:
+			newt:
+				image: fosrl/newt:latest # DO NOT use 'latest' in production
+				environment:
+					NEWT_METRICS_OTLP_ENABLED: "true"
+					OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+					OTEL_EXPORTER_OTLP_INSECURE: "true"
+					PANGOLIN_ENDPOINT: https://example.com
+					NEWT_ID: saz281jfa8z37zg
+					NEWT_SECRET: ssfdfsder33rrerrwe
+		```
+	</Tab>
+	<Tab title="Prometheus Scrape Config">
+		```yaml title="prometheus.yml (fragment)"
+		scrape_configs:
+			- job_name: pangolin
+				static_configs: [{ targets: ["pangolin:2112"] }]
+		```
+	</Tab>
+</Tabs>
+</Accordion>
+</AccordionGroup>
+
+## Full Metric Reference
+
+**Version 1.0.0 from 2025-10-28**
+
+Below are currently implemented metrics for **Newt**.
+
+* **Metric**: exact metric name
+* **Instrument & unit**: OTel instrument type and canonical unit
+* **Purpose**: what the metric conveys / recommended use
+* **Emission path**: subsystem responsible (for troubleshooting missing data)
+* **Example series**: representative sample including labels
+
+<Warning>
+Names/labels can change between major versions. Avoid hard‑coding full label sets in alerts; prefer existence checks and aggregate functions.
+</Warning>
+
+### Newt metrics
+
+<Tabs>
+  <Tab title="OpenTelemetry (OTel)">
+    <ResponseField name="newt">
+      OpenTelemetry metric instruments exposed by Newt. Expand each section to see individual metrics with labels, units, emission points, and examples.
+
+      <Expandable title="Site & Build">
+        <ResponseField name="newt_site_registrations_total" type="Counter">
+          Counts Pangolin registration attempts keyed by result.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result` (`success`|`failure`), `site_id`  
+            **Emission path:** `telemetry.IncSiteRegistration`  
+            **Example:** `newt_site_registrations_total{result="success",site_id="abc"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_site_online" type="ObservableGauge">
+          0/1 heartbeat for the active site.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `site_id`  
+            **Emission path:** `state.TelemetryView` (callback)  
+            **Example:** `newt_site_online{site_id="self"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_site_last_heartbeat_seconds" type="ObservableGauge">
+          Seconds since last Pangolin heartbeat.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `site_id`  
+            **Emission path:** `TouchHeartbeat` (callback)  
+            **Example:** `newt_site_last_heartbeat_seconds{site_id="self"} 3.2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_build_info" type="ObservableGauge">
+          Constant 1 with build metadata labels.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `version`, `commit`  
+            **Emission path:** Build info registration  
+            **Example:** `newt_build_info{version="1.2.3",commit="abc123"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_restart_count_total" type="Counter">
+          Process boot indicator (increments once per process start).
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** —  
+            **Emission path:** `RegisterBuildInfo`  
+            **Example:** `newt_restart_count_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_cert_rotation_total" type="Counter">
+          Certificate rotation events keyed by result.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `IncCertRotation`  
+            **Example:** `newt_cert_rotation_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_config_reloads_total" type="Counter">
+          Config reload attempts keyed by result.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `telemetry.IncConfigReload`  
+            **Example:** `newt_config_reloads_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_config_apply_seconds" type="Histogram (s)">
+          Duration per config-apply phase keyed by `phase` and `result`.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `phase`, `result`  
+            **Emission path:** `telemetry.ObserveConfigApply`  
+            **Example:** `newt_config_apply_seconds_bucket{phase="peer",result="success",le="0.1"} 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Tunnel">
+        <ResponseField name="newt_tunnel_sessions" type="ObservableGauge">
+          Active sessions per tunnel (or collapsed).
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `site_id`, `tunnel_id`  
+            **Emission path:** `RegisterStateView`  
+            **Example:** `newt_tunnel_sessions{site_id="self",tunnel_id="wgpub"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_tunnel_bytes_total" type="Counter (bytes)">
+          Traffic per tunnel, direction, and protocol.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `tunnel_id`, `direction` (`ingress`|`egress`), `protocol` (`tcp`|`udp`)  
+            **Emission path:** Proxy manager  
+            **Example:** `newt_tunnel_bytes_total{direction="egress",protocol="tcp",tunnel_id="wgpub"} 8192`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_tunnel_latency_seconds" type="Histogram (s)">
+          RTT samples per tunnel/transport.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `tunnel_id`, `transport`  
+            **Emission path:** Health checks  
+            **Example:** `newt_tunnel_latency_seconds_bucket{transport="wireguard",le="0.05",tunnel_id="wgpub"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_tunnel_reconnects_total" type="Counter">
+          Reconnect attempts keyed by initiator & reason.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `tunnel_id`, `initiator` (`client`|`server`), `reason`  
+            **Emission path:** `telemetry.IncReconnect`  
+            **Example:** `newt_tunnel_reconnects_total{initiator="client",reason="timeout",tunnel_id="wgpub"} 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Connection & Auth">
+        <ResponseField name="newt_connection_attempts_total" type="Counter">
+          Auth/WebSocket connection attempts keyed by transport & result.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `transport`, `result`  
+            **Emission path:** `telemetry.IncConnAttempt`  
+            **Example:** `newt_connection_attempts_total{transport="websocket",result="failure"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_connection_errors_total" type="Counter">
+          Connection errors keyed by transport and type.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `transport`, `error_type`  
+            **Emission path:** `telemetry.IncConnError`  
+            **Example:** `newt_connection_errors_total{transport="auth",error_type="auth_failed"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="WebSocket">
+        <ResponseField name="newt_websocket_connect_latency_seconds" type="Histogram (s)">
+          Dial latency for Pangolin WebSocket.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `result`, `transport`  
+            **Emission path:** `ObserveWSConnectLatency`  
+            **Example:** `newt_websocket_connect_latency_seconds_bucket{result="success",transport="websocket",le="0.5"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_disconnects_total" type="Counter">
+          WebSocket disconnects keyed by reason.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `reason`, `tunnel_id`  
+            **Emission path:** `IncWSDisconnect`  
+            **Example:** `newt_websocket_disconnects_total{reason="remote_close",tunnel_id="wgpub"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_keepalive_failures_total" type="Counter">
+          Ping/Pong failures observed by keepalive.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `reason` (e.g., `ping_write`, `pong_timeout`)  
+            **Emission path:** `telemetry.IncWSKeepaliveFailure(ctx, "ping_write")`  
+            **Example:** `newt_websocket_keepalive_failures_total{reason="ping_write"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_session_duration_seconds" type="Histogram (s)">
+          Duration of established WS sessions keyed by result.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `result` (`success`|`error`)  
+            **Emission path:** `telemetry.ObserveWSSessionDuration(ctx, time.Since(start).Seconds(), "error")`  
+            **Example:** `newt_websocket_session_duration_seconds_bucket{result="error",le="60"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_connected" type="ObservableGauge">
+          Current WS connection state (0/1).
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** —  
+            **Emission path:** `telemetry.SetWSConnectionState(true|false)`  
+            **Example:** `newt_websocket_connected 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_reconnects_total" type="Counter">
+          WebSocket reconnect attempts keyed by reason.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `reason`  
+            **Emission path:** `telemetry.IncWSReconnect(ctx, "ping_write")`  
+            **Example:** `newt_websocket_reconnects_total{reason="ping_write"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_messages_total" type="Counter">
+          In/out WS messages keyed by direction & type.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `direction` (`in`|`out`), `msg_type` (`ping`|`pong`|`text`|...)  
+            **Emission path:** `IncWSMessage`  
+            **Example:** `newt_websocket_messages_total{direction="out",msg_type="ping"} 4`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Proxy">
+        <ResponseField name="newt_proxy_active_connections" type="ObservableGauge">
+          Active TCP/UDP proxy connections per tunnel/protocol.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `protocol`, `tunnel_id`  
+            **Emission path:** Proxy callback  
+            **Example:** `newt_proxy_active_connections{protocol="tcp",tunnel_id="wgpub"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_buffer_bytes" type="ObservableGauge (bytes)">
+          Proxy buffer pool size.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `protocol`, `tunnel_id`  
+            **Emission path:** Proxy callback  
+            **Example:** `newt_proxy_buffer_bytes{protocol="tcp",tunnel_id="wgpub"} 10240`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_async_backlog_bytes" type="ObservableGauge (bytes)">
+          Unflushed async byte backlog.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `protocol`, `tunnel_id`  
+            **Emission path:** Proxy callback  
+            **Example:** `newt_proxy_async_backlog_bytes{protocol="udp",tunnel_id="wgpub"} 4096`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_drops_total" type="Counter">
+          Proxy write drops keyed by protocol/tunnel.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `protocol`, `tunnel_id`  
+            **Emission path:** `IncProxyDrops`  
+            **Example:** `newt_proxy_drops_total{protocol="udp",tunnel_id="wgpub"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_accept_total" type="Counter">
+          Proxy accept events keyed by result/reason.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `tunnel_id`, `protocol`, `result`, `reason`  
+            **Emission path:** `telemetry.IncProxyAccept(ctx, tunnelID, "tcp", "failure", "timeout")`  
+            **Example:** `newt_proxy_accept_total{protocol="tcp",result="failure",reason="timeout"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_connections_total" type="Counter">
+          Lifecycle events (opened/closed) per connection.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `tunnel_id`, `protocol`, `event` (`opened`|`closed`)  
+            **Emission path:** `telemetry.IncProxyConnectionEvent(ctx, tunnelID, "tcp", telemetry.ProxyConnectionOpened)`  
+            **Example:** `newt_proxy_connections_total{protocol="tcp",event="opened"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_connection_duration_seconds" type="Histogram (s)">
+          Duration of completed proxy connections.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `tunnel_id`, `protocol`, `result`  
+            **Emission path:** `telemetry.ObserveProxyConnectionDuration(ctx, tunnelID, "tcp", "success", seconds)`  
+            **Example:** `newt_proxy_connection_duration_seconds_bucket{protocol="tcp",result="success",le="1"} 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Tab>
+
+  <Tab title="Prometheus">
+    <ResponseField name="newt">
+      Prometheus-style series for the same Newt metrics. Names, labels, and examples mirror the OTel tab.
+
+      <Expandable title="Site & Build">
+        <ResponseField name="newt_site_registrations_total" type="counter">
+          Counts Pangolin registration attempts keyed by result.
+          <Expandable title="Details">
+            **Labels:** `result`, `site_id` • **Unit:** 1 • **Path:** `telemetry.IncSiteRegistration`  
+            **Example:** `newt_site_registrations_total{result="success",site_id="abc"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_site_online" type="gauge">
+          0/1 heartbeat for the active site.
+          <Expandable title="Details">
+            **Labels:** `site_id` • **Unit:** 1 • **Path:** `state.TelemetryView`  
+            **Example:** `newt_site_online{site_id="self"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_site_last_heartbeat_seconds" type="gauge">
+          Seconds since last Pangolin heartbeat.
+          <Expandable title="Details">
+            **Labels:** `site_id` • **Unit:** seconds • **Path:** `TouchHeartbeat`  
+            **Example:** `newt_site_last_heartbeat_seconds{site_id="self"} 3.2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_build_info" type="gauge">
+          Constant 1 with build metadata labels.
+          <Expandable title="Details">
+            **Labels:** `version`, `commit` • **Unit:** 1 • **Path:** Build info registration  
+            **Example:** `newt_build_info{version="1.2.3",commit="abc123"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_restart_count_total" type="counter">
+          Process boot indicator (increments once).
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** 1 • **Path:** `RegisterBuildInfo`  
+            **Example:** `newt_restart_count_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_cert_rotation_total" type="counter">
+          Certificate rotation events keyed by result.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `IncCertRotation`  
+            **Example:** `newt_cert_rotation_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_config_reloads_total" type="counter">
+          Config reload attempts keyed by result.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `telemetry.IncConfigReload`  
+            **Example:** `newt_config_reloads_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_config_apply_seconds" type="histogram">
+          Duration per config-apply phase & result.
+          <Expandable title="Details">
+            **Labels:** `phase`, `result` • **Unit:** seconds • **Path:** `telemetry.ObserveConfigApply`  
+            **Example:** `newt_config_apply_seconds_bucket{phase="peer",result="success",le="0.1"} 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Tunnel">
+        <ResponseField name="newt_tunnel_sessions" type="gauge">
+          Active sessions per tunnel (or collapsed).
+          <Expandable title="Details">
+            **Labels:** `site_id`, `tunnel_id` • **Unit:** 1 • **Path:** `RegisterStateView`  
+            **Example:** `newt_tunnel_sessions{site_id="self",tunnel_id="wgpub"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_tunnel_bytes_total" type="counter">
+          Traffic per tunnel/direction/protocol.
+          <Expandable title="Details">
+            **Labels:** `tunnel_id`, `direction`, `protocol` • **Unit:** bytes • **Path:** Proxy manager  
+            **Example:** `newt_tunnel_bytes_total{direction="egress",protocol="tcp",tunnel_id="wgpub"} 8192`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_tunnel_latency_seconds" type="histogram">
+          RTT samples per tunnel/transport.
+          <Expandable title="Details">
+            **Labels:** `tunnel_id`, `transport` • **Unit:** seconds • **Path:** Health checks  
+            **Example:** `newt_tunnel_latency_seconds_bucket{transport="wireguard",le="0.05",tunnel_id="wgpub"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_tunnel_reconnects_total" type="counter">
+          Reconnect attempts by initiator & reason.
+          <Expandable title="Details">
+            **Labels:** `tunnel_id`, `initiator`, `reason` • **Unit:** 1 • **Path:** `telemetry.IncReconnect`  
+            **Example:** `newt_tunnel_reconnects_total{initiator="client",reason="timeout",tunnel_id="wgpub"} 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Connection & Auth">
+        <ResponseField name="newt_connection_attempts_total" type="counter">
+          Auth/WebSocket attempts by transport & result.
+          <Expandable title="Details">
+            **Labels:** `transport`, `result` • **Unit:** 1 • **Path:** `telemetry.IncConnAttempt`  
+            **Example:** `newt_connection_attempts_total{transport="websocket",result="failure"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_connection_errors_total" type="counter">
+          Connection errors by transport and type.
+          <Expandable title="Details">
+            **Labels:** `transport`, `error_type` • **Unit:** 1 • **Path:** `telemetry.IncConnError`  
+            **Example:** `newt_connection_errors_total{transport="auth",error_type="auth_failed"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="WebSocket">
+        <ResponseField name="newt_websocket_connect_latency_seconds" type="histogram">
+          Dial latency for Pangolin WebSocket.
+          <Expandable title="Details">
+            **Labels:** `result`, `transport` • **Unit:** seconds • **Path:** `ObserveWSConnectLatency`  
+            **Example:** `newt_websocket_connect_latency_seconds_bucket{result="success",transport="websocket",le="0.5"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_disconnects_total" type="counter">
+          WS disconnects by reason.
+          <Expandable title="Details">
+            **Labels:** `reason`, `tunnel_id` • **Unit:** 1 • **Path:** `IncWSDisconnect`  
+            **Example:** `newt_websocket_disconnects_total{reason="remote_close",tunnel_id="wgpub"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_keepalive_failures_total" type="counter">
+          Keepalive Ping/Pong failures.
+          <Expandable title="Details">
+            **Labels:** `reason` • **Unit:** 1 • **Path:** `telemetry.IncWSKeepaliveFailure(ctx, "ping_write")`  
+            **Example:** `newt_websocket_keepalive_failures_total{reason="ping_write"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_session_duration_seconds" type="histogram">
+          Duration of established WebSocket sessions by result.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** seconds • **Path:** `telemetry.ObserveWSSessionDuration(...)`  
+            **Example:** `newt_websocket_session_duration_seconds_bucket{result="error",le="60"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_connected" type="gauge">
+          Current WS connection status (0/1).
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** 1 • **Path:** `telemetry.SetWSConnectionState(true|false)`  
+            **Example:** `newt_websocket_connected 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_reconnects_total" type="counter">
+          Reconnect attempts by reason.
+          <Expandable title="Details">
+            **Labels:** `reason` • **Unit:** 1 • **Path:** `telemetry.IncWSReconnect(ctx, "ping_write")`  
+            **Example:** `newt_websocket_reconnects_total{reason="ping_write"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_websocket_messages_total" type="counter">
+          In/out WS messages by direction & type.
+          <Expandable title="Details">
+            **Labels:** `direction`, `msg_type` • **Unit:** 1 • **Path:** `IncWSMessage`  
+            **Example:** `newt_websocket_messages_total{direction="out",msg_type="ping"} 4`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Proxy">
+        <ResponseField name="newt_proxy_active_connections" type="gauge">
+          Active TCP/UDP proxy connections per tunnel/protocol.
+          <Expandable title="Details">
+            **Labels:** `protocol`, `tunnel_id` • **Unit:** 1 • **Path:** Proxy callback  
+            **Example:** `newt_proxy_active_connections{protocol="tcp",tunnel_id="wgpub"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_buffer_bytes" type="gauge">
+          Proxy buffer pool size.
+          <Expandable title="Details">
+            **Labels:** `protocol`, `tunnel_id` • **Unit:** bytes • **Path:** Proxy callback  
+            **Example:** `newt_proxy_buffer_bytes{protocol="tcp",tunnel_id="wgpub"} 10240`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_async_backlog_bytes" type="gauge">
+          Unflushed async byte backlog.
+          <Expandable title="Details">
+            **Labels:** `protocol`, `tunnel_id` • **Unit:** bytes • **Path:** Proxy callback  
+            **Example:** `newt_proxy_async_backlog_bytes{protocol="udp",tunnel_id="wgpub"} 4096`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_drops_total" type="counter">
+          Proxy write drops per protocol/tunnel.
+          <Expandable title="Details">
+            **Labels:** `protocol`, `tunnel_id` • **Unit:** 1 • **Path:** `IncProxyDrops`  
+            **Example:** `newt_proxy_drops_total{protocol="udp",tunnel_id="wgpub"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_accept_total" type="counter">
+          Proxy accept events by result/reason.
+          <Expandable title="Details">
+            **Labels:** `tunnel_id`, `protocol`, `result`, `reason` • **Unit:** 1 • **Path:** `telemetry.IncProxyAccept(...)`  
+            **Example:** `newt_proxy_accept_total{protocol="tcp",result="failure",reason="timeout"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_connections_total" type="counter">
+          Connection lifecycle events (opened/closed).
+          <Expandable title="Details">
+            **Labels:** `tunnel_id`, `protocol`, `event` • **Unit:** 1 • **Path:** `telemetry.IncProxyConnectionEvent(...)`  
+            **Example:** `newt_proxy_connections_total{protocol="tcp",event="opened"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="newt_proxy_connection_duration_seconds" type="histogram">
+          Duration of completed proxy connections.
+          <Expandable title="Details">
+            **Labels:** `tunnel_id`, `protocol`, `result` • **Unit:** seconds • **Path:** `telemetry.ObserveProxyConnectionDuration(...)`  
+            **Example:** `newt_proxy_connection_duration_seconds_bucket{protocol="tcp",result="success",le="1"} 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Tab>
+</Tabs>
+
+---
+
+## References
+
+* <Link href="https://opentelemetry.io/docs/">OpenTelemetry Documentation</Link>
+* <Link href="https://prometheus.io/docs/introduction/overview/">Prometheus Documentation</Link>
+
+<Tip>
+Have improvements or a missing metric? Open an issue or PR referencing this page.
+</Tip>
+

@@ -113,7 +113,8 @@
                   "self-host/advanced/container-cli-tool",
                   "self-host/advanced/database-options",
                   "self-host/advanced/integration-api",
-                  "self-host/advanced/enable-geoblocking"
+                  "self-host/advanced/enable-geoblocking",
+                  "self-host/advanced/metrics"
                 ]
               },
               {
@@ -200,6 +201,23 @@
       "apiKey": "phc_RIHQ7o2Y2hf8qms2nP62vpoJHEvsrw6TieflQGQO7yI",
       "apiHost": "https://pangolin.net/relay-O7yI"
     }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "vscode",
+      {
+        "title": "Request a feature",
+        "description": "Open a GitHub discussion to request a new feature",
+        "icon": "plus",
+        "href": "https://github.com/fosrl/pangolin/discussions"
+      }
+    ]
   },
   "redirects": [
     {
