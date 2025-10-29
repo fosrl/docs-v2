@@ -1,5 +1,5 @@
 ---
-title: "Development Guide"
+title: "Contribution Guide"
 description: "Set up your local development environment for contributing to Pangolin"
 ---
 
@@ -7,14 +7,11 @@ This guide describes how to set up your local development environment for contri
 
 ## Prerequisites
 
-<Check>
-- Text Editor (VSCode, Neovim, etc.)
 - NodeJS v20.10.0
 - NPM v10.2.3 (or similar)
 - Go v1.23.1
 - Git
 - Docker & Docker Compose
-</Check>
 
 <Info>
 For managing multiple versions of Go, you may want to use [gvm](https://github.com/moovweb/gvm).
@@ -50,7 +47,6 @@ Below is an example if you're working on the Pangolin repository.
   git checkout -b BRANCH_NAME dev
   ```
 
-  <Tip>
   It is recommended to give your branch a meaningful name, relevant to the feature or fix you are working on.
   
   **Good examples**:
@@ -64,7 +60,6 @@ Below is an example if you're working on the Pangolin repository.
   - `feature`
   - `fix`
   - `patch`
-  </Tip>
 </Step>
 
 <Step title="Open pull request">
@@ -72,26 +67,75 @@ Below is an example if you're working on the Pangolin repository.
 </Step>
 </Steps>
 
+## Important Best Practices for PRs
+
+- **Keep PRs small and single-purpose**: One feature, fix, or improvement per PR for easier review and testing.
+- **Prefer improvements over new features**: If you want to propose a net-new feature, contact us by email or on Discord first so we can confirm it fits the roadmap and help scope it.
+- **Frontend consistency**:
+  - Use existing styles, components, and patterns.
+  - Use Credenza for modals and Zod for form validation.
+  - Keep Tailwind classes minimal; prefer component defaults.
+  - Look for an existing example and mirror that pattern. Extract a small reusable component only when it clearly improves reuse.
+- **Stick to established patterns**: Avoid introducing new architectures or abstractions without discussing them with us first.
+- **Auth changes require extra care**:
+  - Pangolin is multi-tenant. Handle user controls at the org level (varies by control) or globally via the server admin panel as appropriate.
+  - Protect all API routes with the correct middleware and verify user permissions and access to referenced entities before performing actions.
+- **Database changes**:
+  - Keep SQLite and Postgres schemas fully in sync and backward compatible.
+  - Use datatypes supported by both databases.
+  - No need to write versioned migrations; maintainers will handle these during releases.
+- **Add visuals**: Include screenshots or short videos when applicable to speed up reviews.
+
+## Databases
+
+Pangolin supports two database types: SQLite and Postgres. You can switch between them with the provided scripts:
+
+Before running these, read local development setup below.
+
+```bash
+npm run set:sqlite
+# or
+npm run set:pg
+```
+
+After switching, regenerate and apply the schema using the matching scripts for that database. Keep both SQLite and Postgres schemas fully in sync and backward compatible.
+
+## Private Files and Directories
+
+Pangolin includes both AGPLv3 code and some proprietary code licensed under the Fossorial Commercial License. Proprietary files include a license header and often live in directories whose names start with `private`.
+
+You may edit proprietary files in your PR as long as your PR includes the required CLA.
+
+- Frontend: no proprietary code.
+- Backend: proprietary code exists, primarily under `server/private/`. Subdirectories mirror the structure under `server/`.
+
+To keep the AGPLv3 distribution fully compliant, be careful about imports:
+
+- AGPLv3 files must never import from the private directory. In TypeScript, the alias `#private/` points to proprietary code and should only be used inside other private files.
+- If you must expose proprietary behavior to AGPLv3 code, use a dynamic import pattern. Create a file that mirrors the proprietary file’s relative location between `server/private` and `server`, and ensure the exported APIs have exactly matching function signatures. Dynamic import aliases start with `#dynamic`.
+- At build time, depending on the build flag, `#dynamic` imports are resolved to the appropriate implementation (AGPLv3 or proprietary).
+
+Build flags control which distribution you are working on: `oss`, `enterprise`, or `saas`. Enterprise and SaaS include proprietary code; OSS must be 100% AGPLv3 compliant and excludes proprietary code. Use the existing npm scripts to switch:
+
+```bash
+npm run set:oss
+# or npm run set:enterprise
+# or npm run set:saas
+```
+
+Switching distributions updates TypeScript path aliases so `#dynamic` resolves to the correct locations. The build flag is also used in code to conditionally enable or disable features per distribution.
+
+As a rule of thumb, write as much AGPLv3 code as possible. Place only core, distribution-specific functionality in the proprietary layer (Enterprise/SaaS).
+
+Database schemas are never proprietary; all distributions share the same schemas.
+
+If you have any questions about this setup, email us or reach out on Discord.
+
 ## Pangolin Development Setup
 
-Choose your preferred development approach. We strongly recommend **Docker Compose** for the most consistent experience across all platforms.
+Choose your preferred development approach. We strongly recommend Docker Compose for the most consistent experience across all platforms.
 
-### Option 1: Docker Compose (Recommended)
-
-<CardGroup cols={2}>
-<Card title="Advantages" icon="check">
-  - Consistent environment
-  - Easy setup and teardown
-  - Isolated dependencies
-  - Works on any OS
-</Card>
-
-<Card title="Requirements" icon="docker">
-  - Docker installed
-  - Docker Compose installed
-  - 4GB+ RAM available
-</Card>
-</CardGroup>
+### Local Development
 
 <Steps>
 <Step title="Install dependencies">
@@ -141,65 +185,28 @@ Then choose your database:
   docker compose up --build
   ```
 
-  <Tip>
-  This will build and start all services in development mode with hot reloading enabled.
-  </Tip>
-</Step>
-</Steps>
-
-<Note>
-When running Pangolin for the first time there will be no exit nodes. This means that there have been no Gerbil "exit nodes" registered in the database. When Gerbil first starts up and requests its config from Pangolin for the first time it gets registered as an exit node.
-
-The easiest way to resolve this is to run Gerbil and have it register in your dev environment. Download the Gerbil binary and run it with localhost:
-
-```bash
-./gerbil \
---reachableAt=http://gerbil:3004 \
---generateAndSaveKeyTo=/var/config/key \
---remoteConfig=http://pangolin:3001/api/v1/
-```
-</Note>
-
-### Option 2: Local Development
-
-<Warning>
-Local development requires more setup and may have environment-specific issues. Docker Compose is recommended for consistency.
-</Warning>
-
-<Steps>
-<Step title="Install dependencies">
-  Install package dependencies:
-
-  ```bash
-  npm install
-  ```
-</Step>
-
-<Step title="Configure environment">
-  Ensure you have a `config/` directory at the root with a `config.yml` inside. Refer to the [Pangolin Configuration docs](/self-host/advanced/config-file) or the `config.example.yml` in the repo for a sample of what to include in that file.
-
-  <Warning>
-  You may need to tweak this to run in dev, such as setting the `dashboard_url` to `http://localhost:3002`.
-  </Warning>
-</Step>
-
-<Step title="Generate database schema">
-  Generate the database schema and push it:
-
-  ```bash
-  npm run db:sqlite:generate
-  npm run db:sqlite:push
-  ```
-</Step>
-
-<Step title="Start development server">
-  Start the development server:
-
+  Or, start the development server directly:
+  
   ```bash
   npm run dev
   ```
 </Step>
 </Steps>
+
+## Exit Nodes
+
+When running Pangolin for the first time there will be no exit nodes. This means that there have been no Gerbil "exit nodes" registered in the database, and therefore, you cannot create Newt sites. When Gerbil first starts up and requests its config from Pangolin for the first time it gets registered as an exit node.
+
+The easiest way to resolve this is to run Gerbil and have it register in your dev environment. Download the Gerbil binary and run it with localhost:
+
+```bash
+./gerbil \
+--reachableAt=http://localhost:3004 \
+--generateAndSaveKeyTo=/var/config/key \
+--remoteConfig=http://localhost:3001/api/v1/
+```
+
+Or enter in a dummy exit-node manually to the database. 
 
 ## Windows Development Considerations
 
@@ -273,9 +280,7 @@ Windows users with Docker Desktop + WSL2: File change detection may not work pro
 
 ### Gerbil
 
-<Card title="Requirements">
-  - Go v1.23.1
-</Card>
+- Go v1.23.1
 
 ```bash
 make local
@@ -283,9 +288,7 @@ make local
 
 ### Newt
 
-<Card title="Requirements">
-  - Go v1.23.1
-</Card>
+- Go v1.23.1
 
 ```bash
 make local
@@ -293,9 +296,7 @@ make local
 
 ### Olm
 
-<Card title="Requirements">
-  - Go v1.23.1
-</Card>
+- Go v1.23.1
 
 ```bash
 make local
