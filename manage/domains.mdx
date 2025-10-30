@@ -11,86 +11,64 @@ In Pangolin Cloud, a domain is not required. You can use our provided domain end
 
 ## Domain Types
 
-<Info>
-SSL certificates are automatically acquired and managed for both CNAME and NS domain types. No additional certificate configuration is required.
-</Info>
+### Wildcard (A Records)
+
+<Tip>This is the most common type used for Self-Hosted</Tip>
+
+Wildcard domains allow you to use any subdomain under a specified base domain or the domain itself. 
+
+- **Exact or Subdomains**: Both the base domain and any subdomains work (e.g., `example.com`, `app.example.com`, `db.example.com`)
+- **A Records**: Uses A records pointing to Pangolin's IP addresses
+- **Simple**: Just pointed to the IP of your server 
+
+More about self-hosted DNS and networking can be found in the [DNS & Networking Section](/self-host/dns-and-networking).
 
 ### Domain Delegation (NS Records)
 
-Domain delegation gives Pangolin full DNS control over your domain:
+<Note>Cloud & Enterprise Only</Note>
+
+Gives Pangolin full DNS control over your domain.
+
+Domain delegation is ideal when you want Pangolin to manage your entire domain and all its subdomains.
 
 - **Full Domain Control**: Includes the base domain and all subdomains
 - **NS Records**: Uses nameserver delegation for complete DNS management
 - **Automatic Subdomains**: All subdomains work automatically
 
-<Tip>
-Domain delegation is ideal when you want Pangolin to manage your entire domain and all its subdomains.
-</Tip>
-
 ### Single Domain (CNAME Records)
 
-Single domain is limited to the exact domain you specify:
+<Note>Cloud & Enterprise Only</Note>
+
+Single domain is limited to the exact domain you specify.
+
+CNAME domains are useful when your domain is already controlled by another provider but you still want to expose resources via Pangolin.
 
 - **Exact Domain Only**: Only the specific domain provided works
 - **CNAME Records**: Uses CNAME records pointing to Pangolin
 - **No Subdomains**: Subdomains will not work with CNAME domains
 - **External DNS**: Your domain remains controlled by your existing DNS provider
 
-<Tip>
-CNAME domains are useful when your domain is already controlled by another provider but you still want to expose resources via Pangolin.
-</Tip>
-
-## Adding Domains
-
-### Pangolin Cloud
-
-Domains can be added to an organization via the domains section of the organization settings:
-
-<Steps>
-<Step title="Navigate to Organization Settings">
-  Go to your organization settings and select the "Domains" section.
-</Step>
-
-<Step title="Choose Domain Type">
-  Select either "Domain Delegation" or "Single Domain" based on your needs.
-</Step>
-
-<Step title="Enter Domain">
-  Provide your domain name (e.g., example.com).
-</Step>
-
-<Step title="Configure DNS Records">
-  Follow the provided instructions to add the required DNS records to your provider.
-</Step>
-
-<Step title="Wait for Verification">
-  DNS changes may take time to propagate. The domain will show as verified once propagation is complete.
-</Step>
-</Steps>
-
-<Warning>
-Domain delegation and CNAME domains are only available in Pangolin Cloud. Community Edition Pangolin uses different domain configuration methods.
-</Warning>
-
-### Self-Hosted Pangolin
-
-For self-hosted Pangolin, domains are configured differently, though you can still create domains in the UI.
-
-<CardGroup cols={2}>
-<Card title="System-Wide Domains" icon="gear" href="/self-host/advanced/config-file#domain-configuration">
-  Configure domains via the config file, including certificate resolver settings.
-</Card>
-
-<Card title="Wildcard Domains" icon="asterisk" href="/self-host/advanced/wild-card-domains">
-  Set up wildcard domains for flexible subdomain management.
-</Card>
-</CardGroup>
-
-<Info>
-In self-hosted Pangolin, domains do not need individual verification, but you're responsible for ensuring correct DNS records point to your server.
-</Info>
-
 ## DNS Configuration
+
+### For Wildcard Domains
+
+When using wildcard domains, you'll need to add the following DNS records:
+
+**Example Wildcard Records:**
+
+```dns
+Record 1:
+Type: A
+Name: *.example.com
+Value: 192.0.2.1
+
+Record 2:
+Type: A
+Name: example.com
+Value: 192.0.2.1
+```
+
+You then access your resources via subdomains like `app.example.com` or `db.example.com` or `example.com`.
 
 ### For Domain Delegation
 
