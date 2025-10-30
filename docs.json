@@ -140,6 +140,13 @@
               "development/contributing",
               "development/feature-requests-and-bug-reports"
             ]
+          },
+          {
+            "group": "Careers",
+            "pages": [
+              "careers/join-us",
+              "careers/software-engineer-full-stack"
+            ]
           }
         ]
       },
@@ -209,8 +216,6 @@
       "chatgpt",
       "claude",
       "perplexity",
-      "mcp",
-      "vscode",
       {
         "title": "Request a feature",
         "description": "Open a GitHub discussion to request a new feature",
