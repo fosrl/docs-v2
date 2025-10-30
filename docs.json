@@ -145,7 +145,8 @@
             "group": "Careers",
             "pages": [
               "careers/join-us",
-              "careers/software-engineer-full-stack"
+              "careers/software-engineer-full-stack",
+              "careers/software-engineer-go"
             ]
           }
         ]
