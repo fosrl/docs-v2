@@ -1,0 +1,24 @@
+---
+title: "Create User"
+description: "Add internal or external users to your organization"
+---
+
+Users can be added to organizations. When a user is added to Pangolin, there is a global user object and an organization‑specific user object that links that user to the organization. This allows a user to exist in one or more organizations.
+
+<Tip>
+Because the root user exists and a per‑organization user exists, a user invited to an organization may be able to create a new organization. You can disable this functionality via a flag in the config file in self‑hosted Pangolin. [Check out the config file documentation](/self-host/advanced/config-file#feature-flags).
+</Tip>
+
+When removing a user from an organization, their account still exists. To completely delete their account, visit the server admin panel as the server admin and delete the global user in the users table.
+
+### Internal Users
+
+An internal user is an identity managed by Pangolin only. When adding the user, you will receive an invite link. The user needs to use this link to either accept the invite, or create an account for the first time and accept the invite.
+
+### External Users
+
+An external user is an identity managed by an external identity provider. When creating an external user, you will need to select an existing identity provider added to Pangolin. [Check out the documentation on adding an IDP](/manage/identity-providers/add-an-idp).
+
+An identity provider may have auto‑provisioning enabled. This means new users who log in with the IDP are automatically created and you do not need to manually create the user. [Check out the auto‑provisioning documentation](/manage/identity-providers/auto-provisioning).
+
+Even if auto‑provisioning is enabled, you can still manually create users.

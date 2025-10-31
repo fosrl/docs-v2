@@ -45,10 +45,16 @@
               {
                 "group": "Access Control",
                 "pages": [
+                  "manage/access-control/create-user",
                   "manage/access-control/rules",
                   "manage/access-control/forwarded-headers",
                   "manage/access-control/login-page",
-                  "manage/geoblocking"
+                  "manage/geoblocking",
+                  "manage/access-control/mfa",
+                  "manage/access-control/password-rotation",
+                  "manage/access-control/session-length",
+                  "manage/access-control/change-password",
+                  "manage/access-control/security-keys"
                 ]
               },
               {
