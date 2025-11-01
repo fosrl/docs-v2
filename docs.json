@@ -89,6 +89,14 @@
                   "manage/remote-node/config-file"
                 ]
               },
+              {
+                "group": "Analytics",
+                "pages": [
+                    "manage/analytics/request",
+                    "manage/analytics/access",
+                    "manage/analytics/action"
+                ]
+              },
               "manage/domains",
               "manage/integration-api",
               "manage/branding"

@@ -1,0 +1,55 @@
+---
+title: "Request Logs"
+description: "Request logs are a record of each HTTP request to a resource"
+---
+
+Request logs provide detailed information about every HTTP request made to your Pangolin resources. These logs capture both successful and denied requests along with comprehensive request metadata.
+
+## What are Request Logs?
+
+Request logs capture every HTTP request that passes through Pangolin's reverse proxy, including the request details, the decision made (allow or deny), and the reason for that decision. These logs are useful for:
+
+- Monitoring traffic patterns and request volumes
+- Debugging access issues and rule configurations
+- Analyzing API usage and endpoint popularity
+- Understanding geographic distribution of requests
+- Identifying potential security threats or unusual traffic patterns
+- Troubleshooting connectivity and routing issues
+
+## Request Log Fields
+
+Each request log entry contains the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `timestamp` | number | Unix timestamp (in seconds) when the request was made |
+| `action` | boolean | Whether the request was allowed (`true`) or denied (`false`) |
+| `reason` | number | Numeric code indicating the reason for the decision |
+| `actorType` | string | The type of actor making the request ("user", "apiKey", or null for anonymous) |
+| `actor` | string | The display name of the authenticated actor (username or API key name) |
+| `actorId` | string | The unique identifier for the authenticated actor |
+| `resourceId` | number | The ID of the resource that received the request |
+| `ip` | string | The IP address of the client making the request |
+| `location` | string | The geographic location (country code) based on IP address |
+| `userAgent` | string | The user agent string of the client browser or application |
+| `metadata` | string | Additional contextual information in JSON format |
+| `headers` | string | HTTP request headers in JSON format |
+| `query` | string | URL query parameters in JSON format |
+| `originalRequestURL` | string | The full original URL of the request |
+| `scheme` | string | The protocol scheme (http or https) |
+| `host` | string | The hostname from the request |
+| `path` | string | The URL path of the request |
+| `method` | string | The HTTP method (GET, POST, PUT, DELETE, etc.) |
+| `tls` | boolean | Whether the connection used TLS/SSL |
+
+## Log Retention
+
+Request log retention is controlled by the organization setting. By default, request logs are retained for 7 days.
+
+<Note>
+Request logs can generate significant data volume depending on your traffic. Consider your storage capacity when configuring retention periods.
+</Note>
+
+## Exporting
+
+Logs can be exported into CSV format for external analysis and archival. Logs can be exported from the table view in the Pangolin dashboard or via the Pangolin API. When exporting, you can specify date ranges and filters to narrow down the logs you need.
