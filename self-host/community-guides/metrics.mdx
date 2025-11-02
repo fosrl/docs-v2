@@ -19,7 +19,7 @@ This setup will increase the use of your server RAM.
 
 For claiming metrics from Traefik we have to adjust some configuration files.
 
-1. Udpate the `docker-compose.yml` file of the Pangolin stack to expose metrics port `8082` for the Prometheus connection:
+1. Update the `docker-compose.yml` file of the Pangolin stack to expose metrics port `8082` for the Prometheus connection:
 
 ```yaml
 service:
@@ -63,7 +63,7 @@ sudo docker restart traefik gerbil
 
 For claiming metrics from Crowdsec we have to adjust the docker compose files.
 
-1. Udpate the `docker-compose.yml` file of the Pangolin stack to expose metrics port `6060` for the Prometheus connection:
+1. Update the `docker-compose.yml` file of the Pangolin stack to expose metrics port `6060` for the Prometheus connection:
 
 ```yaml
 service:
@@ -130,7 +130,7 @@ scrape_configs:
       - targets: ["172.17.0.1:6060"]
 ```
 
-3. Create a folder `data` in `/config/prometheus` and change the ower and owning group:
+3. Create a folder `data` in `/config/prometheus` and change the owner and owning group:
 
 ```bash
 chown nobody:nogroup data
@@ -139,7 +139,7 @@ chown nobody:nogroup data
 4. Start the Prometheus container:
 
 ```bash
-sudo docker conpose up -d
+sudo docker compose up -d
 ```
 
 ## Grafana
