@@ -277,6 +277,55 @@ This will create a resource that looks like the following:
 | `internal-port` | number | No | Internal port mapping | 1-65535 |
 | `path` | string | HTTP only | Path prefix, exact path, or regex pattern | - |
 | `path-match` | string | HTTP only | Path matching type (`prefix`, `exact`, or `regex`) | - |
+| `rewrite-path` | string | No | Path to rewrite the request to | - |
+| `rewrite-match` | string | No | Rewrite matching type (`exact`, `prefix`, `regex`, or `stripPrefix`) | - |
+| `priority` | number | No | Target priority for load balancing | 1-1000, defaults to 100 |
+| `healthcheck` | object | No | Health check configuration for the target | See Health Check Configuration below |
+
+### Health Check Configuration
+
+Health checks can be configured for individual targets to monitor their availability. Add a `healthcheck` object to any target:
+
+```yaml
+proxy-resources:
+  monitored-service:
+    name: Monitored Service
+    protocol: http
+    full-domain: service.example.com
+    targets:
+    - site: my-site
+      hostname: backend-server
+      method: https
+      port: 8443
+      healthcheck:
+        hostname: backend-server
+        port: 8443
+        enabled: true
+        path: /health
+        interval: 30
+        timeout: 5
+        method: GET
+        status: 200
+        headers:
+          - name: X-Health-Check
+            value: true
+```
+
+| Property | Type | Required | Description | Constraints |
+|----------|------|----------|-------------|-------------|
+| `hostname` | string | Yes | Hostname for health check | - |
+| `port` | number | Yes | Port for health check | 1-65535 |
+| `enabled` | boolean | No | Whether health check is enabled | Defaults to `true` |
+| `path` | string | No | Path to check | - |
+| `scheme` | string | No | Protocol scheme for the health check | - |
+| `mode` | string | No | Health check mode | Defaults to `http` |
+| `interval` | number | No | Seconds between health checks | Defaults to 30 |
+| `unhealthy-interval` | number | No | Seconds between checks when unhealthy | Defaults to 30 |
+| `timeout` | number | No | Timeout in seconds | Defaults to 5 |
+| `headers` | array | No | Headers to send with health check | Array of objects with `name` and `value` |
+| `follow-redirects` | boolean | No | Whether to follow redirects | Defaults to `true` |
+| `method` | string | No | HTTP method for health check | Defaults to `GET` |
+| `status` | number | No | Expected HTTP status code | - |
 
 ### Authentication Configuration
 
@@ -298,7 +347,7 @@ Not allowed on TCP/UDP resources.
 |----------|------|----------|-------------|-------------|
 | `action` | string | Yes | Rule action (`allow`, `deny`, or `pass`) | - |
 | `match` | string | Yes | Match type (`cidr`, `path`, `ip`, or `country`) | - |
-| `value` | string | Yes | Value to match against | Format depends on match type |
+| `value` | string | Yes | Value to match against | Format depends on match type. For `country` match, use `ALL` to match all countries |
 
 ### Client Resources
 
