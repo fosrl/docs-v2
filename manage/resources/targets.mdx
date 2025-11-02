@@ -106,10 +106,6 @@ In this configuration:
 - Requests to `/api/users` will be load balanced between Target 1 and Target 2
 - Requests to `/web/dashboard` will only go to Target 3
 
-
-
-
-
 ## Path Rewriting
 
 Path rewriting allows you to modify the request path before it reaches your backend service. This enables you to expose different URL structures to your users while maintaining your existing backend API paths.
@@ -212,4 +208,3 @@ When using path rewriting, request priority is automatically calculated to ensur
 - Regex match adds +2 more
 - Root path `/` gets priority 1 (lowest, acts as catch-all)
 - Custom priorities override the automatic calculation
-

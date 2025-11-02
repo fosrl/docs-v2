@@ -15,10 +15,7 @@ In Pangolin Community Edition, ensure you have the flag enabled in the config fi
 flags:
   allow_raw_resources: true
 ```
-
-These resources can either be:
-1. **Publically Proxied:** Map the resource to a port on the host Pangolin server, so you can access the resource from `<server-public-ip>:<mapped-port>`. This is useful if you want to access the resource over the public internet, such as exposing a game server like Minecraft.
-2. **Internal Exposure:** Map services accessible on the same network as the site to an internal port on the site address. This is useful if you only want internal exposure to a resource when connected with a client.
+You map the resource to a port on the host Pangolin server, so you can access the resource from `<server-public-ip>:<mapped-port>`. This is useful if you want to access the resource over the public internet, such as exposing a game server like Minecraft.
 
 ## Proxied Resources
 
@@ -26,7 +23,7 @@ Proxied resources require extra configuration to expose on the Pangolin server. 
 
 <Steps>
 <Step title="Create the resource">
-  In the Pangolin dashboard, go to Resources and click Add Resource. Select "Raw TCP/UDP resource", enable Public Proxy, and enter your desired publicly mapped port. This is the port you'll use to access the proxied resource.
+  In the Pangolin dashboard, go to Resources and click Add Resource. Select "Raw TCP/UDP resource", and enter your desired publicly mapped port. This is the port you'll use to access the proxied resource.
 </Step>
 
 <Step title="Configure firewall">
@@ -88,3 +85,24 @@ Proxied resources require extra configuration to expose on the Pangolin server. 
 <Note>
 In this example, we expose port 1602 for TCP and port 1704 for UDP. You can use any available ports on your VPS.
 </Note>
+
+## Proxy Protocol
+
+On TCP resources you can enable Proxy Protocol support to forward the original client IP address to your backend service. This is useful for logging and access control.
+
+In order to enable proxy protocol, simply check the "Enable Proxy Protocol" box when creating or editing a TCP resource.
+
+<Note>Your backend application must be configured to accept Proxy Protocol connections. If your backend doesn't support Proxy Protocol, enabling this will break all connections so only enable this if you know what you're doing. Make sure to configure your backend to trust Proxy Protocol headers from Traefik.</Note>
+
+To enable Proxy Protocol in Traefik, add the following to the bottom of your `config/traefik/dynamic_config.yml`:
+
+```yaml 
+tcp:
+  serversTransports:
+    pp-transport-v1:
+      proxyProtocol:
+        version: 1
+    pp-transport-v2:
+      proxyProtocol:
+        version: 2
+```
