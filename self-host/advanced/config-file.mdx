@@ -247,6 +247,16 @@ This section contains the complete reference for all configuration options in `c
         Generate a strong, random secret. This is used for encrypting sensitive data and should be kept secure.
       </Warning>
     </ResponseField>
+
+    <ResponseField name="maxmind_db_path" type="string">
+      Path to the MaxMind GeoIP database file for geolocation features.
+
+      **Example**: `./config/GeoLite2-Country.mmdb`
+
+      <Note>
+        Used for IP geolocation functionality. Requires a MaxMind GeoLite2 or GeoIP2 database file.
+      </Note>
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -399,6 +409,14 @@ This section contains the complete reference for all configuration options in `c
         When enabled, uses file-based dynamic configuration instead of API-based updates. 
       </Note>
     </ResponseField>
+
+    <ResponseField name="pp_transport_prefix" type="string">
+      Prefix used for transport-related configurations. References servers transport config in dynamic Traefik file.
+
+      **Example**: `pp-transport-v`
+
+      **Default**: `pp-transport-v`
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -450,6 +468,38 @@ This section contains the complete reference for all configuration options in `c
   </Expandable>
 </ResponseField>
 
+### Organization Settings
+
+<ResponseField name="orgs" type="object">
+  Organization network configuration settings.
+
+  <Expandable title="Organizations">
+    <ResponseField name="block_size" type="integer">
+      Block size for organization CIDR ranges.
+
+      **Example**: `24`
+
+      **Default**: `24`
+
+      <Note>
+        Determines the subnet size allocated to each organization for network isolation.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="subnet_group" type="string">
+      IP address CIDR range for organization subnets.
+
+      **Example**: `100.90.128.0/24`
+
+      **Default**: `100.90.128.0/24`
+
+      <Note>
+        Base subnet from which organization-specific subnets are allocated.
+      </Note>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
 ### Rate Limiting
 
 <ResponseField name="rate_limits" type="object">
@@ -470,6 +520,32 @@ This section contains the complete reference for all configuration options in `c
           Maximum number of requests allowed in the time window.
 
           **Example**: `100`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="auth" type="object">
+      Rate limit settings specifically for authentication endpoints.
+
+      <Expandable title="Auth Rate Limits">
+        <ResponseField name="window_minutes" type="integer">
+          Time window for authentication rate limiting in minutes.
+
+          **Example**: `1`
+
+          **Default**: `1`
+        </ResponseField>
+
+        <ResponseField name="max_requests" type="integer">
+          Maximum number of authentication requests allowed in the time window.
+
+          **Example**: `10`
+
+          **Default**: `500`
+
+          <Note>
+            Consider setting this lower than global limits for security.
+          </Note>
         </ResponseField>
       </Expandable>
     </ResponseField>
@@ -585,6 +661,46 @@ This section contains the complete reference for all configuration options in `c
 
       **Default**: `false`
     </ResponseField>
+
+    <ResponseField name="disable_local_sites" type="boolean">
+      Whether to disable local site creation and management.
+
+      **Default**: `false`
+
+      <Note>
+        When enabled, users cannot create sites that connect to local networks.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="disable_basic_wireguard_sites" type="boolean">
+      Whether to disable basic WireGuard site functionality.
+
+      **Default**: `false`
+
+      <Note>
+        When enabled, only advanced WireGuard configurations are allowed.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="disable_config_managed_domains" type="boolean">
+      Whether to disable domains managed through the configuration file.
+
+      **Default**: `false`
+
+      <Note>
+        When enabled, only domains created through the UI are allowed.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="enable_clients" type="boolean">
+      Whether to enable client functionality.
+
+      **Default**: `true`
+
+      <Note>
+        Controls access to client-related features and endpoints.
+      </Note>
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -601,6 +717,88 @@ This section contains the complete reference for all configuration options in `c
 
       <Note>
         See [PostgreSQL documentation](/self-host/advanced/database-options#postgresql) for setup instructions.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="replicas" type="array of objects">
+      Read-only replica database configurations for load balancing.
+
+      <Expandable title="Replica Configuration">
+        <ResponseField name="connection_string" type="string" required>
+          Connection string for the read replica database.
+
+          **Example**: `postgresql://user:password@replica-host:port/database`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="pool" type="object">
+      Database connection pool settings.
+
+      <Expandable title="Pool Settings">
+        <ResponseField name="max_connections" type="integer">
+          Maximum number of connections to the primary database.
+
+          **Default**: `20`
+
+          **Example**: `50`
+        </ResponseField>
+
+        <ResponseField name="max_replica_connections" type="integer">
+          Maximum number of connections to replica databases.
+
+          **Default**: `10`
+
+          **Example**: `25`
+        </ResponseField>
+
+        <ResponseField name="idle_timeout_ms" type="integer">
+          Time in milliseconds before idle connections are closed.
+
+          **Default**: `30000` (30 seconds)
+
+          **Example**: `60000`
+        </ResponseField>
+
+        <ResponseField name="connection_timeout_ms" type="integer">
+          Time in milliseconds to wait for a database connection.
+
+          **Default**: `5000` (5 seconds)
+
+          **Example**: `10000`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### DNS Configuration
+
+<ResponseField name="dns" type="object">
+  DNS settings for domain name resolution and CNAME extensions.
+
+  <Expandable title="DNS">
+    <ResponseField name="nameservers" type="array of strings">
+      List of nameservers used for DNS resolution.
+
+      **Example**: `["ns1.example.com", "ns2.example.com"]`
+
+      **Default**: `["ns1.pangolin.net", "ns2.pangolin.net", "ns3.pangolin.net"]`
+
+      <Note>
+        These nameservers are used for DNS queries and domain resolution.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="cname_extension" type="string">
+      Domain extension used for CNAME record management.
+
+      **Example**: `cname.example.com`
+
+      **Default**: `cname.pangolin.net`
+
+      <Note>
+        Used for creating CNAME records for dynamic domain routing.
       </Note>
     </ResponseField>
   </Expandable>
