@@ -79,7 +79,7 @@ gerbil:
 </Step>
 
 <Step title="Configure resources">
-  Create [client resources](/manage/resources/client-resources.mdx) for what you would like to access through the client. For example, to SSH into a server, create a resource like `22:localhost:22`.
+  Create [client resources](/manage/resources/client-resources) for what you would like to access through the client. For example, to SSH into a server, create a resource like `22:localhost:22`.
 </Step>
 
 <Step title="Verify connection">
@@ -115,7 +115,7 @@ Sites have two operating modalities when accepting clients:
 
 ### Proxy Mode
 
-When you run Newt with `--accept-clients` it will run fully in user space. This means you do not need to give the container or binary any special permissions. It will NOT create a virtual network interface on the host. Instead you should create [client resources](../resources/client-resources.mdx) in Pangolin to configure what ports clients can hit and where they should go.
+When you run Newt with `--accept-clients` it will run fully in user space. This means you do not need to give the container or binary any special permissions. It will NOT create a virtual network interface on the host. Instead you should create [client resources](/manage/resources/client-resources) in Pangolin to configure what ports clients can hit and where they should go.
 
 ### Native Mode
 

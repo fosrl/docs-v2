@@ -135,7 +135,6 @@
                 "group": "Community Guides",
                 "pages": [
                   "self-host/community-guides/overview",
-                  "self-host/community-guides/proxyprotocol",
                   "self-host/community-guides/crowdsec",
                   "self-host/community-guides/metrics",
                   "self-host/community-guides/homeassistant",
