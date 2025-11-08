@@ -115,7 +115,7 @@ Sites have two operating modalities when accepting clients:
 
 ### Proxy Mode
 
-When you run Newt with `--accept-clients` it will run fully in user space. This means you do not need to give the container or binary any special permissions. It will NOT create a virtual network interface on the host. Instead you should create [client resources](/resources/client-resources) in Pangolin to configure what ports clients can hit and where they should go.
+When you run Newt with `--accept-clients` it will run fully in user space. This means you do not need to give the container or binary any special permissions. It will NOT create a virtual network interface on the host. Instead you should create [client resources](/manage/resources/client-resources) in Pangolin to configure what ports clients can hit and where they should go.
 
 ### Native Mode
 
@@ -164,7 +164,7 @@ If you can connect to Newt (peer shows as connected in logs) but can't reach rem
 1. **Check if packets reach the destination**: The connection to Newt is working, so this is likely a routing issue
 2. **Verify forwarding is enabled**: Use `sysctl net.ipv4.ip_forward` to confirm it's set to 1
 3. **Check iptables rules**: Ensure NAT masquerading is configured
-4. **Consider using proxy mode**: [Client resources](/resources/client-resources) can be easier as Newt handles the proxying, though you'll need to address everything as the Newt IP and assign specific ports
+4. **Consider using proxy mode**: [Client resources](/manage/resources/client-resources) can be easier as Newt handles the proxying, though you'll need to address everything as the Newt IP and assign specific ports
 
 <Note>
 NAT masquerading can affect other services on the Linux instance, so be aware of potential conflicts with existing network configurations.
