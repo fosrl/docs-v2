@@ -44,6 +44,10 @@ When you click create, you'll be shown the `ClientSecret` and `ClientId`. Make s
   Click `Token settings` then change `Auth Token Type` to `JWT` and check the `User Info inside ID Token` box finally hit `Save`.
 </Step>
 
+<Step title="Enable User Claims in ID Token">
+  Still in `Token settings`, check the box for `Include user's roles in the ID Token`. This enables Zitadel to include necessary user profile claims (including `preferred_username`) in the ID token, which Pangolin requires for user identification.
+</Step>
+
 <Step title="Note Endpoints">
   Open `URLs` and make note of:
   - `Authorization Endpoint`
