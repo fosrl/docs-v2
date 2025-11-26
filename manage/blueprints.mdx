@@ -177,6 +177,10 @@ client-resources:
 
 For containerized applications, you can define blueprints using Docker labels.
 
+<Note>
+Blueprints will **continuously apply** from changes in the docker stack, newt restarting, or when viewing the resource in the dashboard.
+</Note>
+
 ### Enabling Docker Socket Access
 
 To use Docker labels, enable the Docker socket when running Newt:
@@ -192,6 +196,10 @@ DOCKER_SOCKET=/var/run/docker.sock
 ```
 
 ### Docker Compose Example
+
+<Note>
+The compose file will be the source of truth, any edits through the resources dashboard will be **overwritten** by the blueprint labels defined in the compose stack.
+</Note>
 
 ```yaml
 services:
