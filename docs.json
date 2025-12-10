@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "aspen",
   "name": "Pangolin Docs",
-  "description": "Pangolin is a self-hosted alternative to Cloudflare Tunnels, designed to provide secure and highly-available ingress access to applications.",
+  "description": "Pangolin is the easiest to use identity-based remote access platform based on WireGuard.",
   "colors": {
     "primary": "#F36117",
     "light": "#F36117",
@@ -26,24 +26,55 @@
             "pages": [
               {
                 "group": "Sites",
+                "icon": "plug",
                 "pages": [
-                  "manage/sites/add-site",
+                  "manage/sites/understanding-sites",
                   "manage/sites/install-site",
                   "manage/sites/install-kubernetes",
                   "manage/sites/configure-site",
-                  "manage/sites/update-site"
+                  "manage/sites/update-site",
+                  "manage/sites/credentials"
                 ]
               },
               {
                 "group": "Resources",
+                "icon": "link",
                 "pages": [
-                  "manage/resources/targets",
-                  "manage/resources/tcp-udp-resources",
-                  "manage/resources/client-resources"
+                  "manage/resources/understanding-resources",
+                  {
+                    "group": "Public Resources",
+                    "pages": [
+                      "manage/resources/public/authentication",
+                      "manage/resources/public/targets",
+                      "manage/healthchecks-failover",
+                      "manage/resources/public/raw-resources"
+                    ]
+                  },
+                  {
+                    "group": "Private Resources",
+                    "pages": [
+                      "manage/resources/private/host",
+                      "manage/resources/private/cidr",
+                      "manage/resources/private/alias"
+                    ]
+                  }
                 ]
               },
               {
+                "group": "Clients",
+                "icon": "desktop",
+                "pages": [
+                  "manage/clients/add-client",
+                  "manage/clients/install-client",
+                  "manage/clients/configure-client",
+                  "manage/clients/update-client",
+                  "manage/clients/credentials"
+                ]
+              },
+              "manage/domains",
+              {
                 "group": "Access Control",
+                "icon": "user-group",
                 "pages": [
                   "manage/access-control/create-user",
                   "manage/access-control/rules",
@@ -59,6 +90,7 @@
               },
               {
                 "group": "Identity Providers",
+                "icon": "id-card",
                 "pages": [
                   "manage/identity-providers/add-an-idp",
                   "manage/identity-providers/auto-provisioning",
@@ -70,17 +102,18 @@
                 ]
               },
               {
-                "group": "Clients",
+                "group": "Logs & Analytics",
+                "icon": "chart-bar",
                 "pages": [
-                  "manage/clients/add-client",
-                  "manage/clients/install-client",
-                  "manage/clients/configure-client"
+                  "manage/analytics/request",
+                  "manage/analytics/access",
+                  "manage/analytics/action"
                 ]
               },
-              "manage/healthchecks-failover",
               "manage/blueprints",
               {
                 "group": "Remote Nodes",
+                "icon": "server",
                 "pages": [
                   "manage/remote-node/ha",
                   "manage/remote-node/nodes",
@@ -89,15 +122,6 @@
                   "manage/remote-node/config-file"
                 ]
               },
-              {
-                "group": "Analytics",
-                "pages": [
-                    "manage/analytics/request",
-                    "manage/analytics/access",
-                    "manage/analytics/action"
-                ]
-              },
-              "manage/domains",
               "manage/integration-api",
               "manage/branding"
             ]
@@ -156,11 +180,10 @@
             ]
           },
           {
-            "group": "Careers",
+            "group": "Additional Resources",
             "pages": [
-              "careers/join-us",
-              "careers/software-engineer-full-stack",
-              "careers/software-engineer-go"
+              "additional-resources/changelog",
+              "additional-resources/trust-center"
             ]
           }
         ]
@@ -194,6 +217,9 @@
       ]
     }
   },
+  "interaction": {
+    "drilldown": true
+  },
   "logo": {
     "light": "/logo/light.png",
     "dark": "/logo/dark.png",
@@ -202,14 +228,19 @@
   "navbar": {
     "links": [
       {
+        "label": "Log In",
+        "href": "https://app.pangolin.net/auth/login"
+      },
+      {
         "label": "Contact Us",
-        "href": "mailto:numbat@pangolin.net"
+        "icon": "envelope",
+        "href": "mailto:contact@pangolin.net"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Pangolin Dashboard",
-      "href": "https://app.pangolin.net"
+      "href": "https://app.pangolin.net/auth/signup"
     }
   },
   "footer": {

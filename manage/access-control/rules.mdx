@@ -5,12 +5,12 @@ description: "Configure rules to allow or deny access to resources without authe
 
 Rules allow you to either "allow" and bypass the Pangolin auth system (no pin, login, password), or "deny" and fully reject the request. After you create a resource you can select the "Rules" tab on the sidebar and enable rules.
 
-<CardGroup cols={2}>
-<Card title="Allow Rules" icon="check">
+<CardGroup cols={3}>
+<Card title="Bypass Auth" icon="check">
   Bypass authentication completely for matching requests. Users can access resources without any login or PIN.
 </Card>
 
-<Card title="Deny Rules" icon="x">
+<Card title="Block Access" icon="x">
   Completely reject requests that match the rule. Useful for blocking admin paths or sensitive endpoints.
 </Card>
 

@@ -1,180 +1,70 @@
 ---
-title: "Add Client"
+title: "Understanding Clients"
 description: "Create a client to connect to your Pangolin network from a remote computer"
 ---
 
-A client in Pangolin is a way to create a traditional VPN tunnel from your remote computer to your Newt site on your private network. Clients allow you to tunnel your computer back into your whole network and remotely access non-HTTP resources like file shares or use it as a bastion host to manage servers.
+A client is a way to access resources on sites remotely and privately via a virtual private network. Clients are used with private resources to faciliate zero-trust network access.
 
-<Note>
-Client support in Pangolin is still in beta - things may not perform as expected. If you encounter bugs please report them on [GitHub in an issue](https://github.com/fosrl/pangolin).
-</Note>
+By default a client does not have access to any hosts on the local network of the site. Admins must explicitely define resources on the site and give specific users and roles access to the resources. 
 
-## How Clients Work
+Users must log in and connect from a Pangolin client for [Window, Mac, and Linux](/manage/clients/install-client). Machine (automated systems and servers) connect with an ID and secret.
 
-### The Connection Process
+## Client Types
 
-1. **Client Creation**: You create a client in Pangolin's dashboard
-2. **Olm Registration**: Olm registers with Pangolin using the client credentials
-3. **Tunnel Establishment**: Olm establishes a WireGuard tunnel to your network
-4. **Resource Access**: You can access resources on your private network through the tunnel
+There are two types of clients: user devices and machines.
 
-### What Clients Are
+<CardGroup cols={2}>
+<Card title="User Devices">
+  - Associated with a user in your Pangolin organization
+  - Requires login to connect (password, 2fa, etc)
+  - Available for download on Mac, Windows, and Linux
+</Card>
 
-- A way to tunnel your computer back into your whole network
-- Remotely access non HTTP resources like file shares
-- A bastion host or "jump box" to manage servers
+<Card title="Machines">
+  - Represent a server or automated system instead of a user
+  - Connect with an ID and secret
+  - Available in CLI form with Pangolin CLI or Olm CLI
+</Card>
+</CardGroup>
 
-### What Pangolin Clients Are Not (Yet)
+### User Devices
 
-- A mesh VPN like Tailscale, Netbird, or Netmaker
-- A slick desktop UI (coming soon)
+A user may download a client for their specific system. Before they can connect, they must select a Pangolin server to authenticate to using their provided Pangolin account. Users can log in as a Pangolin user or with your attached external identity provider. 
 
-You can install the [Olm](https://github.com/fosrl/olm) client on your computer and run it with the ID and secret values you generate in the dashboard. When it connects, it will create a virtual network adapter on your computer just like a traditional VPN.
+Examples include:
 
-[Take a look at a quick video about clients](https://youtu.be/jg8Bb05hlnI)
+- **SSH**: Admins and developers can connect with their client to specific hosts for SSH.
+- **RDP**: Users can connect to a remote host using familiar remote desktop software.
 
-## Prerequisites
+Then, just like in the Pangolin dashboard, a user selects the organization to connect to. Once connected, all resources made available to the user in that organization become available via the tunnel.
 
-Before adding a client, ensure you have:
+### Machines
 
-1. **Updated Components**: Make sure you have the required versions:
-   - Pangolin ^1.8.0
-   - Gerbil ^1.1.0
-   - Newt ^1.4.0
+Machine clients are for servers and automated systems that are not associated with a specific user. 
 
-2. **Site Configuration**: Your Newt site must be configured to accept clients with the `--accept-clients` flag or `ACCEPT_CLIENTS=true` environment variable.
+Examples include:
 
-3. **Port Configuration**: Ensure port 21820 is open on your VPS and added to your `docker-compose.yml`:
+- **CICD**: Access remote resources like a database in an automated deployment pipeline.
+- **Servers**: Provide a VPS with access to a resource running in a different network.
 
-```yml title="docker-compose.yml" highlight={4}
-gerbil: 
-  ports:
-    - 51820:51820/udp
-    - 21820:21820/udp
-    - 443:443
-    - 80:80
-```
+Though you may connect a server via a user account using a CLI client, we reccomend you specifically use a machine client.
 
-## Adding a Client
-
-<Steps>
-<Step title="Navigate to Clients">
-  In the Pangolin dashboard, go to the **Clients** section and click **Add Client**.
-</Step>
-
-<Step title="Configure client details">
-  Configure the basic information:
-  - **Client Name**: A descriptive name for your client
-</Step>
-
-<Step title="Generate Olm credentials">
-  Pangolin will generate:
-  - **Client ID**: Unique identifier for the Olm client
-  - **Secret**: Authentication secret for secure connection
-  - **Endpoint**: The Pangolin server endpoint
-</Step>
-
-<Step title="Install Olm">
-  Use the generated credentials to install and configure Olm on your remote computer. See [Install Olm](/manage/clients/install-client) for detailed instructions.
-</Step>
-
-<Step title="Configure resources">
-  Create [client resources](/manage/resources/client-resources) for what you would like to access through the client. For example, to SSH into a server, create a resource like `22:localhost:22`.
-</Step>
-
-<Step title="Verify connection">
-  Once Olm is running, the client status should show as "Online" in the dashboard. You can then connect to your network using the site's IP address.
-</Step>
-</Steps>
+Machine clients authenticate with an ID and secret string. These credentials are passed via arguments into one of the supported Pangolin CLI clients. They can be revoked and rotated.
 
 ## Client Modalities
 
-Clients have two major operation modalities:
+Clients have two major operation modalities. A client will first attempt to hole punch before falling back to relaying.
 
-### Relaying (Default)
+### Relaying
 
-By default, Olm will relay traffic through your Pangolin VPS - through Gerbil specifically. Gerbil listens on UDP port 21820 for new WireGuard connections and forwards the packets down the Newt site tunnels to the right peers. This means your connections back to your site do not require firewall config and uses the existing NAT holepunching capabilities of Newt.
+Clients can relay traffic through a Pangolin server - through Gerbil specifically. Gerbil listens on UDP port 21820 for new WireGuard connections and forwards the packets down the Newt site tunnels to the right peers. This means your connections back to your site do not require firewall config and uses the existing NAT holepunching capabilities of Newt.
 
-### NAT Hole Punching (Experimental)
+### NAT Hole Punching
 
-<Note>
-Right now NAT hole punching is EXPERIMENTAL. While functional, it does not always connect reliably and can fall back to relaying. We plan to work to improve the reliability over time by implementing more methods for those behind CGNAT or hard nats.
+While functional, it does not always connect reliably and can fall back to relaying. We plan to work to improve the reliability over time by implementing more methods for those behind CGNAT or hard nats.
 
-Take a look at [Tailscale docs](https://tailscale.com/kb/1361/firewall) for some firewall changes you might be able to make to improve HP performance.
-</Note>
-
-This mode can be activated by using `--holepunch` in Olm. Instead of immediately relaying through the VPS, this will attempt to connect directly to the Newt site across NAT routers.
+Take a look at [these docs](https://tailscale.com/kb/1361/firewall) for some firewall changes you might be able to make to improve hole punch reliability and performance.
 
 This should help to:
 - Increase performance (speed/bandwidth)
 - Reduce VPS transit costs
-
-## Site Modalities
-
-Sites have two operating modalities when accepting clients:
-
-### Proxy Mode
-
-When you run Newt with `--accept-clients` it will run fully in user space. This means you do not need to give the container or binary any special permissions. It will NOT create a virtual network interface on the host. Instead you should create [client resources](/manage/resources/client-resources) in Pangolin to configure what ports clients can hit and where they should go.
-
-### Native Mode
-
-<Note>
-Right now native mode only works on Linux.
-</Note>
-
-In native mode with both `--accept-clients` and `--native`, Newt will create a native Linux tunnel interface on the host. This means that all traffic destined for the site can access anything on the host.
-
-#### Remote Subnets
-
-In native mode, you can add remote subnets to the site settings in Pangolin to forward remote networks through Newt. This can let Newt act as a traditional VPN server to route to anything on your local network.
-
-<Frame caption="Pangolin UI showing remote subnets for clients.">
-  <img src="/images/remote_subnets.png" alt="Remote Subnets"/>
-</Frame>
-
-This will configure a route on the Olm side of the tunnel to route this subnet down the tunnel. When it reaches the other end, can be routed to the appropriate destination by the host.
-
-This requires proper Linux routing configuration. Here's what happens in native mode:
-
-1. **Olm forwards packets**: Your computer running Olm blindly forwards all packets destined for the remote subnet (e.g., 192.168.0.x) over the tunnel
-2. **Newt receives packets**: Newt creates a WireGuard network interface on the Linux host and receives these packets
-3. **Linux must route packets**: The Linux machine needs to know what to do with packets destined for 192.168.0.x
-
-#### Required Configuration
-
-**Enable IP forwarding:**
-```bash
-sudo nano /etc/sysctl.conf
-
-net.ipv4.ip_forward = 1
-```
-
-**Setup NAT masquerading:**
-```bash
-sudo iptables -t nat -A POSTROUTING -j MASQUERADE
-```
-
-This rewrites the source address of packets from the tunnel to be the 192.168.0.x address of the Linux instance when packets leave the instance. This way, when devices on 192.168.0.x reply to the Olm client, they know to send the response back through the tunnel.
-
-#### Troubleshooting Routing Issues
-
-If you can connect to Newt (peer shows as connected in logs) but can't reach remote subnet resources:
-
-1. **Check if packets reach the destination**: The connection to Newt is working, so this is likely a routing issue
-2. **Verify forwarding is enabled**: Use `sysctl net.ipv4.ip_forward` to confirm it's set to 1
-3. **Check iptables rules**: Ensure NAT masquerading is configured
-4. **Consider using proxy mode**: [Client resources](/manage/resources/client-resources) can be easier as Newt handles the proxying, though you'll need to address everything as the Newt IP and assign specific ports
-
-<Note>
-NAT masquerading can affect other services on the Linux instance, so be aware of potential conflicts with existing network configurations.
-</Note>
-
-## Notes
-
-- Clients require Olm to be running on the remote computer
-- Each client can access multiple resources on the site
-- Connection status is monitored automatically
-- Olm creates a native tun interface and usually requires sudo/admin permissions
-- On Windows: Olm will run as a service
-- LXC containers need to be configured to allow tun access

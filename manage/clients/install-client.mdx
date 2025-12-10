@@ -1,25 +1,65 @@
 ---
-title: "Install Client"
-description: "Install Olm as a binary"
+title: "Install Clients"
+description: "Install native clients for Mac, Windows, and Linux"
 ---
 
-Olm can be installed as either a static binary executable or a Docker container. Configuration is passed via CLI arguments in both cases.
+## Windows
 
-<Warning>
-You **must first create a client and copy the Olm config** in Pangolin before running Olm.
-</Warning>
+- [Pangolin for Windows Installer](https://pangolin.net/downloads/windows) - This is the official page to download the latest installer file for Windows.
+- [All Versions](https://github.com/fosrl/windows/releases) - The releases section of this repository contains release notes and download artifacts for the latest version and all older versions.
 
-## Binary Installation
+## Mac
+
+- [Pangolin for macOS Installer](https://pangolin.net/downloads/mac) - This is the official page to download the latest installer file for macOS.
+- [All Versions](https://github.com/fosrl/apple/releases) - The releases section of this repository contains release notes and download artifacts for the latest version and all older versions.
+
+## Pangolin CLI (Linux)
+
+Pangolin CLI is the recommended way to run a client using a command line interface on Mac or Linux. Support for Windows is coming soon.
+
+Pangolin CLI supports running as user device with authentication or a machine client.
 
 ### Quick Install (Recommended)
+
+Use this command to automatically install Pangolin CLI. It detects your system architecture automatically and always pulls the latest version, adding `pangolin` to your PATH:
+
+```bash
+curl -fsSL https://static.pangolin.net/get-cli.sh | bash
+```
+
+### Manual Download
+
+Binaries for Linux and macOS are available in the [GitHub releases](https://github.com/fosrl/cli/releases) for ARM and AMD64 (x86_64) architectures.
+
+Download and install manually:
+
+```bash
+wget -O pangolin "https://github.com/fosrl/cli/releases/download/{version}/pangolin-cli_{architecture}" && chmod +x ./pangolin
+```
+
+<Note>
+Replace `{version}` with the desired version and `{architecture}` with your architecture. Check the [release notes](https://github.com/fosrl/cli/releases) for the latest information.
+</Note>
+
+## Olm CLI
+
+Olm CLI is the most basic form of a client. All other clients implement Olm under the hood in some form.
+
+If you're looking for a CLI interface for a client, we recommend using Pangolin CLI where possible.
+
+Olm CLI is mainly only used for machine clients. Though the Pangolin CLI can also be used for machine clients, use Pangolin CLI if you expect to log in as a user.
+
+### Binary Installation
+
+#### Quick Install (Recommended)
 
 Use this command to automatically install Olm. It detects your system architecture automatically and always pulls the latest version, adding Olm to your PATH:
 
 ```bash
-curl -fsSL https://pangolin.net/get-olm.sh | bash
+curl -fsSL https://static.pangolin.net/get-olm.sh | bash
 ```
 
-### Manual Download
+#### Manual Download
 
 Binaries for Linux, macOS, and Windows are available in the [GitHub releases](https://github.com/fosrl/olm/releases) for ARM and AMD64 (x86_64) architectures.
 
@@ -78,11 +118,11 @@ WantedBy=multi-user.target
 Make sure to move the binary to `/usr/local/bin/olm` before creating the service!
 </Warning>
 
-## Windows Service
+### Windows Service
 
 On Windows, olm has to be installed and run as a Windows service. When running it with the cli args, it will attempt to install and run the service to function like a cli tool. You can also run the following:
 
-### Service Management Commands
+#### Service Management Commands
 
 ```
 # Install the service
@@ -109,7 +149,7 @@ olm.exe help
 
 Note running the service requires credentials in `%PROGRAMDATA%\olm\olm-client\config.json`.
 
-### Service Configuration
+#### Service Configuration
 
 When running as a service, Olm will read configuration from environment variables or you can modify the service to include command-line arguments:
 
@@ -117,7 +157,7 @@ When running as a service, Olm will read configuration from environment variable
 2. Set the credentials in `%PROGRAMDATA%\olm\olm-client\config.json`. Hint: if you run olm once with --id and --secret this file will be populated! 
 3. Start the service: `olm.exe start`
 
-### Service Logs
+#### Service Logs
 
 When running as a service, logs are written to:
 
@@ -130,7 +170,7 @@ You can view the Windows Event Log using Event Viewer or PowerShell:
 Get-EventLog -LogName Application -Source "OlmWireguardService" -Newest 10
 ```
 
-## Gotchas
+### Gotchas
 
 Olm creates a native tun interface. This usually requires sudo / admin permissions. Some notes:
 

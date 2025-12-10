@@ -1,29 +1,9 @@
 ---
-title: "Install Site"
+title: "Install Sites"
 description: "Install Newt as a binary or Docker container"
 ---
 
-Newt can be installed as either a static binary executable or a Docker container. Configuration is passed via CLI arguments in both cases.
-
-<Warning>
-You **must first create a site and copy the Newt config** in Pangolin before running Newt.
-</Warning>
-
-<CardGroup cols={2}>
-<Card title="Binary Installation" icon="download">
-  - Static executable
-  - Cross-platform support
-  - Easy to install and run
-  - Systemd service support
-</Card>
-
-<Card title="Docker Installation" icon="docker">
-  - Containerized deployment
-  - Environment variables
-  - Docker Compose support
-  - Easy management
-</Card>
-</CardGroup>
+Newt can be installed as either a static binary executable or a Docker container. You must first create a site and copy the Newt config in Pangolin before running Newt.
 
 ## Binary Installation
 
@@ -32,7 +12,7 @@ You **must first create a site and copy the Newt config** in Pangolin before run
 Use this command to automatically install Newt. It detects your system architecture automatically and always pulls the latest version, adding Newt to your PATH:
 
 ```bash
-curl -fsSL https://pangolin.net/get-newt.sh | bash
+curl -fsSL https://static.pangolin.net/get-newt.sh | bash
 ```
 
 ### Manual Download
@@ -59,15 +39,6 @@ newt \
 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
 --endpoint https://example.com
 ```
-
-### Permanent Installation
-
-Install to your PATH (may need to run as root):
-
-```bash
-mv ./newt /usr/local/bin
-```
-
 <Note>
 The quick installer will do this step for you.
 </Note>
@@ -130,7 +101,7 @@ services:
       - NEWT_SECRET=nnisrfsdfc7prqsp9ewo1dvtvci50j5uiqotez00dgap0ii2
 ```
 
-#### Config file injected as Compose Secret
+#### Config File Injected as Compose Secret
 
 A safer but slightly more complex way is to use [Compose Secrets](https://docs.docker.com/compose/how-tos/use-secrets/). First, create a `JSON` file containing your configuration:
 

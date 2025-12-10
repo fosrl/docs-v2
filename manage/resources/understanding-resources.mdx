@@ -1,0 +1,52 @@
+---
+title: "Understanding Resources"
+description: "Resources are any network address you want to make available to users"
+---
+
+Resources respresent the applications, hosts, or ranges you make available for remote access to users. Resources exist on the remote networks of your sites. Users only ever think about connecting to resources and not specific sites.
+
+By default, no resources are made available on sites. Admins must define resources with backend targets, and assign specific access policies before any users can gain access.
+
+## Resources Types
+
+There are two types of resources: public resources and private resources.
+
+<CardGroup cols={2}>
+<Card title="Public Resources">
+  - Reverse proxies to backend services
+  - Optionally have authentication
+  - Anyone with web browser can access
+</Card>
+
+<Card title="Private Resources">
+  - Zero-trust VPN
+  - Access to every resources requires authentication
+  - Users and machines access when connected with a client
+</Card>
+</CardGroup>
+
+### Public Resources
+
+Public resources are protocol-aware and TCP/UDP proxies to services that are made available to the public internet. 
+
+#### HTTPS Resources
+
+Examples of HTTP resources include, APIs, websites, and dashboards. These are served with a fully qualified domain name and HTTPS with a valid SSL certificate.
+
+All requests go through an authenticated reverse proxy. **Thus, public resources do not require client-side software to be installed on user devices for access. Anyone with a web browser can access public resources.**
+
+HTTP resources are also identity and context aware, meaning you can create policies and rules to only let certain users, roles, countries, IPs, CIDRs, etc have access. When users visit an authenticated public resource, they are greeted with a Pangolin login page where they must complete authentication in order to get to the underlying resource. Therefore, Pangolin acts as a frontdoor barrier to these resources.
+
+#### Raw TCP/UDP Resources
+
+Raw resources are a way to proxy any TCP and UDP traffic through the Pangolin reverse proxy. Instead of a fully qualified domain name and certificate, these resources are bound to one or more ports on the Pangolin host. 
+
+Since these resources are not protocol aware and are publically proxied, they do not support identity and context policies and rules.
+
+### Private Resources
+
+Private resources require users to be connected with Pangolin client in order for them to be accessed. Any TCP and UDP traffic can be made available.
+
+**Private resources function like a zero-trust virtual private network (VPN).** Explicit access to resources must be granted for users and roles to be able to access them. For this reason, we recommend using private resources for all raw TCP/UDP traffic that doesn't need a public proxy, instead of relying on raw TCP/UDP public resources (as discussed above).
+
+Private resources support single hosts or entire network ranges (CIDR). Private resources can also have internal DNS alias hostnames assigned for easy, human-readable naming. Users don't choose to connect to specific resources; rather, when they connect via a client to your organization, they can access all resources their account has access to at once.

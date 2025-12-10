@@ -1,5 +1,6 @@
 ---
 title: "Domains"
+icon: "globe"
 description: "Learn how to configure domains for your Pangolin resources and understand the different domain types available"
 ---
 
@@ -72,6 +73,10 @@ You then access your resources via subdomains like `app.example.com` or `db.exam
 
 ### For Domain Delegation
 
+<Warning>
+Some domain providers, namely Cloudflare, do not allow adding NS records for the root of your domain. This would prevent you from delegating all `*.example` to Pangolin. However, you can usually delegate everything after the first level, like `*.subdomain.example.com`. If your provider restricts you in this way, you could either move your domain, or use CNAME records for individual subdomains of the root domain.
+</Warning>
+
 When using domain delegation, you'll need to update your domain's nameservers:
 
 **Example NS Records:**
@@ -99,7 +104,3 @@ Type: CNAME
 Name: _acme-challenge.test.example.com
 Value: _acme-challenge.0nbn5rpcq4wthq6.cname.pangolin.net
 ```
-
-<Check>
-Once DNS is properly configured and propagated, your domain will be verified and ready to use with your Pangolin resources.
-</Check>

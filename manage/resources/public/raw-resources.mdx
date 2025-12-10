@@ -1,5 +1,5 @@
 ---
-title: "Raw TCP & UDP"
+title: "TCP & UDP"
 description: "Configure raw TCP and UDP traffic through Pangolin tunnels"
 ---
 
@@ -15,6 +15,7 @@ In Pangolin Community Edition, ensure you have the flag enabled in the config fi
 flags:
   allow_raw_resources: true
 ```
+
 You map the resource to a port on the host Pangolin server, so you can access the resource from `<server-public-ip>:<mapped-port>`. This is useful if you want to access the resource over the public internet, such as exposing a game server like Minecraft.
 
 ## Proxied Resources

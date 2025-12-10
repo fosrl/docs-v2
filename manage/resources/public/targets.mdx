@@ -3,13 +3,7 @@ title: "Targets"
 description: "Configure destination endpoints for resource routing and load balancing"
 ---
 
-## Overview
-
 When you create a resource in Pangolin, you define different targets that specify where traffic should be routed within your network. Each target represents a specific destination that the resource can proxy to when handling incoming requests.
-
-<Note>
-Targets are created on the Newt tunnel, enabling traffic to reach destinations on the remote network without requiring additional routing configuration.
-</Note>
 
 ## How Targets Work
 
@@ -22,9 +16,9 @@ Targets function as destination endpoints for your resources:
 3. **Network Access**: Newt proxy routes traffic to the local network through the tunnel
 4. **Direct Connection**: No additional routing is necessary on the remote network
 
-## Multi-Site Targets (v1.9.0+)
+## Multi-Site Targets
 
-With the introduction of update 1.9.0, targets now have sites associated with them. This enhancement provides significant benefits for reliability and load distribution.
+Targets have sites associated with them. This provides significant benefits for reliability and load distribution described below.
 
 ### Site-Distributed Resources
 
@@ -38,21 +32,21 @@ You can now configure targets across different sites for the same resource:
   Set up load balancing across sites to distribute traffic in a round-robin fashion between all available targets.
 </Card>
 
-### Load Balancing Requirements
+### Distributing Sites Load Across Servers
 
-<Warning>
-Load balancing between different targets only works when sites are connected to the same node. In Pangolin instances with multiple remote nodes, ensure load balancing occurs on the same node.
-</Warning>
+<Note>
+This is an Enterprise Edition only feature.
+</Note>
+
+This refers to having more than on Pangolin server node that a site can connect to. If one of the server nodes goes down, the site moves to another node. This has some implications for site-based load balancing, because DNS must can only route a FQDN to one Pangolin server node at a time.
+
+Load balancing between different targets only works when sites are connected to the same Pangolin node. In Pangolin instances with multiple remote nodes, ensure load balancing occurs on the same node.
 
 To ensure effective load balancing in multi-node environments:
 
 ```bash
 newt --prefer-endpoint <specific-endpoint> <other-args>
 ```
-
-<Note>
-Pangolin currently does not load balance between nodes, only between targets on the same node.
-</Note>
 
 ## Path-Based Routing
 
@@ -71,23 +65,23 @@ When a request comes in, Pangolin evaluates the path against all targets and rou
 
 Pangolin supports three different matching strategies:
 
-<Card title="Exact Match">
-  **exact**: The request path must match the configured path exactly.
-  
-  Example: Path `/api/users` with exact match only matches `/api/users`
-</Card>
+#### Exact Match
 
-<Card title="Prefix Match">
-  **prefix**: The request path must start with the configured path.
-  
-  Example: Path `/api` with prefix match matches `/api/users`, `/api/orders`, `/api/users/123`, etc.
-</Card>
+**exact**: The request path must match the configured path exactly.
 
-<Card title="Regex Match">
-  **regex**: The request path is matched against a regular expression pattern.
-  
-  Example: Path `^/api/users/[0-9]+$` with regex match matches `/api/users/123` but not `/api/users/abc`
-</Card>
+Example: Path `/api/users` with exact match only matches `/api/users`
+
+#### Prefix Match
+
+**prefix**: The request path must start with the configured path.
+
+Example: Path `/api` with prefix match matches `/api/users`, `/api/orders`, `/api/users/123`, etc.
+
+#### Regex Match
+
+**regex**: The request path is matched against a regular expression pattern.
+
+Example: Path `^/api/users/[0-9]+$` with regex match matches `/api/users/123` but not `/api/users/abc`
 
 <Frame caption="Pangolin UI showing targets with path-based routing configuration">
   <img src="/images/targets_config_path_match.png" alt="Targets example"/>
@@ -127,41 +121,41 @@ The rewriting happens after the path match evaluation but before the request rea
 
 Pangolin supports four different rewriting strategies:
 
-<Card title="Prefix Rewrite">
-  **prefix**: Replaces the matched portion with a new prefix, preserving the rest of the path.
- 
-  - With Prefix Match: `/api` → `/v2/api` transforms `/api/users` into `/v2/api/users`
-  - With Exact Match: `/old` → `/new` transforms `/old` into `/new`
-  - With Regex Match: Uses the regex pattern with the rewrite value as replacement
-</Card>
+#### Prefix Rewrite
 
-<Card title="Exact Rewrite">
-  **exact**: Replaces the matched path with the exact rewrite path.
- 
-  Example: Match path `/api/users` → Rewrite to `/users` transforms `/api/users` into `/users`
-</Card>
+**prefix**: Replaces the matched portion with a new prefix, preserving the rest of the path.
 
-<Card title="Regex Rewrite">
-  **regex**: Uses regular expression substitution to transform the path. Works with any match type.
- 
-  - With Regex Match: Uses the regex pattern directly
-  - With Prefix Match: Automatically captures everything after the prefix with `(.*)` 
-  - With Exact Match: Matches the exact path
-  
-  Example: Match path `^/api/v1/(.*)` (regex) → Rewrite to `/api/v2/$1` transforms `/api/v1/users` into `/api/v2/users`
-</Card>
+- With Prefix Match: `/api` → `/v2/api` transforms `/api/users` into `/v2/api/users`
+- With Exact Match: `/old` → `/new` transforms `/old` into `/new`
+- With Regex Match: Uses the regex pattern with the rewrite value as replacement
 
-<Card title="Strip Prefix">
-  **stripPrefix**: Removes the matched prefix from the path.
- 
-  - With Prefix Match: Efficiently strips the prefix using Traefik's stripPrefix middleware
-  - With Exact/Regex Match: Uses regex replacement to remove the matched portion
-  - Optionally add a new prefix after stripping by providing a rewrite value
-  
-  Example: Match path `/api` (prefix) → Strip Prefix transforms `/api/users` into `/users`
-  
-  Example with new prefix: Match path `/old` (prefix) → Strip Prefix + Rewrite to `/new` transforms `/old/users` into `/new/users`
-</Card>
+#### Exact Rewrite
+
+**exact**: Replaces the matched path with the exact rewrite path.
+
+Example: Match path `/api/users` → Rewrite to `/users` transforms `/api/users` into `/users`
+
+#### Regex Rewrite
+
+**regex**: Uses regular expression substitution to transform the path. Works with any match type.
+
+- With Regex Match: Uses the regex pattern directly
+- With Prefix Match: Automatically captures everything after the prefix with `(.*)` 
+- With Exact Match: Matches the exact path
+
+Example: Match path `^/api/v1/(.*)` (regex) → Rewrite to `/api/v2/$1` transforms `/api/v1/users` into `/api/v2/users`
+
+#### Strip Prefix
+
+**stripPrefix**: Removes the matched prefix from the path.
+
+- With Prefix Match: Efficiently strips the prefix using Traefik's stripPrefix middleware
+- With Exact/Regex Match: Uses regex replacement to remove the matched portion
+- Optionally add a new prefix after stripping by providing a rewrite value
+
+Example: Match path `/api` (prefix) → Strip Prefix transforms `/api/users` into `/users`
+
+Example with new prefix: Match path `/old` (prefix) → Strip Prefix + Rewrite to `/new` transforms `/old/users` into `/new/users`
 
 <Frame caption="Pangolin UI showing path rewriting configuration">
   <img src="/images/targets_config_path_rewrite.png" alt="Targets with path rewriting"/>
