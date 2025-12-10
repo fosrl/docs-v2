@@ -2,3 +2,14 @@
 title: "Hosts"
 description: "Provide access to a specific host on the network"
 ---
+
+
+
+
+
+
+### What about overlaps?
+
+Pangolin smooths away overlapping networks and arbitrarily chooses a single site to resolve the IP address or range to. This is because we want connection requests to any Resource to be as simple as possible for the end users: when they connect to a particular IP address or FQDN, Pangolin figures out which site to send it to and the end user never needs to figure this out.
+
+It is recommended that you create overlapping resources only if absolutely required. If you do, use [Aliases](/manage/resources/private/alias) to explicitly defined which host should be used for a given FQDN or IP address and use the alias to connect.
