@@ -153,18 +153,6 @@ olm \
 --endpoint https://example.com
 ```
 
-### Permanent Installation
-
-Install to your PATH (may need to run as root):
-
-```bash
-mv ./olm /usr/local/bin
-```
-
-<Note>
-The quick installer will do this step for you.
-</Note>
-
 ### Systemd Service
 
 Create a basic systemd service:
@@ -285,11 +273,11 @@ Get-EventLog -LogName Application -Source "OlmWireguardService" -Newest 10
 Olm creates a native tun interface. This usually requires sudo / admin permissions. Some notes:
 
 - **Windows**: Olm will run as a service. You can use the commands described [Configure Client](/manage/clients/configure-client) to manage it. You can use this to run it in the background if needed!
-- **LXC containers**: Need to be configured to allow tun access. See below.
+- **LXC containers**: Need to be configured to allow tun access. On Proxmox see below.
 - **Linux**: May require root privileges or specific capabilities to create tun interfaces.
 - **macOS**: May require additional permissions for network interface creation.
 
-#### LXC Container Configuration
+#### LXC Proxmox
 
 1. Create your LXC container.
 2. Go to the Resources tab of the container.

@@ -1,288 +1,288 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "theme": "aspen",
-  "name": "Pangolin Docs",
-  "description": "Pangolin is the easiest to use identity-based remote access platform based on WireGuard.",
-  "colors": {
-    "primary": "#F36117",
-    "light": "#F36117",
-    "dark": "#F36117"
-  },
-  "favicon": "/favicon.svg",
-  "navigation": {
-    "tabs": [
-      {
-        "tab": "Docs",
-        "groups": [
-          {
-            "group": "About",
-            "pages": [
-              "about/how-pangolin-works",
-              "about/pangolin-vs-reverse-proxy-vs-vpn"
-            ]
-          },
-          {
-            "group": "Manage Pangolin",
-            "pages": [
-              {
-                "group": "Sites",
-                "icon": "plug",
-                "pages": [
-                  "manage/sites/understanding-sites",
-                  "manage/sites/install-site",
-                  "manage/sites/install-kubernetes",
-                  "manage/sites/configure-site",
-                  "manage/sites/update-site",
-                  "manage/sites/credentials"
-                ]
-              },
-              {
-                "group": "Resources",
-                "icon": "link",
-                "pages": [
-                  "manage/resources/understanding-resources",
-                  {
-                    "group": "Public Resources",
-                    "pages": [
-                      "manage/resources/public/authentication",
-                      "manage/resources/public/targets",
-                      "manage/healthchecks-failover",
-                      "manage/resources/public/raw-resources"
-                    ]
-                  },
-                  {
-                    "group": "Private Resources",
-                    "pages": [
-                      "manage/resources/private/destinations",
-                      "manage/resources/private/access",
-                      "manage/resources/private/alias"
-                    ]
-                  }
-                ]
-              },
-              {
-                "group": "Clients",
-                "icon": "desktop",
-                "pages": [
-                  "manage/clients/add-client",
-                  "manage/clients/install-client",
-                  "manage/clients/configure-client",
-                  "manage/clients/update-client",
-                  "manage/clients/credentials"
-                ]
-              },
-              "manage/domains",
-              {
-                "group": "Access Control",
-                "icon": "user-group",
-                "pages": [
-                  "manage/access-control/create-user",
-                  "manage/access-control/rules",
-                  "manage/access-control/forwarded-headers",
-                  "manage/access-control/login-page",
-                  "manage/geoblocking",
-                  "manage/access-control/mfa",
-                  "manage/access-control/password-rotation",
-                  "manage/access-control/session-length",
-                  "manage/access-control/change-password",
-                  "manage/access-control/security-keys"
-                ]
-              },
-              {
-                "group": "Identity Providers",
-                "icon": "id-card",
-                "pages": [
-                  "manage/identity-providers/add-an-idp",
-                  "manage/identity-providers/auto-provisioning",
-                  "manage/identity-providers/openid-connect",
-                  "manage/identity-providers/google",
-                  "manage/identity-providers/azure",
-                  "manage/identity-providers/pocket-id",
-                  "manage/identity-providers/zitadel"
-                ]
-              },
-              {
-                "group": "Logs & Analytics",
-                "icon": "chart-bar",
-                "pages": [
-                  "manage/analytics/request",
-                  "manage/analytics/access",
-                  "manage/analytics/action"
-                ]
-              },
-              "manage/blueprints",
-              {
-                "group": "Remote Nodes",
-                "icon": "circle-nodes",
-                "pages": [
-                  "manage/remote-node/ha",
-                  "manage/remote-node/nodes",
-                  "manage/remote-node/quick-install-remote",
-                  "manage/remote-node/convert-remote",
-                  "manage/remote-node/config-file"
-                ]
-              },
-              "manage/integration-api",
-              "manage/branding"
-            ]
-          },
-          {
-            "group": "Self-host Pangolin",
-            "pages": [
-              "self-host/quick-install",
-              "self-host/choosing-a-vps",
-              {
-                "group": "Manual Installation",
-                "pages": [
-                  "self-host/manual/docker-compose",
-                  "self-host/manual/unraid"
-                ]
-              },
-              "self-host/dns-and-networking",
-              {
-                "group": "Advanced Configuration",
-                "pages": [
-                  "self-host/advanced/config-file",
-                  "self-host/advanced/wild-card-domains",
-                  "self-host/advanced/cloudflare-proxy",
-                  "self-host/advanced/without-tunneling",
-                  "self-host/advanced/container-cli-tool",
-                  "self-host/advanced/database-options",
-                  "self-host/advanced/integration-api",
-                  "self-host/advanced/enable-geoblocking",
-                  "self-host/advanced/metrics",
-                  "self-host/telemetry"
-                ]
-              },
-              "self-host/how-to-update",
-              {
-                "group": "Community Guides",
-                "pages": [
-                  "self-host/community-guides/overview",
-                  "self-host/community-guides/crowdsec",
-                  "self-host/community-guides/metrics",
-                  "self-host/community-guides/homeassistant",
-                  "self-host/community-guides/middlewaremanager",
-                  "self-host/community-guides/traefiklogsdashboard",
-                  "self-host/community-guides/geolite2automation"
-                ]
-              },
-              "self-host/supporter-program",
-              "self-host/enterprise-edition"
-            ]
-          },
-          {
-            "group": "Development",
-            "pages": [
-              "development/system-architecture",
-              "development/contributing",
-              "development/feature-requests-and-bug-reports"
-            ]
-          },
-          {
-            "group": "Additional Resources",
-            "pages": [
-              "additional-resources/changelog",
-              "additional-resources/trust-center"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Blog",
-        "href": "https://pangolin.net/blog"
-      },
-      {
-        "tab": "Website",
-        "href": "https://pangolin.net/"
-      }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/fosrl/pangolin",
-          "icon": "github"
-        },
-        {
-          "anchor": "Slack",
-          "href": "https://pangolin.net/slack",
-          "icon": "slack"
-        },
-        {
-          "anchor": "Discord",
-          "href": "https://pangolin.net/discord",
-          "icon": "discord"
-        }
-      ]
-    }
-  },
-  "interaction": {
-    "drilldown": true
-  },
-  "logo": {
-    "light": "/logo/light.png",
-    "dark": "/logo/dark.png",
-    "href": "https://docs.pangolin.net"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Log In",
-        "href": "https://app.pangolin.net/auth/login"
-      },
-      {
-        "label": "Contact Us",
-        "icon": "envelope",
-        "href": "mailto:contact@pangolin.net"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Pangolin Dashboard",
-      "href": "https://app.pangolin.net/auth/signup"
-    }
-  },
-  "footer": {
-    "socials": {
-      "github": "https://github.com/fosrl/pangolin",
-      "linkedin": "https://linkedin.com/company/digpangolin"
-    }
-  },
-  "integrations": {
-    "posthog": {
-      "apiKey": "phc_RIHQ7o2Y2hf8qms2nP62vpoJHEvsrw6TieflQGQO7yI",
-      "apiHost": "https://pangolin.net/relay-O7yI"
-    }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      {
-        "title": "Request a feature",
-        "description": "Open a GitHub discussion to request a new feature",
-        "icon": "plus",
-        "href": "https://github.com/fosrl/pangolin/discussions"
-      }
-    ]
-  },
-  "redirects": [
-    {
-      "source": "/telemetry",
-      "destination": "/self-host/telemetry"
+    "$schema": "https://mintlify.com/docs.json",
+    "theme": "aspen",
+    "name": "Pangolin Docs",
+    "description": "Pangolin is the easiest to use identity-based remote access platform based on WireGuard.",
+    "colors": {
+        "primary": "#F36117",
+        "light": "#F36117",
+        "dark": "#F36117"
     },
-    {
-      "source": "/community/:slug*",
-      "destination": "/self-host/:slug*"
+    "favicon": "/favicon.svg",
+    "navigation": {
+        "tabs": [
+            {
+                "tab": "Docs",
+                "groups": [
+                    {
+                        "group": "About",
+                        "pages": [
+                            "about/how-pangolin-works",
+                            "about/pangolin-vs-reverse-proxy-vs-vpn"
+                        ]
+                    },
+                    {
+                        "group": "Manage Pangolin",
+                        "pages": [
+                            {
+                                "group": "Sites",
+                                "icon": "plug",
+                                "pages": [
+                                    "manage/sites/understanding-sites",
+                                    "manage/sites/install-site",
+                                    "manage/sites/install-kubernetes",
+                                    "manage/sites/configure-site",
+                                    "manage/sites/update-site",
+                                    "manage/sites/credentials"
+                                ]
+                            },
+                            {
+                                "group": "Resources",
+                                "icon": "link",
+                                "pages": [
+                                    "manage/resources/understanding-resources",
+                                    {
+                                        "group": "Public Resources",
+                                        "pages": [
+                                            "manage/resources/public/authentication",
+                                            "manage/resources/public/targets",
+                                            "manage/healthchecks-failover",
+                                            "manage/resources/public/raw-resources"
+                                        ]
+                                    },
+                                    {
+                                        "group": "Private Resources",
+                                        "pages": [
+                                            "manage/resources/private/authentication",
+                                            "manage/resources/private/destinations",
+                                            "manage/resources/private/alias"
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "group": "Clients",
+                                "icon": "desktop",
+                                "pages": [
+                                    "manage/clients/add-client",
+                                    "manage/clients/install-client",
+                                    "manage/clients/configure-client",
+                                    "manage/clients/update-client",
+                                    "manage/clients/credentials"
+                                ]
+                            },
+                            "manage/domains",
+                            {
+                                "group": "Access Control",
+                                "icon": "user-group",
+                                "pages": [
+                                    "manage/access-control/create-user",
+                                    "manage/access-control/rules",
+                                    "manage/access-control/forwarded-headers",
+                                    "manage/access-control/login-page",
+                                    "manage/geoblocking",
+                                    "manage/access-control/mfa",
+                                    "manage/access-control/password-rotation",
+                                    "manage/access-control/session-length",
+                                    "manage/access-control/change-password",
+                                    "manage/access-control/security-keys"
+                                ]
+                            },
+                            {
+                                "group": "Identity Providers",
+                                "icon": "id-card",
+                                "pages": [
+                                    "manage/identity-providers/add-an-idp",
+                                    "manage/identity-providers/auto-provisioning",
+                                    "manage/identity-providers/openid-connect",
+                                    "manage/identity-providers/google",
+                                    "manage/identity-providers/azure",
+                                    "manage/identity-providers/pocket-id",
+                                    "manage/identity-providers/zitadel"
+                                ]
+                            },
+                            {
+                                "group": "Logs & Analytics",
+                                "icon": "chart-bar",
+                                "pages": [
+                                    "manage/analytics/request",
+                                    "manage/analytics/access",
+                                    "manage/analytics/action"
+                                ]
+                            },
+                            "manage/blueprints",
+                            {
+                                "group": "Remote Nodes",
+                                "icon": "circle-nodes",
+                                "pages": [
+                                    "manage/remote-node/ha",
+                                    "manage/remote-node/nodes",
+                                    "manage/remote-node/quick-install-remote",
+                                    "manage/remote-node/convert-remote",
+                                    "manage/remote-node/config-file"
+                                ]
+                            },
+                            "manage/integration-api",
+                            "manage/branding"
+                        ]
+                    },
+                    {
+                        "group": "Self-host Pangolin",
+                        "pages": [
+                            "self-host/quick-install",
+                            "self-host/choosing-a-vps",
+                            {
+                                "group": "Manual Installation",
+                                "pages": [
+                                    "self-host/manual/docker-compose",
+                                    "self-host/manual/unraid"
+                                ]
+                            },
+                            "self-host/dns-and-networking",
+                            {
+                                "group": "Advanced Configuration",
+                                "pages": [
+                                    "self-host/advanced/config-file",
+                                    "self-host/advanced/wild-card-domains",
+                                    "self-host/advanced/cloudflare-proxy",
+                                    "self-host/advanced/without-tunneling",
+                                    "self-host/advanced/container-cli-tool",
+                                    "self-host/advanced/database-options",
+                                    "self-host/advanced/integration-api",
+                                    "self-host/advanced/enable-geoblocking",
+                                    "self-host/advanced/metrics",
+                                    "self-host/telemetry"
+                                ]
+                            },
+                            "self-host/how-to-update",
+                            {
+                                "group": "Community Guides",
+                                "pages": [
+                                    "self-host/community-guides/overview",
+                                    "self-host/community-guides/crowdsec",
+                                    "self-host/community-guides/metrics",
+                                    "self-host/community-guides/homeassistant",
+                                    "self-host/community-guides/middlewaremanager",
+                                    "self-host/community-guides/traefiklogsdashboard",
+                                    "self-host/community-guides/geolite2automation"
+                                ]
+                            },
+                            "self-host/supporter-program",
+                            "self-host/enterprise-edition"
+                        ]
+                    },
+                    {
+                        "group": "Development",
+                        "pages": [
+                            "development/system-architecture",
+                            "development/contributing",
+                            "development/feature-requests-and-bug-reports"
+                        ]
+                    },
+                    {
+                        "group": "Additional Resources",
+                        "pages": [
+                            "additional-resources/changelog",
+                            "additional-resources/trust-center"
+                        ]
+                    }
+                ]
+            },
+            {
+                "tab": "Blog",
+                "href": "https://pangolin.net/blog"
+            },
+            {
+                "tab": "Website",
+                "href": "https://pangolin.net/"
+            }
+        ],
+        "global": {
+            "anchors": [
+                {
+                    "anchor": "GitHub",
+                    "href": "https://github.com/fosrl/pangolin",
+                    "icon": "github"
+                },
+                {
+                    "anchor": "Slack",
+                    "href": "https://pangolin.net/slack",
+                    "icon": "slack"
+                },
+                {
+                    "anchor": "Discord",
+                    "href": "https://pangolin.net/discord",
+                    "icon": "discord"
+                }
+            ]
+        }
+    },
+    "interaction": {
+        "drilldown": true
+    },
+    "logo": {
+        "light": "/logo/light.png",
+        "dark": "/logo/dark.png",
+        "href": "https://docs.pangolin.net"
+    },
+    "navbar": {
+        "links": [
+            {
+                "label": "Log In",
+                "href": "https://app.pangolin.net/auth/login"
+            },
+            {
+                "label": "Contact Us",
+                "icon": "envelope",
+                "href": "mailto:contact@pangolin.net"
+            }
+        ],
+        "primary": {
+            "type": "button",
+            "label": "Pangolin Dashboard",
+            "href": "https://app.pangolin.net/auth/signup"
+        }
+    },
+    "footer": {
+        "socials": {
+            "github": "https://github.com/fosrl/pangolin",
+            "linkedin": "https://linkedin.com/company/digpangolin"
+        }
+    },
+    "integrations": {
+        "posthog": {
+            "apiKey": "phc_RIHQ7o2Y2hf8qms2nP62vpoJHEvsrw6TieflQGQO7yI",
+            "apiHost": "https://pangolin.net/relay-O7yI"
+        }
+    },
+    "contextual": {
+        "options": [
+            "copy",
+            "view",
+            "chatgpt",
+            "claude",
+            "perplexity",
+            {
+                "title": "Request a feature",
+                "description": "Open a GitHub discussion to request a new feature",
+                "icon": "plus",
+                "href": "https://github.com/fosrl/pangolin/discussions"
+            }
+        ]
+    },
+    "redirects": [
+        {
+            "source": "/telemetry",
+            "destination": "/self-host/telemetry"
+        },
+        {
+            "source": "/community/:slug*",
+            "destination": "/self-host/:slug*"
+        }
+    ],
+    "seo": {
+        "metatags": {
+            "canonical": "https://docs.pangolin.net"
+        }
     }
-  ],
-  "seo": {
-    "metatags": {
-      "canonical": "https://docs.pangolin.net"
-    }
-  }
 }

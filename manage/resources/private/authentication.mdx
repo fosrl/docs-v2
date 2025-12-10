@@ -1,5 +1,5 @@
 ---
-title: "Access"
+title: "Authentication"
 description: "Only allow access to Resources to specific users, roles, and machines"
 ---
 
@@ -12,3 +12,7 @@ Access can be granted in several ways:
 * **Machines:** Assign access to Resources to specific machines. Only those machines will gain access to the Resource when they connect. Note that machines can not be put into roles.
 
 When removing access to a resource, the client will automatically tear down the WireGuard tunnel to that Resource if there are no other Resources accessible on that site.
+
+    <Frame>
+        <img src="/images/private_access_controls.png" centered/>
+    </Frame>
