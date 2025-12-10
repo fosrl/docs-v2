@@ -36,7 +36,7 @@ description: "Configure Newt for connecting to Pangolin sites"
 <ResponseField name="dns" type="string">
   DNS server to use for resolving the endpoint.
   
-  **Default**: `8.8.8.8`
+  **Default**: `9.9.9.9`
 </ResponseField>
 
 <ResponseField name="log-level" type="string">
@@ -83,40 +83,100 @@ description: "Configure Newt for connecting to Pangolin sites"
   **Example**: `/path/to/updown.sh`
 </ResponseField>
 
-<ResponseField name="tls-client-cert" type="string">
-  Client certificate (p12 or pfx) for mutual TLS (mTLS) authentication.
+<ResponseField name="blueprint-file" type="string">
+  Path to blueprint file to define Pangolin resources and configurations.
   
-  **Example**: `/path/to/client.p12`
+  **Example**: `/path/to/blueprint.yaml`
 </ResponseField>
 
-<ResponseField name="disable-clients" type="boolean">
-  Prevent Pangolin Clients from connecting to resources on this site.
+<ResponseField name="no-cloud" type="boolean">
+  Don't fail over to the cloud when using managed nodes in Pangolin Cloud.
   
   **Default**: `false`
 </ResponseField>
 
-<ResponseField name="generateAndSaveKeyTo" type="string">
-  Path to save generated private key (used with accept-clients).
+<ResponseField name="disable-clients" type="boolean">
+  Disable clients on the WireGuard interface.
   
-  **Example**: `/var/key`
+  **Default**: `false` (clients enabled)
 </ResponseField>
 
 <ResponseField name="native" type="boolean">
-  Use native WireGuard interface when accepting clients (requires WireGuard kernel module and Linux, must run as root).
+  Use native WireGuard interface (requires WireGuard kernel module and Linux, must run as root).
   
   **Default**: `false` (uses userspace netstack)
 </ResponseField>
 
 <ResponseField name="interface" type="string">
-  Name of the WireGuard interface (used with native mode).
+  Name of the WireGuard interface.
   
   **Default**: `newt`
 </ResponseField>
 
-<ResponseField name="keep-interface" type="boolean">
-  Keep the WireGuard interface after shutdown (used with native mode).
+<ResponseField name="metrics" type="boolean">
+  Enable Prometheus /metrics exporter.
+  
+  **Default**: `true`
+</ResponseField>
+
+<ResponseField name="otlp" type="boolean">
+  Enable OTLP exporters (metrics/traces) to OTEL_EXPORTER_OTLP_ENDPOINT.
   
   **Default**: `false`
+</ResponseField>
+
+<ResponseField name="metrics-admin-addr" type="string">
+  Admin/metrics bind address.
+  
+  **Default**: `127.0.0.1:2112`
+</ResponseField>
+
+<ResponseField name="metrics-async-bytes" type="boolean">
+  Enable async bytes counting (background flush; lower hot path overhead).
+  
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="region" type="string">
+  Optional region resource attribute for telemetry and metrics.
+  
+  **Example**: `us-west-2`
+</ResponseField>
+
+<ResponseField name="enforce-hc-cert" type="boolean">
+  Enforce certificate validation for health checks.
+  
+  **Default**: `false` (accepts any cert)
+</ResponseField>
+
+<ResponseField name="tls-client-cert-file" type="string">
+  Path to client certificate file (PEM/DER format) for mTLS.
+  
+  **Example**: `/path/to/client.crt`
+</ResponseField>
+
+<ResponseField name="tls-client-key" type="string">
+  Path to client private key file (PEM/DER format) for mTLS.
+  
+  **Example**: `/path/to/client.key`
+</ResponseField>
+
+<ResponseField name="tls-client-ca" type="string">
+  Path to CA certificate file for validating remote certificates (can be specified multiple times).
+  
+  **Example**: `/path/to/ca.crt`
+</ResponseField>
+
+<ResponseField name="tls-client-cert" type="string">
+  Path to client certificate (PKCS12 format) - DEPRECATED: use `--tls-client-cert-file` and `--tls-client-key` instead.
+  
+  **Example**: `/path/to/client.p12`
+</ResponseField>
+
+<ResponseField name="prefer-endpoint" type="string">
+  Prefer this endpoint for the connection (if set, will override the endpoint from the server).
+  
+  **Example**: `https://preferred.endpoint.com`
 </ResponseField>
 
 ## Environment Variables
@@ -148,7 +208,21 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 <ResponseField name="DNS" type="string">
   DNS server to use for resolving the endpoint (equivalent to `--dns`)
   
-  **Default**: `8.8.8.8`
+  **Default**: `9.9.9.9`
+</ResponseField>
+
+<ResponseField name="CONFIG_FILE" type="string">
+  Load the config JSON from this file instead of in the home folder.
+</ResponseField>
+
+<ResponseField name="BLUEPRINT_FILE" type="string">
+  Path to blueprint file to define Pangolin resources and configurations (equivalent to `--blueprint-file`).
+</ResponseField>
+
+<ResponseField name="NO_CLOUD" type="boolean">
+  Don't fail over to the cloud when using managed nodes in Pangolin Cloud (equivalent to `--no-cloud`).
+  
+  **Default**: `false`
 </ResponseField>
 
 <ResponseField name="LOG_LEVEL" type="string">
@@ -177,10 +251,6 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   Path to updown script for target add/remove events (equivalent to `--updown`)
 </ResponseField>
 
-<ResponseField name="TLS_CLIENT_CERT" type="string">
-  Path to client certificate for mTLS (equivalent to `--tls-client-cert`)
-</ResponseField>
-
 <ResponseField name="DOCKER_ENFORCE_NETWORK_VALIDATION" type="boolean">
   Validate container targets are on same network (equivalent to `--docker-enforce-network-validation`)
   
@@ -191,14 +261,10 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   Path to health file for connection monitoring (equivalent to `--health-file`)
 </ResponseField>
 
-<ResponseField name="ACCEPT_CLIENTS" type="boolean">
-  Enable WireGuard server mode (equivalent to `--accept-clients`)
+<ResponseField name="DISABLE_CLIENTS" type="boolean">
+  Disable clients on the WireGuard interface (equivalent to `--disable-clients`).
   
   **Default**: `false`
-</ResponseField>
-
-<ResponseField name="GENERATE_AND_SAVE_KEY_TO" type="string">
-  Path to save generated private key (equivalent to `--generateAndSaveKeyTo`)
 </ResponseField>
 
 <ResponseField name="USE_NATIVE_INTERFACE" type="boolean">
@@ -213,15 +279,77 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   **Default**: `newt`
 </ResponseField>
 
-<ResponseField name="KEEP_INTERFACE" type="boolean">
-  Keep the WireGuard interface after shutdown (equivalent to `--keep-interface`)
+<ResponseField name="NEWT_METRICS_PROMETHEUS_ENABLED" type="boolean">
+  Enable Prometheus /metrics exporter (equivalent to `--metrics`).
+  
+  **Default**: `true`
+</ResponseField>
+
+<ResponseField name="NEWT_METRICS_OTLP_ENABLED" type="boolean">
+  Enable OTLP exporters (metrics/traces) to OTEL_EXPORTER_OTLP_ENDPOINT (equivalent to `--otlp`).
   
   **Default**: `false`
 </ResponseField>
 
-<ResponseField name="CONFIG_FILE" type="string">
-  Load the config JSON from this file instead of in the home folder.
+<ResponseField name="NEWT_ADMIN_ADDR" type="string">
+  Admin/metrics bind address (equivalent to `--metrics-admin-addr`).
+  
+  **Default**: `127.0.0.1:2112`
 </ResponseField>
+
+<ResponseField name="NEWT_METRICS_ASYNC_BYTES" type="boolean">
+  Enable async bytes counting (background flush; lower hot path overhead, equivalent to `--metrics-async-bytes`).
+  
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="NEWT_REGION" type="string">
+  Optional region resource attribute for telemetry and metrics (equivalent to `--region`).
+</ResponseField>
+
+<ResponseField name="ENFORCE_HC_CERT" type="boolean">
+  Enforce certificate validation for health checks (equivalent to `--enforce-hc-cert`).
+  
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="TLS_CLIENT_CERT" type="string">
+  Path to client certificate file (PEM/DER format) for mTLS (equivalent to `--tls-client-cert-file`)
+</ResponseField>
+
+<ResponseField name="TLS_CLIENT_KEY" type="string">
+  Path to client private key file (PEM/DER format) for mTLS (equivalent to `--tls-client-key`)
+</ResponseField>
+
+<ResponseField name="TLS_CLIENT_CAS" type="string">
+  Comma-separated list of CA certificate file paths for validating remote certificates (equivalent to multiple `--tls-client-ca` flags)
+</ResponseField>
+
+<ResponseField name="TLS_CLIENT_CERT_PKCS12" type="string">
+  Path to client certificate (PKCS12 format) - DEPRECATED: use `TLS_CLIENT_CERT` and `TLS_CLIENT_KEY` instead
+</ResponseField>
+
+## Loading secrets from files
+
+You can use `CONFIG_FILE` to define a location of a config file to store the credentials between runs. 
+
+```
+$ cat ~/.config/newt-client/config.json
+{
+  "id": "spmzu8rbpzj1qq6",
+  "secret": "f6v61mjutwme2kkydbw3fjo227zl60a2tsf5psw9r25hgae3",
+  "endpoint": "https://app.pangolin.net",
+  "tlsClientCert": ""
+}
+```
+
+This file is also written to when newt first starts up. So you do not need to run every time with --id and secret if you have run it once! 
+
+Default locations: 
+
+- **macOS**: `~/Library/Application Support/newt-client/config.json`
+- **Windows**: `%PROGRAMDATA%\newt\newt-client\config.json`
+- **Linux/Others**: `~/.config/newt-client/config.json`
 
 ### Docker Socket Integration
 
@@ -229,21 +357,41 @@ Newt can integrate with the Docker socket to provide remote inspection of Docker
 
 **Configuration:**
 
-You can specify the Docker socket path using the `--docker-socket` CLI argument or by setting the `DOCKER_SOCKET` environment variable. On most Linux systems the socket is `/var/run/docker.sock`. When deploying Newt as a container, you need to mount the host socket as a volume for the Newt container to access it.
+You can specify the Docker socket path using the `--docker-socket` CLI argument or by setting the `DOCKER_SOCKET` environment variable. If the Docker socket is not available or accessible, Newt will gracefully disable Docker integration and continue normal operation.
 
-```yaml title="docker-compose.yml"
+Supported values include:
+
+-   Local UNIX socket (default):
+    >You must mount the socket file into the container using a volume, so Newt can access it.
+
+    `unix:///var/run/docker.sock`
+
+-   TCP socket (e.g., via Docker Socket Proxy):
+
+    `tcp://localhost:2375`
+
+-   HTTP/HTTPS endpoints (e.g., remote Docker APIs):
+
+    `http://your-host:2375`
+
+-   SSH connections (experimental, requires SSH setup):
+
+    `ssh://user@host`
+
+
+```yaml
 services:
-  newt:
-    image: fosrl/newt
-    container_name: newt
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - PANGOLIN_ENDPOINT=https://app.pangolin.net
-      - NEWT_ID=2ix2t8xk22ubpfy
-      - NEWT_SECRET=nnisrfsdfc7prqsp9ewo1dvtvci50j5uiqotez00dgap0ii2
-      - DOCKER_SOCKET=/var/run/docker.sock
+    newt:
+        image: fosrl/newt
+        container_name: newt
+        restart: unless-stopped
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        environment:
+            - PANGOLIN_ENDPOINT=https://example.com
+            - NEWT_ID=2ix2t8xk22ubpfy
+            - NEWT_SECRET=nnisrfsdfc7prqsp9ewo1dvtvci50j5uiqotez00dgap0ii2
+            - DOCKER_SOCKET=unix:///var/run/docker.sock
 ```
 
 <Note>
@@ -296,12 +444,47 @@ You can look at `updown.py` as a reference script to get started!
 
 ### mTLS Authentication
 
-Newt supports mutual TLS (mTLS) authentication if the server has been configured to request a client certificate.
+Newt supports mutual TLS (mTLS) authentication if the server is configured to request a client certificate. You can use either a PKCS12 (.p12/.pfx) file or split PEM files for the client cert, private key, and CA.
+
+#### Option 1: PKCS12 (Legacy)
+
+<Note>
+This is the original method and still supported.
+</Note>
 
 **Requirements:**
-- Only PKCS12 (.p12 or .pfx) file format is accepted
-- The PKCS12 file must contain:
-  - Private key
+- File must contain:
+  - Client private key
   - Public certificate
   - CA certificate
-- Encrypted PKCS12 files are currently not supported
+- Encrypted `.p12` files are **not supported**
+
+**Example:**
+
+```bash
+newt \
+--id 31frd0uzbjvp721 \
+--secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
+--endpoint https://example.com \
+--tls-client-cert ./client.p12
+```
+
+#### Option 2: Split PEM Files (Preferred)
+
+You can now provide separate files for:
+
+- `--tls-client-cert-file`: client certificate (`.crt` or `.pem`)
+- `--tls-client-key`: client private key (`.key` or `.pem`)
+- `--tls-client-ca`: CA cert to verify the server (can be specified multiple times)
+
+**Example:**
+
+```bash
+newt \
+--id 31frd0uzbjvp721 \
+--secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
+--endpoint https://example.com \
+--tls-client-cert-file ./client.crt \
+--tls-client-key ./client.key \
+--tls-client-ca ./ca.crt
+```
