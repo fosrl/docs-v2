@@ -8,10 +8,53 @@ description: "Install native clients for Mac, Windows, and Linux"
 - [Pangolin for Windows Installer](https://pangolin.net/downloads/windows) - This is the official page to download the latest installer file for Windows.
 - [All Versions](https://github.com/fosrl/windows/releases) - The releases section of this repository contains release notes and download artifacts for the latest version and all older versions.
 
+### Installation Steps
+
+1. **Download and install the Pangolin client**
+
+   Download and install the Pangolin client using the official .msi installer from the download button above.
+
+2. **Launch Pangolin**
+
+   Open Pangolin from the Start menu or the shortcut on your Desktop.
+
+3. **Log in with your Pangolin account**
+
+   Log in on your Pangolin Cloud account or your self-hosted Pangolin instance.
+   
+   - Click the Pangolin icon in the task bar's system tray and select Log in.
+
 ## Mac
 
 - [Pangolin for macOS Installer](https://pangolin.net/downloads/mac) - This is the official page to download the latest installer file for macOS.
 - [All Versions](https://github.com/fosrl/apple/releases) - The releases section of this repository contains release notes and download artifacts for the latest version and all older versions.
+
+### Installation Steps
+
+1. **Download and install the Pangolin client**
+
+   Download and install the Pangolin client using the official .dmg installer from the download button above.
+   
+   - Open the downloaded .dmg file
+   - Drag and drop Pangolin.app into your Applications folder
+
+2. **Launch Pangolin**
+
+   Open Pangolin from your Applications folder.
+
+3. **Install the VPN configuration**
+
+   Follow the Pangolin onboarding flow, which will guide you to install the Pangolin VPN configuration.
+   
+   - Select Open System Settings on startup when it asks to install a network extension.
+   - In System Settings, under General > Login Items & Extension > By Category > Network Extensions, ensure that Pangolin.app is toggled on.
+   - Select Allow when Pangolin asks to add a VPN configuration.
+
+4. **Log in with your Pangolin account**
+
+   Log in on your Pangolin Cloud account or your self-hosted Pangolin instance.
+   
+   - Click the Pangolin icon in the menu bar and select Log in.
 
 ## Pangolin CLI (Linux)
 
@@ -40,6 +83,32 @@ wget -O pangolin "https://github.com/fosrl/cli/releases/download/{version}/pango
 <Note>
 Replace `{version}` with the desired version and `{architecture}` with your architecture. Check the [release notes](https://github.com/fosrl/cli/releases) for the latest information.
 </Note>
+
+### Installation Steps
+
+1. **Download and install the Pangolin client**
+
+   Install Pangolin using the installation script:
+
+   ```bash
+   curl -fsSL https://static.pangolin.net/get-cli.sh | bash
+   ```
+
+2. **Log in with your Pangolin account**
+
+   Log in on your Pangolin Cloud account or your self-hosted Pangolin instance:
+
+   ```bash
+   pangolin login
+   ```
+
+3. **Start Pangolin**
+
+   Connect Pangolin by running:
+
+   ```bash
+   pangolin up
+   ```
 
 ## Olm CLI
 
