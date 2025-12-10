@@ -1,0 +1,27 @@
+---
+title: "Destinations"
+description: "Understand connection options to the remote network"
+---
+
+A Resource's **destination** can be defined in several ways:
+
+* **Fully Qualified Domain Name (FQDN):** For example, `host.autoco.internal`.
+* **IP Address:** For example, `10.1.0.35`.
+* **IP CIDR Range:** For example, `10.1.0.0/16`.
+
+When defining a Resource with an FQDN, the Pangolin site will resolve the FQDN to an IP address on the remote network. This allows you to create Resources that point to hosts whose IP addresses may change over time, as long as the FQDN remains consistent.
+
+When defining a Resource with an IP address, the Pangolin client will connect directly to that specific IP address on the remote network. It will insert routes for that single IP address into the network route table of the host when users connect with the client.
+
+When defining a Resource with a CIDR range, all IP addresses within that range will be accessible to users who have been granted access to the Resource. This is useful for providing access to entire subnets or network segments. It will insert routes for that single IP address into the network route table of the host when users connect with the client.
+
+### Additional Notes on Resource Destinations
+
+* **Reserved IP Addresses:** The Pangolin client reserves the CGNAT subnet 100.96.128.0/24. Accessing resources via an IP address within this reserved range will be blocked by the client, though its use is uncommon. This range can be configured for newly created orgs in the self-hosted Pangolin configuration file.
+* **Resource Destination Resolution:** The configured address of the Resource is resolved by the site the resource points to. Make sure the site can resolve the address correctly.
+
+### What about overlaps?
+
+Pangolin smooths away overlapping networks and arbitrarily chooses a single site to resolve the IP address or range to. This is because we want connection requests to any Resource to be as simple as possible for the end users: when they connect to a particular IP address or FQDN, Pangolin figures out which site to send it to and the end user never needs to figure this out.
+
+It is recommended that you create overlapping resources only if absolutely required. If you do, use [Aliases](/manage/resources/private/alias) to explicitly defined which host should be used for a given FQDN or IP address and use the alias to connect.

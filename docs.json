@@ -53,8 +53,8 @@
                   {
                     "group": "Private Resources",
                     "pages": [
-                      "manage/resources/private/host",
-                      "manage/resources/private/cidr",
+                      "manage/resources/private/destinations",
+                      "manage/resources/private/access",
                       "manage/resources/private/alias"
                     ]
                   }

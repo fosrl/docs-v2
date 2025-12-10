@@ -351,7 +351,7 @@ Default locations:
 - **Windows**: `%PROGRAMDATA%\newt\newt-client\config.json`
 - **Linux/Others**: `~/.config/newt-client/config.json`
 
-### Docker Socket Integration
+## Docker Socket Integration
 
 Newt can integrate with the Docker socket to provide remote inspection of Docker containers. This allows Pangolin to query and retrieve detailed information about containers running on the Newt client, including metadata, network configuration, port mappings, and more.
 
@@ -398,7 +398,7 @@ services:
 If the Docker socket is not available or accessible, Newt will gracefully disable Docker integration and continue normal operation.
 </Note>
 
-#### Hostnames vs IPs
+**Hostnames vs IPs**
 
 When the Docker Socket Integration is used, depending on the network which Newt is run with, either the hostname (generally considered the container name) or the IP address of the container will be sent to Pangolin:
 
@@ -407,19 +407,17 @@ When the Docker Socket Integration is used, depending on the network which Newt 
 - **Running in docker-compose without a network specification**: Docker compose creates a network for the compose by default, hostnames will be used
 - **Running on docker-compose with defined network**: Hostnames will be used
 
-#### Docker Enforce Network Validation
+**Docker Enforce Network Validation**
 
 When run as a Docker container, Newt can validate that the target being provided is on the same network as the Newt container and only return containers directly accessible by Newt. Validation will be carried out against either the hostname/IP Address and the Port number to ensure the running container is exposing the ports to Newt.
+
+Validation is `false` by default. It can be enabled via setting the `--docker-enforce-network-validation` CLI argument or by setting the `DOCKER_ENFORCE_NETWORK_VALIDATION` environment variable.
 
 <Warning>
 If the Newt container is run with a network mode of `host`, this feature will not work. Running in `host` mode causes the container to share its resources with the host machine, making it impossible to retrieve specific host container information for network validation.
 </Warning>
 
-**Configuration:**
-
-Validation is `false` by default. It can be enabled via setting the `--docker-enforce-network-validation` CLI argument or by setting the `DOCKER_ENFORCE_NETWORK_VALIDATION` environment variable.
-
-### Updown Scripts
+## Updown Scripts
 
 You can pass in an updown script for Newt to call when it is adding or removing a target:
 
@@ -442,11 +440,11 @@ Returning a string from the script in the format of a target (`ip:dst` so `10.0.
 You can look at `updown.py` as a reference script to get started!
 </Note>
 
-### mTLS Authentication
+## mTLS Authentication
 
 Newt supports mutual TLS (mTLS) authentication if the server is configured to request a client certificate. You can use either a PKCS12 (.p12/.pfx) file or split PEM files for the client cert, private key, and CA.
 
-#### Option 1: PKCS12 (Legacy)
+### Option 1: PKCS12 (Legacy)
 
 <Note>
 This is the original method and still supported.
@@ -469,7 +467,7 @@ newt \
 --tls-client-cert ./client.p12
 ```
 
-#### Option 2: Split PEM Files (Preferred)
+### Option 2: Split PEM Files (Preferred)
 
 You can now provide separate files for:
 

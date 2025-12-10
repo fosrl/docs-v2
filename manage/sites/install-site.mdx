@@ -37,7 +37,7 @@ Run Newt with the configuration from Pangolin:
 newt \
 --id 31frd0uzbjvp721 \
 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
---endpoint https://example.com
+--endpoint https://app.pangolin.net
 ```
 <Note>
 The quick installer will do this step for you.
@@ -53,7 +53,7 @@ Description=Newt
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/newt --id 31frd0uzbjvp721 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 --endpoint https://example.com
+ExecStart=/usr/local/bin/newt --id 31frd0uzbjvp721 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 --endpoint https://app.pangolin.net
 Restart=always
 User=root
 
@@ -82,7 +82,7 @@ Run Newt with CLI arguments from Pangolin:
 ```bash
 docker run -it fosrl/newt --id 31frd0uzbjvp721 \
 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
---endpoint https://example.com
+--endpoint https://app.pangolin.net
 ```
 
 ### Docker Compose
@@ -109,7 +109,7 @@ A safer but slightly more complex way is to use [Compose Secrets](https://docs.d
 {
   "id": "2ix2t8xk22ubpfy",
   "secret": "nnisrfsdfc7prqsp9ewo1dvtvci50j5uiqotez00dgap0ii2",
-  "endpoint": "https://example.com",
+  "endpoint": "https://app.pangolin.net",
   "tlsClientCert": ""
 }
 ```
@@ -145,7 +145,7 @@ services:
     command:
       - --id 31frd0uzbjvp721
       - --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6
-      - --endpoint https://example.com
+      - --endpoint https://app.pangolin.net
 ```
 
 Start the service:
