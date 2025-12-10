@@ -2,24 +2,40 @@
 title: "Introduction to Pangolin"
 ---
 
-Pangolin is an open-source and identity-aware tunneled reverse proxy server. Pangolin's distributed architecture with nodes provide highly available ingress to ensure applications always remain accessible.
+Pangolin is an open-source, identity-based remote access platform built on WireGuard that enables secure, seamless connectivity to private and public resources.
 
 <Frame caption="Screenshot of resources page from the Pangolin Dashboard.">
   <img src="/images/fossorial-dashboard.png" alt="Pangolin Dashboard"/>
 </Frame>
 
-Pangolin establishes secure connections from edge networks to nodes, bypassing the need for public inbound ports and complex firewall configurations. Pangolin is incredibly useful for exposing local services, IoT devices, or internal applications to the internet without direct exposure, enhancing security by reducing attack surface and simplifying network management. Additionally, Pangolin acts as an identity-aware proxy by authenticating every request against admin-defined access controls and rules.
+Pangolin combines reverse proxy and VPN capabilities into one platform. It provides browser-based access to web applications and client-based access to private resources like databases and SSH servers, all with zero-trust security and granular access control.
+
+Pangolin connects remote networks using lightweight software connectors called sites. Sites create secure tunnels without requiring public IP addresses or open ports. Admins define specific resources that users can access, not entire networks. This gives users only the access they need while keeping everything else secure.
+
+Users access public resources through any web browser with authentication. Users access private resources by connecting with a Pangolin client on their device. Both methods use the same identity-based access control, so you manage users and permissions in one place.
+
+## Keep Reading
+
+<Card title="How Pangolin Works" icon="brain" href="/about/how-pangolin-works">
+  Learn about the fundamentals of Pangolin and how they work together to provide simple and secure remote access.
+</Card>
+
+<Card title="Pangolin vs. Reverse Proxy vs. VPN" icon="brain" href="/about/how-pangolin-works">
+  What are the similarities and differences between Pangolin and traditional reverse proxies and VPNs?
+</Card>
+
+## Deployment Options
 
 <Columns cols={2}>
   <Card title="Pangolin Cloud" icon="cloud" href="https://app.pangolin.net/auth/signup">
-    Use Cloud for a highly available and access-controlled ingress service with nodes all over the world. Optionally self-host a node to keep your traffic private.
+    Use Cloud for low-maintenance, highly available remote access. Optionally self-host a node to keep your traffic private.
   </Card>
   <Card title="Self-host Pangolin" icon="server" href="self-host/quick-install">
     Self-host a fully isolated Pangolin server. Install the Community Edition or Enterprise Edition easily using the quick installer.
   </Card>
 </Columns>
 
-## What is a fossorial animal?
+## What is a Fossorial Animal?
 
 The Pangolin system is made up of many components, all with unique animal names. These animals are called fossorial animals.
 

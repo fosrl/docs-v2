@@ -1,0 +1,55 @@
+---
+title: "Pangolin vs. Reverse Proxy vs. VPN"
+icon: "book"
+description: "What are the similarities and differences between Pangolin and traditional reverse proxies and VPNs?"
+---
+
+Pangolin combines the capabilities of both a reverse proxy and a VPN into a single platform. It provides reverse proxy functionality through public resources and VPN functionality through private resources, all with zero-trust access control and distributed architecture.
+
+## What Each Solution Provides
+
+**Reverse Proxies** expose web applications to the internet. They handle SSL termination, load balancing, and basic authentication. Users access applications through web browsers using domain names.
+
+**VPNs** create encrypted tunnels that give users access to entire private networks. Users install client software and connect to a VPN server. Once connected, they can access any resource on the network they have network-level access to.
+
+**Pangolin** provides both capabilities. Public resources work like a reverse proxy, allowing browser-based access to specific applications. Private resources work like a zero-trust VPN, giving users access to specific hosts or network ranges when connected with a client.
+
+## Reverse Proxy Capabilities
+
+Pangolin's public resources function as reverse proxies. They expose web applications through domain names with automatic SSL certificates. Users access these resources through web browsers without installing any software.
+
+Public resources support identity-aware access control. You can require authentication, enforce multi-factor authentication, and create rules based on user identity, roles, geographic location, IP addresses, and URL paths. This goes beyond what traditional reverse proxies offer.
+
+Unlike traditional reverse proxies, Pangolin does not require public IP addresses or open ports on your network. Sites create outbound tunnels to Pangolin, so your applications remain behind firewalls.
+
+## VPN Capabilities
+
+Pangolin's private resources function like a zero-trust VPN. Users install a Pangolin client on their device and connect to your organization. Once connected, they can access the specific hosts or network ranges you have granted them access to.
+
+Private resources provide granular access control. Users only get access to the specific resources you define, not entire networks. This reduces the risk of over-permission that comes with traditional VPNs.
+
+Clients work transparently with applications. No application configuration is required. Users connect once and can access all their authorized resources. The client handles routing and establishes encrypted tunnels automatically.
+
+## Why Pangolin Combines Both
+
+Many organizations need both reverse proxy and VPN capabilities. You might want to expose web applications to users through browsers while also providing secure access to databases, SSH servers, or internal services that require a VPN-like connection.
+
+With Pangolin, you use one platform for both use cases. Public resources handle web application access. Private resources handle VPN-like access. Both use the same authentication system, access control policies, and infrastructure.
+
+This unified approach simplifies management. You configure users, roles, and access policies once. Those policies apply to both public and private resources. You do not need to maintain separate systems for reverse proxy and VPN access.
+
+## Infrastructure and Availability
+
+Traditional reverse proxies and VPNs typically run on a single server. If that server fails, all access is lost. They also require public IP addresses and open ports, which adds complexity and security concerns.
+
+Pangolin uses a distributed architecture with multiple nodes. If one node fails, traffic automatically routes to another node. Sites create outbound tunnels, so your networks do not need public IP addresses or open ports.
+
+You can deploy multiple remote nodes for high availability. If your nodes become unavailable, traffic can optionally fail over to cloud infrastructure until you restore service. This provides redundancy that single-server solutions cannot match.
+
+## When to Use Each Solution
+
+Use a traditional reverse proxy if you only need to expose web applications, you have a public IP address, and you do not need advanced access control or high availability.
+
+Use a traditional VPN if you need full network access, you can accept the security risks of broad access, and you do not need application-specific access control.
+
+Use Pangolin if you need both reverse proxy and VPN capabilities, you want granular access control, you need high availability, or you want to avoid public IP addresses and open ports.

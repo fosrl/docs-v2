@@ -17,8 +17,8 @@
           {
             "group": "About",
             "pages": [
-              "about/pangolin-vs-traditional-reverse-proxy",
-              "about/pangolin-vs-vpn"
+              "about/how-pangolin-works",
+              "about/pangolin-vs-reverse-proxy-vs-vpn"
             ]
           },
           {
@@ -113,7 +113,7 @@
               "manage/blueprints",
               {
                 "group": "Remote Nodes",
-                "icon": "server",
+                "icon": "circle-nodes",
                 "pages": [
                   "manage/remote-node/ha",
                   "manage/remote-node/nodes",
@@ -130,6 +130,7 @@
             "group": "Self-host Pangolin",
             "pages": [
               "self-host/quick-install",
+              "self-host/choosing-a-vps",
               {
                 "group": "Manual Installation",
                 "pages": [
@@ -138,9 +139,6 @@
                 ]
               },
               "self-host/dns-and-networking",
-              "self-host/choosing-a-vps",
-              "self-host/how-to-update",
-              "self-host/supporter-program",
               {
                 "group": "Advanced Configuration",
                 "pages": [
@@ -152,9 +150,11 @@
                   "self-host/advanced/database-options",
                   "self-host/advanced/integration-api",
                   "self-host/advanced/enable-geoblocking",
-                  "self-host/advanced/metrics"
+                  "self-host/advanced/metrics",
+                  "self-host/telemetry"
                 ]
               },
+              "self-host/how-to-update",
               {
                 "group": "Community Guides",
                 "pages": [
@@ -167,7 +167,7 @@
                   "self-host/community-guides/geolite2automation"
                 ]
               },
-              "self-host/telemetry",
+              "self-host/supporter-program",
               "self-host/enterprise-edition"
             ]
           },
