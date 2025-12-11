@@ -164,3 +164,52 @@ Newt is available in the Unraid Community Applications store. Search for "Newt" 
 ### Portainer and Other UIs
 
 Container management UIs like Portainer typically allow passing commands and environment variables to containers similar to Docker Compose. Look for a commands or arguments configuration section and follow the relevant guides.
+
+### Windows Service
+
+On Windows, newt can to be installed and run as a Windows service to remain persistent.
+
+#### Service Management Commands
+
+```
+# Install the service
+newt.exe install
+
+# Start the service
+newt.exe start
+
+# Stop the service
+newt.exe stop
+
+# Check service status
+newt.exe status
+
+# Remove the service
+newt.exe remove
+
+# Show help
+newt.exe service-help
+```
+
+Note running the service requires credentials in `%PROGRAMDATA%\newt\newt-client\config.json`.
+
+#### Service Configuration
+
+When running as a service, newt will read configuration from environment variables or you can modify the service to include command-line arguments:
+
+1. Install the service: `newt.exe install`
+2. Set the credentials in `%PROGRAMDATA%\newt\newt-client\config.json`. Hint: if you run newt once with --id and --secret this file will be populated!
+3. Start the service: `newt.exe start`
+
+#### Service Logs
+
+When running as a service, logs are written to:
+
+-   Windows Event Log (Application log, source: "newtWireguardService")
+-   Log files in: `%PROGRAMDATA%\newt\logs\newt.log`
+
+You can view the Windows Event Log using Event Viewer or PowerShell:
+
+```powershell
+Get-EventLog -LogName Application -Source "newtWireguardService" -Newest 10
+```
