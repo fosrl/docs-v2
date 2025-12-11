@@ -5,7 +5,7 @@ description: "Create a client to connect to your Pangolin network from a remote 
 
 A client is a way to access resources on sites remotely and privately via a virtual private network. Clients are used with private resources to faciliate zero-trust network access.
 
-By default a client does not have access to any hosts on the local network of the site. Admins must explicitely define resources on the site and give specific users and roles access to the resources. 
+By default a client does not have access to any hosts on the local network of the site. Admins must explicitely define resources on the site and give specific users and roles access to the resources.
 
 Users must log in and connect from a Pangolin client for [Window, Mac, and Linux](/manage/clients/install-client). Machine (automated systems and servers) connect with an ID and secret.
 
@@ -29,7 +29,7 @@ There are two types of clients: user devices and machines.
 
 ### User Devices
 
-A user may download a client for their specific system. Before they can connect, they must select a Pangolin server to authenticate to using their provided Pangolin account. Users can log in as a Pangolin user or with your attached external identity provider. 
+A user may download a client for their specific system. Before they can connect, they must select a Pangolin server to authenticate to using their provided Pangolin account. Users can log in as a Pangolin user or with your attached external identity provider.
 
 Examples include:
 
@@ -40,7 +40,7 @@ Then, just like in the Pangolin dashboard, a user selects the organization to co
 
 ### Machines
 
-Machine clients are for servers and automated systems that are not associated with a specific user. 
+Machine clients are for servers and automated systems that are not associated with a specific user.
 
 Examples include:
 
@@ -63,7 +63,7 @@ Clients can relay traffic through a Pangolin server - through Gerbil specificall
 
 While functional, it does not always connect reliably and can fall back to relaying. We plan to work to improve the reliability over time by implementing more methods for those behind CGNAT or hard nats.
 
-Take a look at [these docs](https://tailscale.com/kb/1361/firewall) for some firewall changes you might be able to make to improve hole punch reliability and performance.
+Take a look at [some things you can do to improve reliability](/manage/sites/configure-site#nat-traversal-tweaks) if you are not getting reliable hole punching.
 
 This should help to:
 - Increase performance (speed/bandwidth)
