@@ -61,12 +61,12 @@ YAML config can be applied using Docker labels, API, from a Newt site, or in the
 
 </Card>
 
-### Proxy Resources
+### Public Resources
 
-Proxy resources are used to expose HTTP, TCP, or UDP services through Pangolin. Below is an example configuration for proxy resources:
+Public resources are used to expose HTTP, TCP, or UDP services through Pangolin. Below is an example configuration for public resources:
 
 ```yaml
-proxy-resources:
+public-resources:
   resource-nice-id-uno:
     name: this is a http resource
     protocol: http
@@ -116,7 +116,7 @@ Authentication is off by default. You can enable it by adding the relevant field
 </Note>
 
 ```yaml
-proxy-resources:
+public-resources:
   secure-resource:
     name: Secured Resource
     protocol: http
@@ -142,7 +142,7 @@ proxy-resources:
 You can define simplified resources that contain only target configurations. This is useful for adding targets to existing resources or for simple configurations:
 
 ```yaml
-proxy-resources:
+public-resources:
   additional-targets:
     targets:
     - site: another-site
@@ -159,19 +159,32 @@ proxy-resources:
 When using targets-only resources, the `name` and `protocol` fields are not required. All other resource-level validations are skipped for these simplified configurations.
 </Note>
 
-### Client Resources
+### Private Resources
 
-Client resources define proxied resources accessible when connected via an Olm client:
+Private resources define proxied resources accessible when connected via an client:
 
 ```yaml
-client-resources:
-  client-resource-nice-id-uno:
-    name: this is my resource
-    protocol: tcp
-    proxy-port: 3001
-    hostname: localhost
-    internal-port: 3000
+private-resources:
+  private-resource-nice-id-uno:
+    name: SSH Server
+    mode: host
+    destination: 192.168.1.100
     site: lively-yosemite-toad
+    roles:
+      - Developer
+      - DevOps
+    users:
+      - user@example.com
+    machines:
+      - machine-id-1
+      - machine-id-2
+  private-resource-nice-id-duo:
+    name: Internal Network
+    mode: cidr
+    destination: 10.0.0.0/24
+    site: lively-yosemite-toad
+    users:
+      - admin@example.com
 ```
 
 ## Docker Labels Format
@@ -212,25 +225,25 @@ services:
     image: nginxdemos/hello
     container_name: nginx1
     labels:
-      # Proxy Resource Configuration
-      - pangolin.proxy-resources.nginx.name=nginx
-      - pangolin.proxy-resources.nginx.full-domain=nginx.fosrl.io
-      - pangolin.proxy-resources.nginx.protocol=http
-      - pangolin.proxy-resources.nginx.headers[0].name=X-Example-Header
-      - pangolin.proxy-resources.nginx.headers[0].value=example-value
+      # Public Resource Configuration
+      - pangolin.public-resources.nginx.name=nginx
+      - pangolin.public-resources.nginx.full-domain=nginx.fosrl.io
+      - pangolin.public-resources.nginx.protocol=http
+      - pangolin.public-resources.nginx.headers[0].name=X-Example-Header
+      - pangolin.public-resources.nginx.headers[0].value=example-value
       # Target Configuration - the port and hostname will be auto-detected
-      - pangolin.proxy-resources.nginx.targets[0].method=http
-      - pangolin.proxy-resources.nginx.targets[0].path=/path
-      - pangolin.proxy-resources.nginx.targets[0].path-match=prefix
+      - pangolin.public-resources.nginx.targets[0].method=http
+      - pangolin.public-resources.nginx.targets[0].path=/path
+      - pangolin.public-resources.nginx.targets[0].path-match=prefix
 
   nginx2:
     image: nginxdemos/hello
     container_name: nginx2
     labels:
         # Additional target for the same resource where the port and hostname are explicit
-      - pangolin.proxy-resources.nginx.targets[1].method=http
-      - pangolin.proxy-resources.nginx.targets[1].hostname=nginx2
-      - pangolin.proxy-resources.nginx.targets[1].port=80
+      - pangolin.public-resources.nginx.targets[1].method=http
+      - pangolin.public-resources.nginx.targets[1].hostname=nginx2
+      - pangolin.public-resources.nginx.targets[1].port=80
 
 networks:
   default:
@@ -259,14 +272,14 @@ This will create a resource that looks like the following:
 
 ## Configuration Properties
 
-### Proxy Resources
+### Public Resources
 
 | Property | Type | Required | Description | Constraints |
 |----------|------|----------|-------------|-------------|
 | `name` | string | Conditional | Human-readable name for the resource | Required unless targets-only resource |
 | `protocol` | string | Conditional | Protocol type (`http`, `tcp`, or `udp`) | Required unless targets-only resource |
 | `full-domain` | string | HTTP only | Full domain name for HTTP resources | Required for HTTP protocol, must be unique |
-| `proxy-port` | number | TCP/UDP only | Port for raw TCP/UDP resources | Required for TCP/UDP, 1-65535, must be unique within proxy-resources |
+| `proxy-port` | number | TCP/UDP only | Port for raw TCP/UDP resources | Required for TCP/UDP, 1-65535, must be unique within public-resources |
 | `ssl` | boolean | No | Enable SSL/TLS for the resource | - |
 | `enabled` | boolean | No | Whether the resource is enabled | Defaults to `true` |
 | `host-header` | string | No | Custom Host header for requests | - |
@@ -298,7 +311,7 @@ This will create a resource that looks like the following:
 Health checks can be configured for individual targets to monitor their availability. Add a `healthcheck` object to any target:
 
 ```yaml
-proxy-resources:
+public-resources:
   monitored-service:
     name: Monitored Service
     protocol: http
@@ -351,6 +364,7 @@ Not allowed on TCP/UDP resources.
 | `sso-roles` | array | No | Allowed SSO roles | Cannot include "Admin" role |
 | `sso-users` | array | No | Allowed SSO user emails | Must be valid email addresses |
 | `whitelist-users` | array | No | Whitelisted user emails | Must be valid email addresses |
+| `auto-login-idp` | number | No | Automatic login identity provider ID | Must be a positive integer |
 
 ### Rules Configuration
 
@@ -360,19 +374,20 @@ Not allowed on TCP/UDP resources.
 | `match` | string | Yes | Match type (`cidr`, `path`, `ip`, or `country`) | - |
 | `value` | string | Yes | Value to match against | Format depends on match type. For `country` match, use `ALL` to match all countries |
 
-### Client Resources
+### Private Resources
 
-These are resources used with Pangolin Olm clients (e.g., SSH, RDP).
+These are resources used with Pangolin clients (e.g., SSH, RDP).
 
 | Property | Type | Required | Description | Constraints |
 |----------|------|----------|-------------|-------------|
-| `name` | string | Yes | Human-readable name for the resource | 2-100 characters |
-| `protocol` | string | Yes | Protocol type (`tcp` or `udp`) | - |
-| `proxy-port` | number | Yes | Port accessible to clients | 1-65535, must be unique within client-resources |
-| `hostname` | string | Yes | Target hostname or IP address | 1-255 characters |
-| `internal-port` | number | Yes | Port on the target system | 1-65535 |
-| `site` | string | No | Site identifier where the resource is located | 2-100 characters |
-| `enabled` | boolean | No | Whether the resource is enabled | Defaults to `true` |
+| `name` | string | Yes | Human-readable name for the resource | 1-255 characters |
+| `mode` | string | Yes | Resource mode (`host` or `cidr`) | - |
+| `destination` | string | Yes | Target IP address, hostname, or CIDR block | For `host` mode: IP address or domain. For `cidr` mode: valid CIDR notation |
+| `site` | string | Yes | Site identifier where the resource is located | - |
+| `alias` | string | No | Fully qualified domain name alias | Must be a valid FQDN (e.g., example.com). Required when destination is a domain in `host` mode |
+| `roles` | array | No | Allowed SSO roles | Cannot include "Admin" role |
+| `users` | array | No | Allowed user emails | Must be valid email addresses |
+| `machines` | array | No | Allowed machine identifiers | Array of strings |
 
 ## Validation Rules and Constraints
 
@@ -385,14 +400,13 @@ These are resources used with Pangolin Olm clients (e.g., SSH, RDP).
    - **TCP/UDP Protocol**: Must have `proxy-port` and targets must NOT have `method` field
    - **TCP/UDP Protocol**: Cannot have `auth` configuration
 
-3. **Port Uniqueness**:
-   - `proxy-port` values must be unique within `proxy-resources`
-   - `proxy-port` values must be unique within `client-resources`
-   - Cross-validation between proxy and client resources is not enforced
+3. **Alias Uniqueness**: `alias` values must be unique across all private resources within the same blueprint and in the org
 
-4. **Domain Uniqueness**: `full-domain` values must be unique across all proxy resources
+4. **Domain Uniqueness**: `full-domain` values must be unique across all public resources
 
-5. **Target Method Requirements**: When protocol is `http`, all non-null targets must specify a `method`
+5. **Proxy Port Uniqueness**: `proxy-port` values must be unique per protocol within public resources (e.g., TCP port 3000 and UDP port 3000 can coexist)
+
+6. **Target Method Requirements**: When protocol is `http`, all non-null targets must specify a `method`
 
 ## Common Validation Errors
 
@@ -402,10 +416,10 @@ When working with blueprints, you may encounter these validation errors:
 The `Admin` role is reserved and cannot be included in the `sso-roles` array for authentication configuration.
 
 ### "Duplicate 'full-domain' values found"
-Each `full-domain` must be unique across all proxy resources. If you need multiple resources for the same domain, use different subdomains or paths.
+Each `full-domain` must be unique across all public resources. If you need multiple resources for the same domain, use different subdomains or paths.
 
-### "Duplicate 'proxy-port' values found"
-Port numbers in `proxy-port` must be unique within their resource type (proxy-resources or client-resources separately).
+### "Duplicate 'proxy-port' values found in public-resources"
+Port numbers in `proxy-port` must be unique per protocol within public-resources (e.g., you can't have two TCP resources using port 3000, but TCP port 3000 and UDP port 3000 can coexist).
 
 ### "When protocol is 'http', all targets must have a 'method' field"
 All targets in HTTP proxy resources must specify whether they use `http`, `https`, or `h2c`.
@@ -418,3 +432,14 @@ Authentication is only supported for HTTP resources, not TCP or UDP.
 
 ### "Resource must either be targets-only or have both 'name' and 'protocol' fields"
 Resources must either contain only the `targets` field (targets-only) or include both `name` and `protocol` for complete resource definitions.
+
+### "Duplicate 'alias' values found in private-resources"
+Alias values in private resources must be unique within the blueprint.
+
+### "Destination must be a valid IP address or valid domain AND alias is required"
+For private resources in `host` mode, the destination must be a valid IP address or domain. When using a domain, an `alias` field is required.
+### "Destination must be a valid CIDR notation for cidr mode"
+For private resources in `cidr` mode, the destination must be a valid CIDR notation (e.g., 10.0.0.0/24).
+
+### "Admin role cannot be included in roles"
+The `Admin` role is reserved and cannot be included in the `roles` array for private resource configuration.
