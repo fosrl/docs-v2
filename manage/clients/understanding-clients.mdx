@@ -1,0 +1,70 @@
+---
+title: "Understanding Clients"
+description: "Create a client to connect to your Pangolin network from a remote computer"
+---
+
+A client is a way to access resources on sites remotely and privately via a virtual private network. Clients are used with private resources to faciliate zero-trust network access.
+
+By default a client does not have access to any hosts on the local network of the site. Admins must explicitely define resources on the site and give specific users and roles access to the resources.
+
+Users must log in and connect from a Pangolin client for [Window, Mac, and Linux](/manage/clients/install-client). Machine (automated systems and servers) connect with an ID and secret.
+
+## Client Types
+
+There are two types of clients: user devices and machines.
+
+<CardGroup cols={2}>
+<Card title="User Devices">
+  - Associated with a user in your Pangolin organization
+  - Requires login to connect (password, 2fa, etc)
+  - Available for download on Mac, Windows, and Linux
+</Card>
+
+<Card title="Machines">
+  - Represent a server or automated system instead of a user
+  - Connect with an ID and secret
+  - Available in CLI form with Pangolin CLI or Olm CLI
+</Card>
+</CardGroup>
+
+### User Devices
+
+A user may download a client for their specific system. Before they can connect, they must select a Pangolin server to authenticate to using their provided Pangolin account. Users can log in as a Pangolin user or with your attached external identity provider.
+
+Examples include:
+
+- **SSH**: Admins and developers can connect with their client to specific hosts for SSH.
+- **RDP**: Users can connect to a remote host using familiar remote desktop software.
+
+Then, just like in the Pangolin dashboard, a user selects the organization to connect to. Once connected, all resources made available to the user in that organization become available via the tunnel.
+
+### Machines
+
+Machine clients are for servers and automated systems that are not associated with a specific user.
+
+Examples include:
+
+- **CICD**: Access remote resources like a database in an automated deployment pipeline.
+- **Servers**: Provide a VPS with access to a resource running in a different network.
+
+Though you may connect a server via a user account using a CLI client, we reccomend you specifically use a machine client.
+
+Machine clients authenticate with an ID and secret string. These credentials are passed via arguments into one of the supported Pangolin CLI clients. They can be revoked and rotated.
+
+## Client Modalities
+
+Clients have two major operation modalities. A client will first attempt to hole punch before falling back to relaying.
+
+### Relaying
+
+Clients can relay traffic through a Pangolin server - through Gerbil specifically. Gerbil listens on UDP port 21820 for new WireGuard connections and forwards the packets down the Newt site tunnels to the right peers. This means your connections back to your site do not require firewall config and uses the existing NAT holepunching capabilities of Newt.
+
+### NAT Hole Punching
+
+While functional, it does not always connect reliably and can fall back to relaying. We plan to work to improve the reliability over time by implementing more methods for those behind CGNAT or hard nats.
+
+Take a look at [some things you can do to improve reliability](/manage/sites/configure-site#nat-traversal-tweaks) if you are not getting reliable hole punching.
+
+This should help to:
+- Increase performance (speed/bandwidth)
+- Reduce VPS transit costs

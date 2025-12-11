@@ -9,103 +9,82 @@ This guide assumes you already are familiar with Kubernetes concepts and you ful
 
 ## Global Prerequisites
 
-<Check>
 - Kubernetes Cluster (v1.28.15+)
 - Access to the Kubernetes Cluster
 - Helm (v3.0+) installed, see <Link href="https://helm.sh/docs/intro/install/">Helm install docs</Link>
-</Check>
 
-<Tip>
-**Recommended**: Helm Chart Installation.
-</Tip>
+## Helm Installation
 
----
+All Fossorial Helm charts are available on Artifact Hub. See <Link href="https://artifacthub.io/packages/search?org=fosrl">Fossorial Charts</Link>.
 
-<Tabs>
-	<Tab title="Helm">
+<Steps>
+  <Step title="Add Fossorial Helm repo">
+    ```bash
+    helm repo add fossorial https://charts.fossorial.io
+    helm repo update fossorial
+    helm search repo fossorial
+    ```
+  </Step>
+  <Step title="Prepare Installation files">
 
-		# Helm Installation
+	Prepare your Newt credentials:
+    ```env title="newt-cred.env"
+	PANGOLIN_ENDPOINT=<your-endpoint>
+	NEWT_ID=<your-id>
+	NEWT_SECRET=<your-secret>
+	```
 
-		<Tip>
-		All Fossorial Helm charts are available on Artifact Hub. See <Link href="https://artifacthub.io/packages/search?org=fosrl">Fossorial Charts</Link>.
-		</Tip>
+    Prepare a values file with your desired configuration.
 
-		## Install Newt
+	<Tip>See <Link href="https://github.com/fosrl/helm-charts/tree/main/charts/newt">Newt chart values configuration options</Link>.</Tip>
 
-		<Steps>
-		  <Step title="Add Fossorial Helm repo">
-		    ```bash
-		    helm repo add fossorial https://charts.fossorial.io
-		    helm repo update fossorial
-		    helm search repo fossorial
-		    ```
-		  </Step>
-		  <Step title="Prepare Installation files">
+    ```yaml title="values-newt.yaml"
+    newtInstances:
+      - name: main
+	enabled: true
+	auth:
+	  existingSecretName: newt-cred
+	  keys:
+	    endpointKey: PANGOLIN_ENDPOINT
+	    idKey: NEWT_ID
+	    secretKey: NEWT_SECRET
+    ```
+	</Step>
+	<Step title="Newt Installation">
 
-			Prepare your Newt credentials:
-		    ```env title="newt-cred.env"
-			PANGOLIN_ENDPOINT=<your-endpoint>
-			NEWT_ID=<your-id>
-			NEWT_SECRET=<your-secret>
-			```
+    Create a Kubernetes Secret from the env file created earlier:
+	```bash
+kubectl create secret generic newt-cred -n newt --from-env-file=newt-cred.env
+	```
 
-		    Prepare a values file with your desired configuration.
+	Install Newt with Helm:
+    ```bash
+    helm install my-newt fossorial/newt \
+      -n newt --create-namespace \
+      -f values-newt.yaml
+    ```
 
-			<Tip>See <Link href="https://github.com/fosrl/helm-charts/tree/main/charts/newt">Newt chart values configuration options</Link>.</Tip>
-
-		    ```yaml title="values-newt.yaml"
-		    newtInstances:
-		      - name: main
-		        enabled: true
-		        auth:
-		          existingSecretName: newt-cred
-		          keys:
-		            endpointKey: PANGOLIN_ENDPOINT
-		            idKey: NEWT_ID
-		            secretKey: NEWT_SECRET
-		    ```
-			</Step>
-			<Step title="Newt Installation">
-
-		    Create a Kubernetes Secret from the env file created earlier:
-			```bash
-            kubectl create secret generic newt-cred -n newt --from-env-file=newt-cred.env
-			```
-
-			Install Newt with Helm:
-		    ```bash
-		    helm install my-newt fossorial/newt \
-		      -n newt --create-namespace \
-		      -f values-newt.yaml
-		    ```
-
-			Change the release name (`my-newt`), namespace (`newt`), and values filename as needed.
-		  </Step>
-		  <Step title="Upgrade or rollback">
-		    ```bash
-			# Update repo to get latest charts
-			helm repo update fossorial
-			# Upgrade Newt (after editing values)
-		    helm upgrade my-newt fossorial/newt -n newt -f values-newt.yaml
-		    ```
-			```bash
-			# Roll back to a previous revision
-		    helm rollback my-newt 1 -n newt
-		    ```
-		  </Step>
-		</Steps>
-	</Tab>
-</Tabs>
-
----
+	Change the release name (`my-newt`), namespace (`newt`), and values filename as needed.
+  </Step>
+  <Step title="Upgrade or rollback">
+    ```bash
+	# Update repo to get latest charts
+	helm repo update fossorial
+	# Upgrade Newt (after editing values)
+    helm upgrade my-newt fossorial/newt -n newt -f values-newt.yaml
+    ```
+	```bash
+	# Roll back to a previous revision
+    helm rollback my-newt 1 -n newt
+    ```
+  </Step>
+</Steps>
 
 ## Customizing Your Values
 
 All configuration options are documented in the respective repositories:
 
 - <Link href="https://github.com/fosrl/helm-charts/tree/main/charts/newt">Newt Helm chart values</Link>
-
----
 
 ## References
 

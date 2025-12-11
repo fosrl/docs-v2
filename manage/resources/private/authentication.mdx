@@ -1,0 +1,18 @@
+---
+title: "Authentication"
+description: "Only allow access to Resources to specific users, roles, and machines"
+---
+
+When a client connects into an organization they will **NOT** have access to any Resources by default. Access must be explicitly granted to users, roles, or machines for a WireGuard tunnel to be established to the site hosting the Resource. The Client will show no peers unless access is granted.
+
+Access can be granted in several ways:
+
+* **Roles:** Assign access to Resources to specific roles. Any user or machine with that role will gain access to the Resource when they connect.
+* **Users:** Assign access to Resources to specific users. Only those users will gain access to the Resource when they connect.
+* **Machines:** Assign access to Resources to specific machines. Only those machines will gain access to the Resource when they connect. Note that machines can not be put into roles.
+
+When removing access to a resource, the client will automatically tear down the WireGuard tunnel to that Resource if there are no other Resources accessible on that site.
+
+    <Frame>
+        <img src="/images/private_access_controls.png" centered/>
+    </Frame>

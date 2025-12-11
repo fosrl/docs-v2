@@ -1,66 +1,81 @@
 ---
 title: "How Pangolin Works"
-description: "Learn about Pangolin's architecture and how its components work together to provide secure application access"
+icon: "brain"
+description: "Learn about the fundamentals of Pangolin and how they work together to provide simple and secure remote access."
 ---
 
-Pangolin provides secure, application-specific ingress to your applications through a network of nodes. Users connect to the closest node, which authenticates them and routes their requests through secure tunnels to your backend.
-
-<Frame>
-  <img src="/images/diagram.svg" width="400" centered/>
-</Frame>
-
-## How It Works
+## Basic Steps
 
 <Steps>
-<Step title="User enters through node">
-  DNS automatically routes users to the closest available regional node. A node is always available because the control plane fails over between nodes.
+<Step title="Link remote networks with sites">
+  Join remote networks together using site connectors. Pangolin's lightweight connectors use intelligent routing and NAT traversal to make any network anywhere available.
 </Step>
 
-<Step title="Authentication and authorization">
-  The node verifies the user's identity, checks access permissions, and applies context aware rules such as IP and path based filters, geoblocking, and rate limiting.
+<Step title="Define resources">
+  Create resources that represent services or entire network ranges available for remote access. Resources can be public or fully private.
 </Step>
 
-<Step title="Secure tunnel routing">
-  Authenticated requests are routed and flow through encrypted WireGuard tunnels to your applications with optional load balancing and failover for your backend servers.
-</Step>
-
-<Step title="Application delivery">
-  Your applications receive the requests and respond through the same secure path.
+<Step title="Users access resources">
+  Authenticated users can access resources anywhere using a web browser or when connected with a Pangolin client on their device.
 </Step>
 </Steps>
 
-## Deployment Options
+## Key Concepts
 
-<CardGroup cols={2}>
-<Card title="Pangolin Cloud" icon="cloud" href="https://app.pangolin.net/auth/signup">
-  Large network of nodes with automatic failover and routing to your backend services. We host the Pangolin server for you.
+Pangolin relies on several components that work together to provide secure remote access. Each component has a specific role in ensuring that only authenticated users can access the resources they are authorized to use.
+
+### Pangolin Server
+
+The Pangolin server is the central coordination component for your network. It stores configuration changes, manages access policies, and coordinates connections between clients and sites. The server handles user authentication and generates access control lists that determine what resources each user can reach.
+
+You can use Pangolin Cloud, which is fully managed, or you can self-host your own Pangolin server for complete control over your infrastructure and data.
+
+<Card title="Read about how to self-host Pangolin" icon="server" href="/self-host/quick-install">
+  Learn how to deploy your own self-hosted Pangolin server or use Pangolin Cloud.
 </Card>
 
-<Card title="Self-host Pangolin" icon="server" href="/self-host/quick-install">
-  Fully self-hosted, self-contained Pangolin server acting as a single node.
+### Sites
+
+Sites connect remote networks to your Pangolin server. They use Newt connectors to create secure tunnels from remote networks back to Pangolin. Sites let you expose resources on those networks to authorized users.
+
+Sites run behind firewalls on remote networks. They maintain outbound connections to the Pangolin server. By default, sites block all traffic until you define resources and grant access. This ensures that just deploying a site does not expose any network resources.
+
+The Newt connector handles tunnel creation, NAT traversal, and routing. It makes remote networks available without requiring complex firewall rules or public IP addresses.
+
+<Card title="Read more about sites" icon="plug" href="/manage/sites/understanding-sites">
+  Learn about sites, how they work, and how to install and configure them.
 </Card>
 
-<Card title="Remote Nodes" icon="circle-nodes" href="/manage/remote-node/ha">
-  Self-host your own Pangolin node with cloud coordination for high availability and automatic failover. Data always transits your servers.
-</Card>
-</CardGroup>
+### Resources
 
-## Key Benefits
+Resources are the applications, hosts, or network ranges you make available to users. They exist on sites and represent what users can access. Users connect to resources, not to sites directly.
 
-<CardGroup cols={2}>
-<Card title="No Public IPs or Ports" icon="network-wired">
-  Your applications can run on private networks without exposing ports.
-</Card>
+There are two types of resources. Public resources work through web browsers and act as reverse proxies to backend services. Private resources require a client connection and function like a zero-trust VPN.
 
-<Card title="Ingress Mesh" icon="globe">
-  Users always connect to the closest available node.
+You must define resources and assign access before users can reach them. By default, no resources are available on sites. This ensures that only explicitly defined resources can be accessed.
+
+<Card title="Read more about resources" icon="link" href="/manage/resources/understanding-resources">
+  Learn about public and private resources and how to create them.
 </Card>
 
-<Card title="Zero-Trust Security" icon="shield">
-  Every request is authenticated and authorized before reaching your applications.
+### Clients
+
+Clients are software components installed on user devices or machines. They let users and automated systems connect to your Pangolin network and access private resources through a secure tunnel.
+
+Users authenticate through the client using their accounts. Machines connect with credentials. Once connected, users can reach all resources their account has access to. The client handles routing decisions and establishes encrypted tunnels to the appropriate sites.
+
+Clients are available for Mac, Windows, and Linux. They work transparently with applications, so no application configuration is required.
+
+<Card title="Read more about clients" icon="desktop" href="/manage/clients/add-client">
+  Learn about clients and where to download them for Mac, Windows, and Linux.
 </Card>
 
-<Card title="High Availability" icon="check-double">
-  Multiple nodes, failover, and load balancing between tunnels ensures there is always a way for users to access your applications.
+### Remote Nodes
+
+Remote nodes are self-hosted Pangolin servers that you control while using Pangolin Cloud or enterprise for management and coordination. You maintain complete control over your infrastructure and data flow, while the cloud handles the control plane, DNS, certificate management, and backups.
+
+You can deploy multiple remote nodes for high availability and automatic failover. If your nodes become unavailable, traffic can optionally fail over to cloud infrastructure until you restore service.
+
+<Card title="Read more about remote nodes" icon="circle-nodes" href="/manage/remote-node/nodes">
+  Learn about remote nodes and how they provide high availability and simplified operations.
 </Card>
-</CardGroup>

@@ -1,20 +1,9 @@
 ---
 title: "Health Checks"
-description: "Configure automated health monitoring and failover for high availability"
+description: "Configure automated health monitoring and failover for resources"
 ---
 
-<iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/Xdme_2-AMas"
-  title="YouTube video player"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-></iframe>
-
-## Overview
-
-Pangolin provides automated health checking for [targets](/manage/resources/targets) to ensure traffic is only routed to healthy services. Health checks are essential for building highly available services, as they automatically remove unhealthy targets from traffic routing and load balancing.
+Pangolin provides automated health checking for targets to ensure traffic is only routed to healthy services. Health checks are essential for building highly available services, as they automatically remove unhealthy targets from traffic routing and load balancing.
 
 ## How Health Checks Work
 
@@ -22,16 +11,10 @@ Pangolin provides automated health checking for [targets](/manage/resources/targ
 
 Health checks operate continuously in the background:
 
-1. **Periodic Checks**: Pangolin sends requests to your target endpoints at configured intervals
-2. **Status Evaluation**: Responses are evaluated against your configured criteria
-3. **Traffic Management**: Healthy targets receive traffic, unhealthy targets are excluded
-4. **Automatic Recovery**: Targets are automatically re-enabled when they become healthy again
-
-### Health Check vs Target Endpoint
-
-<Card title="Flexible Monitoring">
-  The health check endpoint can be the same as your target, but you can also monitor a different endpoint. This allows you to create dedicated health check endpoints that provide more detailed service status information.
-</Card>
+1. **Periodic Checks**: Pangolin sends requests to your target endpoints at configured intervals.
+2. **Status Evaluation**: Responses are evaluated against your configured criteria.
+3. **Traffic Management**: Healthy targets receive traffic, unhealthy targets are excluded.
+4. **Automatic Recovery**: Targets are automatically re-enabled when they become healthy again.
 
 ## Target Health States
 
@@ -87,109 +70,45 @@ Targets can exist in three distinct states that determine how traffic is routed:
 
 ### Endpoint Configuration
 
-<Card title="Health Check Target">
-  **Target Endpoint**: The URL or address to monitor for health status
-  
-  **Default Behavior**: Usually the same as your target endpoint
-  
-  **Custom Endpoints**: Can monitor different endpoints (e.g., `/health`, `/status`)
-</Card>
+- **Target Endpoint**: The URL or address to monitor for health status
+- **Default Behavior**: Usually the same as your target endpoint
+- **Custom Endpoints**: Can monitor different endpoints (e.g., `/health`, `/status`)
 
 ### Timing Configuration
 
-<CardGroup cols={2}>
-<Card title="Healthy Interval">
-  **Purpose**: How often to check targets that are currently healthy
-  
-  **Typical Range**: 30-60 seconds
-  
-  **Consideration**: Less frequent checks reduce overhead
-</Card>
+#### Healthy Interval
 
-<Card title="Unhealthy Interval">
-  **Purpose**: How often to check targets that are currently unhealthy
+- **Purpose**: How often to check targets that are currently healthy
+- **Typical Range**: 30-60 seconds
+- **Consideration**: Less frequent checks reduce overhead
+
+#### Unhealthy Interval
   
-  **Typical Range**: 10-30 seconds
-  
-  **Consideration**: More frequent checks enable faster recovery
-</Card>
-</CardGroup>
+- **Purpose**: How often to check targets that are currently unhealthy
+- **Typical Range**: 10-30 seconds
+- **Consideration**: More frequent checks enable faster recovery
 
 ### Response Configuration
 
-<Card title="Timeout Settings">
-  **Request Timeout**: Maximum time to wait for a health check response
-  
-  **Default Behavior**: Requests exceeding timeout are considered failed
-  
-  **Recommended**: Set based on your service's typical response time
-</Card>
+#### Timeout Settings
 
-<Card title="HTTP Response Codes">
-  **Healthy Codes**: Which HTTP status codes indicate a healthy target
-  
-  **Common Settings**: 200, 201, 202, 204
-  
-  **Custom Codes**: Configure based on your service's health endpoint behavior
-</Card>
+- **Request Timeout**: Maximum time to wait for a health check response
+- **Default Behavior**: Requests exceeding timeout are considered failed
+- **Recommended**: Set based on your service's typical response time
 
-## Failover Behavior
+#### HTTP Response Codes
 
-### Automatic Traffic Exclusion
-
-When a target becomes unhealthy:
-
-<Steps>
-<Step title="Health Check Failure">
-  Target fails to meet health check criteria (response code, timeout, etc.)
-</Step>
-
-<Step title="Status Update">
-  Target status changes from "Healthy" to "Unhealthy"
-</Step>
-
-<Step title="Traffic Removal">
-  Target is immediately removed from traffic routing configuration
-</Step>
-
-<Step title="Load Balancer Update">
-  Load balancing configuration is updated to exclude the unhealthy target
-</Step>
-
-<Step title="Continued Monitoring">
-  Health checks continue at the unhealthy interval for recovery detection
-</Step>
-</Steps>
-
-### Automatic Recovery
-
-When an unhealthy target recovers:
-
-<Steps>
-<Step title="Successful Health Check">
-  Target begins responding correctly to health checks
-</Step>
-
-<Step title="Status Update">
-  Target status changes from "Unhealthy" to "Healthy"
-</Step>
-
-<Step title="Traffic Restoration">
-  Target is automatically added back to traffic routing
-</Step>
-
-<Step title="Load Balancer Update">
-  Load balancing resumes including the recovered target
-</Step>
-</Steps>
+- **Healthy Codes**: Which HTTP status codes indicate a healthy target
+- **Common Settings**: 200, 201, 202, 204
+- **Custom Codes**: Configure based on your service's health endpoint behavior
 
 ## High Availability Strategies
 
 ### Multi-Target Redundancy
 
-<Card title="Service Redundancy">
-  Deploy multiple instances of your service across different targets to ensure availability even when some targets fail.
-</Card>
+#### Service Redundancy
+
+Deploy multiple instances of your service across different targets to ensure availability even when some targets fail.
 
 ```
 Resource: web-application
@@ -202,9 +121,9 @@ Traffic routes to: Target 1 & Target 3 only
 
 ### Cross-Site Failover
 
-<Card title="Geographic Distribution">
-  Distribute targets across multiple sites to protect against site-level failures.
-</Card>
+#### Geographic Distribution
+
+Distribute targets across multiple sites to protect against site-level failures.
 
 ```
 Resource: api-service

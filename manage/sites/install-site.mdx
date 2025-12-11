@@ -1,29 +1,9 @@
 ---
-title: "Install Site"
+title: "Install Sites"
 description: "Install Newt as a binary or Docker container"
 ---
 
-Newt can be installed as either a static binary executable or a Docker container. Configuration is passed via CLI arguments in both cases.
-
-<Warning>
-You **must first create a site and copy the Newt config** in Pangolin before running Newt.
-</Warning>
-
-<CardGroup cols={2}>
-<Card title="Binary Installation" icon="download">
-  - Static executable
-  - Cross-platform support
-  - Easy to install and run
-  - Systemd service support
-</Card>
-
-<Card title="Docker Installation" icon="docker">
-  - Containerized deployment
-  - Environment variables
-  - Docker Compose support
-  - Easy management
-</Card>
-</CardGroup>
+Newt can be installed as either a static binary executable or a Docker container. You must first create a site and copy the Newt config in Pangolin before running Newt.
 
 ## Binary Installation
 
@@ -32,12 +12,16 @@ You **must first create a site and copy the Newt config** in Pangolin before run
 Use this command to automatically install Newt. It detects your system architecture automatically and always pulls the latest version, adding Newt to your PATH:
 
 ```bash
-curl -fsSL https://pangolin.net/get-newt.sh | bash
+curl -fsSL https://static.pangolin.net/get-newt.sh | bash
 ```
+
+#### Windows
+
+If you would like to use Newt on Windows as a service or with clients, wintun.dll is sometimes required. Please use latest installer from [GitHub releases](https://github.com/fosrl/newt/releases/latest).
 
 ### Manual Download
 
-Binaries for Linux, macOS, and Windows are available in the [GitHub releases](https://github.com/fosrl/newt/releases) for ARM and AMD64 (x86_64) architectures.
+Binaries for Linux, macOS, and Windows are available in the [GitHub releases](https://github.com/fosrl/newt/releases/latest) for ARM and AMD64 (x86_64) architectures.
 
 Download and install manually:
 
@@ -57,20 +41,8 @@ Run Newt with the configuration from Pangolin:
 newt \
 --id 31frd0uzbjvp721 \
 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
---endpoint https://example.com
+--endpoint https://app.pangolin.net
 ```
-
-### Permanent Installation
-
-Install to your PATH (may need to run as root):
-
-```bash
-mv ./newt /usr/local/bin
-```
-
-<Note>
-The quick installer will do this step for you.
-</Note>
 
 ### Systemd Service
 
@@ -82,7 +54,7 @@ Description=Newt
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/newt --id 31frd0uzbjvp721 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 --endpoint https://example.com
+ExecStart=/usr/local/bin/newt --id 31frd0uzbjvp721 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 --endpoint https://app.pangolin.net
 Restart=always
 User=root
 
@@ -111,7 +83,7 @@ Run Newt with CLI arguments from Pangolin:
 ```bash
 docker run -it fosrl/newt --id 31frd0uzbjvp721 \
 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
---endpoint https://example.com
+--endpoint https://app.pangolin.net
 ```
 
 ### Docker Compose
@@ -130,7 +102,7 @@ services:
       - NEWT_SECRET=nnisrfsdfc7prqsp9ewo1dvtvci50j5uiqotez00dgap0ii2
 ```
 
-#### Config file injected as Compose Secret
+#### Config File Injected as Compose Secret
 
 A safer but slightly more complex way is to use [Compose Secrets](https://docs.docker.com/compose/how-tos/use-secrets/). First, create a `JSON` file containing your configuration:
 
@@ -138,7 +110,7 @@ A safer but slightly more complex way is to use [Compose Secrets](https://docs.d
 {
   "id": "2ix2t8xk22ubpfy",
   "secret": "nnisrfsdfc7prqsp9ewo1dvtvci50j5uiqotez00dgap0ii2",
-  "endpoint": "https://example.com",
+  "endpoint": "https://app.pangolin.net",
   "tlsClientCert": ""
 }
 ```
@@ -174,7 +146,7 @@ services:
     command:
       - --id 31frd0uzbjvp721
       - --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6
-      - --endpoint https://example.com
+      - --endpoint https://app.pangolin.net
 ```
 
 Start the service:
@@ -196,3 +168,52 @@ Newt is available in the Unraid Community Applications store. Search for "Newt" 
 ### Portainer and Other UIs
 
 Container management UIs like Portainer typically allow passing commands and environment variables to containers similar to Docker Compose. Look for a commands or arguments configuration section and follow the relevant guides.
+
+### Windows Service
+
+On Windows, newt can to be installed and run as a Windows service to remain persistent.
+
+#### Service Management Commands
+
+```
+# Install the service
+newt.exe install
+
+# Start the service
+newt.exe start
+
+# Stop the service
+newt.exe stop
+
+# Check service status
+newt.exe status
+
+# Remove the service
+newt.exe remove
+
+# Show help
+newt.exe service-help
+```
+
+Note running the service requires credentials in `%PROGRAMDATA%\newt\newt-client\config.json`.
+
+#### Service Configuration
+
+When running as a service, newt will read configuration from environment variables or you can modify the service to include command-line arguments:
+
+1. Install the service: `newt.exe install`
+2. Set the credentials in `%PROGRAMDATA%\newt\newt-client\config.json`. Hint: if you run newt once with --id and --secret this file will be populated!
+3. Start the service: `newt.exe start`
+
+#### Service Logs
+
+When running as a service, logs are written to:
+
+-   Windows Event Log (Application log, source: "newtWireguardService")
+-   Log files in: `%PROGRAMDATA%\newt\logs\newt.log`
+
+You can view the Windows Event Log using Event Viewer or PowerShell:
+
+```powershell
+Get-EventLog -LogName Application -Source "newtWireguardService" -Newest 10
+```

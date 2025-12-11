@@ -1,5 +1,6 @@
 ---
 title: "Branding"
+icon: "brush"
 description: "Learn how to customize the look your Pangolin dashboard and login pages with custom branding"
 ---
 
@@ -24,8 +25,6 @@ branding:
   logo:
     light_path: "/branding/logo-light.svg"
     dark_path: "/branding/logo-dark.svg"
-  
-  favicon_path: "/branding/favicon.ico"
   
   colors:
     light:
@@ -72,6 +71,16 @@ All branding configuration options are optional. Only specify the sections you w
 
   **Example**: `"MyApp"`
 </ResponseField>
+
+### Favicon
+
+To customize the favicon, mount your favicon to `/app/public/favicon.ico` in the container.
+
+```yaml title="docker-compose.yml"
+volumes:
+  - ./config:/app/config
+  - ./branding/favicon.ico:/app/public/favicon.ico
+```
 
 ### Background Image
 
@@ -168,18 +177,6 @@ All branding configuration options are optional. Only specify the sections you w
   </Expandable>
 </ResponseField>
 
-### Favicon
-
-<ResponseField name="favicon_path" type="string">
-  Path to a custom favicon.
-
-  **Example**: `"/branding/favicon.ico"`
-
-  <Note>
-    Requires mounting a volume to `/app/public`.
-  </Note>
-</ResponseField>
-
 ### Footer
 
 <ResponseField name="footer" type="array of objects">
@@ -209,12 +206,6 @@ All branding configuration options are optional. Only specify the sections you w
   Custom text for the login page.
 
   <Expandable title="Login Page">
-    <ResponseField name="title_text" type="string">
-      The main title text displayed on the login page.
-
-      **Example**: `"Welcome Back!"`
-    </ResponseField>
-
     <ResponseField name="subtitle_text" type="string">
       The subtitle text displayed below the title.
 
@@ -229,12 +220,6 @@ All branding configuration options are optional. Only specify the sections you w
   Custom text for the signup page.
 
   <Expandable title="Signup Page">
-    <ResponseField name="title_text" type="string">
-      The main title text displayed on the signup page.
-
-      **Example**: `"Create Your Account"`
-    </ResponseField>
-
     <ResponseField name="subtitle_text" type="string">
       The subtitle text displayed below the title.
 

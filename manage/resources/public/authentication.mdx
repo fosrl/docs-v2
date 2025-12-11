@@ -1,0 +1,36 @@
+---
+title: "Authentication"
+description: "Create identity and context aware rules to allow access"
+---
+
+Though public resources are public and accessible to via a web browser, admins can create rules to enable a layer of authenticated protection in front of public resources. By default, all public resources have Pangolin auth (Platform SSO) enabled, but a number of other authentication methods are available.
+
+When an unauthenticated user visits a resource in their web browser, they will be redirected to a Pangolin-controlled authentication page where they must complete authentication.
+
+## User Login
+
+- **Pangolin (Platform) SSO** - Users must log in with a valid Pangolin account before they can log in.
+- **External Identity Provider** - Enable log in to resoruces via your organization's identity provider of choice (Google, Azure, Okta, etc).
+- **Users and Roles** - Assign specific users accesss to resources. Group users by roles and assign entire roles access to resources.
+
+## PIN and Passcode
+
+Add simple PIN or passcode authentication to resources. Similarly to user login, users will need to first enter a PIN or passcode before they can gain access to the resource.
+
+## Shareable Links and Access Tokens
+
+Generate temporary self-destructing links that provide authenticated access to resources. Set specific expiration times for when all users who used the link will lose access and when the link becomes invalid. Links can optionally grant more permanent access with no expiration. Delete links when you want to revoke access.
+
+You can also pass access tokens via query params or headers to resources to enable programmatic access.
+
+## Email-based One Time Passcode (OTP)
+
+First whitelist specific emails or wildcards, like `*@.example.com`. When users visit the resource, they will be prompted to enter an email. If the email they enter is on the whitelist, a temporary one time passcode will be sent to their email. Users can then enter this OTP to gain access to the resource.
+
+## Rules to Access or Deny
+
+Define ranked rules to either block or allow access from specific IPs, geolocation, URL paths, and more.
+
+## More
+
+Read about more authentication options and specific settings in [Access Control](/manage/access-control/) and [Identity Providers](/manage/identity-providers/).
