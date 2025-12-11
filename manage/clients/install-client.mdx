@@ -21,7 +21,7 @@ description: "Install native clients for Mac, Windows, and Linux"
 3. **Log in with your Pangolin account**
 
    Log in on your Pangolin Cloud account or your self-hosted Pangolin instance.
-   
+
    - Click the Pangolin icon in the task bar's system tray and select Log in.
 
 ## Mac
@@ -34,7 +34,7 @@ description: "Install native clients for Mac, Windows, and Linux"
 1. **Download and install the Pangolin client**
 
    Download and install the Pangolin client using the official .dmg installer from the download button above.
-   
+
    - Open the downloaded .dmg file
    - Drag and drop Pangolin.app into your Applications folder
 
@@ -45,7 +45,7 @@ description: "Install native clients for Mac, Windows, and Linux"
 3. **Install the VPN configuration**
 
    Follow the Pangolin onboarding flow, which will guide you to install the Pangolin VPN configuration.
-   
+
    - Select Open System Settings on startup when it asks to install a network extension.
    - In System Settings, under General > Login Items & Extension > By Category > Network Extensions, ensure that Pangolin.app is toggled on.
    - Select Allow when Pangolin asks to add a VPN configuration.
@@ -53,7 +53,7 @@ description: "Install native clients for Mac, Windows, and Linux"
 4. **Log in with your Pangolin account**
 
    Log in on your Pangolin Cloud account or your self-hosted Pangolin instance.
-   
+
    - Click the Pangolin icon in the menu bar and select Log in.
 
 ## Pangolin CLI (Linux)
@@ -127,6 +127,10 @@ Use this command to automatically install Olm. It detects your system architectu
 ```bash
 curl -fsSL https://static.pangolin.net/get-olm.sh | bash
 ```
+
+#### Windows
+
+If you would like to use Olm on Windows, wintun.dll is required. Please use latest installer from [GitHub releases](https://github.com/fosrl/olm/releases/latest).V
 
 #### Manual Download
 
@@ -252,7 +256,7 @@ Note running the service requires credentials in `%PROGRAMDATA%\olm\olm-client\c
 When running as a service, Olm will read configuration from environment variables or you can modify the service to include command-line arguments:
 
 1. Install the service: `olm.exe install`
-2. Set the credentials in `%PROGRAMDATA%\olm\olm-client\config.json`. Hint: if you run olm once with --id and --secret this file will be populated! 
+2. Set the credentials in `%PROGRAMDATA%\olm\olm-client\config.json`. Hint: if you run olm once with --id and --secret this file will be populated!
 3. Start the service: `olm.exe start`
 
 #### Service Logs
