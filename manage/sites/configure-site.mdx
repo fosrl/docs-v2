@@ -107,12 +107,6 @@ description: "Configure Newt for connecting to Pangolin sites"
   **Default**: `false` (clients enabled)
 </ResponseField>
 
-<ResponseField name="native" type="boolean">
-  Use native WireGuard interface (requires WireGuard kernel module and Linux, must run as root).
-
-  **Default**: `false` (uses userspace netstack)
-</ResponseField>
-
 <ResponseField name="interface" type="string">
   Name of the WireGuard interface.
 
@@ -273,12 +267,6 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 
 <ResponseField name="DISABLE_CLIENTS" type="boolean">
   Disable clients on the WireGuard interface (equivalent to `--disable-clients`).
-
-  **Default**: `false`
-</ResponseField>
-
-<ResponseField name="USE_NATIVE_INTERFACE" type="boolean">
-  Use native WireGuard interface (Linux only, equivalent to `--native`)
 
   **Default**: `false`
 </ResponseField>
