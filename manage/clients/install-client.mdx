@@ -190,8 +190,8 @@ services:
         container_name: olm
         restart: unless-stopped
         network_mode: host
-         cap_add:
-             - NET_ADMIN
+        cap_add:
+            - NET_ADMIN
         devices:
             - /dev/net/tun:/dev/net/tun
         environment:
@@ -209,8 +209,8 @@ services:
         container_name: olm
         restart: unless-stopped
         network_mode: host
-         cap_add:
-             - NET_ADMIN
+        cap_add:
+            - NET_ADMIN
         devices:
             - /dev/net/tun:/dev/net/tun
         command:
@@ -222,6 +222,7 @@ services:
 **Docker Configuration Notes:**
 
 - `network_mode: host` brings the olm network interface to the host system, allowing the WireGuard tunnel to function properly
+- `cap_add: - NET_ADMIN` is required to grant the container permission to manage network interfaces
 - `devices: - /dev/net/tun:/dev/net/tun` is required to give the container access to the TUN device for creating WireGuard interfaces
 
 ### Windows Service
