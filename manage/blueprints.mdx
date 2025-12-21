@@ -49,7 +49,7 @@ YAML config can be applied using Docker labels, API, from a Newt site, or in the
 
     You can also apply blueprints directly through the Pangolin API with an API key. [Take a look at the API documentation for more details.](https://api.pangolin.net/v1/docs/#/Organization/put_org__orgId__blueprint)
 
-    POST to `/org/{orgId}/blueprint` with a base64 encodes JSON body like the following:
+    PUT to `/org/{orgId}/blueprint` with a base64 encodes JSON body like the following:
 
     ```json
     {
