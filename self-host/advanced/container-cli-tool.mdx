@@ -32,3 +32,52 @@ docker exec -it pangolin pangctl set-admin-credentials --email "admin@example.co
 <Warning>
 Use a strong password and keep your admin credentials secure.
 </Warning>
+
+## Clear Exit Nodes
+
+Clear all exit nodes from the database:
+
+```bash
+docker exec -it pangolin pangctl clear-exit-nodes
+```
+
+<Warning>
+This command permanently deletes all exit nodes from the database. This action cannot be undone.
+</Warning>
+
+## Reset User Security Keys
+
+Reset a user's security keys (passkeys) by deleting all their webauthn credentials:
+
+```bash
+docker exec -it pangolin pangctl reset-user-security-keys --email "user@example.com"
+```
+
+<Warning>
+This command permanently deletes all security keys for the specified user. The user will need to re-register their security keys to use passkey authentication again.
+</Warning>
+
+## Rotate Server Secret
+
+Rotate the server secret by decrypting all encrypted values with the old secret and re-encrypting with a new secret. This command updates OIDC IdP configurations and license keys in the database, as well as the config file.
+
+```bash
+docker exec -it pangolin pangctl rotate-server-secret --old-secret "current-secret" --new-secret "new-secret"
+```
+
+### Options
+
+- `--old-secret` (required): The current server secret (for verification)
+- `--new-secret` (required): The new server secret to use (must be at least 8 characters long)
+- `--force` (optional): Force rotation even if the old secret doesn't match the config file. Use this if you know the old secret is correct but the config file is out of sync.
+
+<Warning>
+This command performs a critical operation that affects all encrypted data in your database. Ensure you have a backup before running this command.
+
+**Important considerations:**
+- The new secret must be at least 8 characters long
+- The new secret must be different from the old secret
+- The command verifies the old secret matches the config file (unless `--force` is used)
+- After rotation, you must restart the server for the new secret to take effect
+- Using `--force` with an incorrect old secret will cause the rotation to fail or corrupt encrypted data
+</Warning>
