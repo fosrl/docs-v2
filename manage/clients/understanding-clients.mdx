@@ -47,7 +47,7 @@ Examples include:
 - **CICD**: Access remote resources like a database in an automated deployment pipeline.
 - **Servers**: Provide a VPS with access to a resource running in a different network.
 
-Though you may connect a server via a user account using a CLI client, we reccomend you specifically use a machine client.
+Though you may connect a server via a user account using a CLI client, we recommend you specifically use a machine client.
 
 Machine clients authenticate with an ID and secret string. These credentials are passed via arguments into one of the supported Pangolin CLI clients. They can be revoked and rotated.
 
@@ -61,7 +61,9 @@ Clients can relay traffic through a Pangolin server - through Gerbil specificall
 
 ### NAT Hole Punching
 
-While functional, it does not always connect reliably and can fall back to relaying. We plan to work to improve the reliability over time by implementing more methods for those behind CGNAT or hard nats.
+NAT hole punching establishes a direct peer-to-peer connection between the client and site, bypassing the need to route traffic through the Pangolin server. The server coordinates the initial connection by helping both peers discover each other's network addresses, allowing them to establish a direct tunnel through their respective NATs and firewalls.
+
+If the site and client are unable to hole punch, they fall back to relaying through your Pangolin server.
 
 Take a look at [some things you can do to improve reliability](/manage/sites/configure-site#nat-traversal-tweaks) if you are not getting reliable hole punching.
 

@@ -54,3 +54,37 @@ gerbil:
   ```
 </Step>
 </Steps>
+
+### Getting the Real Client IP
+
+Pangolin needs to know the original client IP address for features like rate limiting. When Cloudflare proxy is enabled, the API server sees Cloudflare's IP instead of the real client IP.
+
+Cloudflare sets special headers with the real IP that need to be processed by Traefik before forwarding to Pangolin. Configure Traefik to parse these headers using a community plugin for Traefik: [Real IP from Cloudflare Proxy Tunnel](https://plugins.traefik.io/plugins/62e97498e2bf06d4675b9443/real-ip-from-cloudflare-proxy-tunnel).
+
+Add the plugin to your Traefik configuration:
+
+```yaml
+experimental:
+  plugins:
+    cloudflarewarp:
+      moduleName: github.com/BetterCorp/cloudflarewarp
+      version: v1.3.0
+
+entryPoints:
+  websecure:
+    address: ':443'
+    http:
+      middlewares:
+        - cloudflarewarp@file
+```
+
+This creates a middleware called `cloudflarewarp` and applies it to the `websecure` entrypoint.
+
+Then set `trust_proxy: 2` in your Pangolin config file. This tells Pangolin to trust the second-level proxy (Traefik is proxy 1, Cloudflare is proxy 2):
+1
+```yaml
+server:
+  trust_proxy: 2
+```
+
+After making these changes, restart both Traefik and Pangolin for the configuration to take effect.

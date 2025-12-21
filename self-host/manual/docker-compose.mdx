@@ -144,8 +144,6 @@ services:
     restart: unless-stopped
     volumes:
       - ./config:/app/config
-      - pangolin-data:/var/certificates
-      - pangolin-data:/var/dynamic
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
       interval: "3s"
@@ -187,17 +185,12 @@ services:
     volumes:
       - ./config/traefik:/etc/traefik:ro # Volume to store the Traefik configuration
       - ./config/letsencrypt:/letsencrypt # Volume to store the Let's Encrypt certificates
-      # Shared volume for certificates and dynamic config in file mode
-      - pangolin-data:/var/certificates:ro
-      - pangolin-data:/var/dynamic:ro
+      - ./config/traefik/logs:/var/log/traefik # Volume to store Traefik logs
 
 networks:
   default:
     driver: bridge
     name: pangolin
-
-volumes:
-  pangolin-data:
 ```
 
 ## Traefik Static Configuration

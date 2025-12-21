@@ -278,6 +278,10 @@
         {
             "source": "/community/:slug*",
             "destination": "/self-host/:slug*"
+        },
+        {
+            "source": "/manage/resources/tcp-udp-resources",
+            "destination": "/manage/resources/public/raw-resources"
         }
     ],
     "seo": {

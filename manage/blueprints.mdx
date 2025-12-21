@@ -49,7 +49,7 @@ YAML config can be applied using Docker labels, API, from a Newt site, or in the
 
     You can also apply blueprints directly through the Pangolin API with an API key. [Take a look at the API documentation for more details.](https://api.pangolin.net/v1/docs/#/Organization/put_org__orgId__blueprint)
 
-    POST to `/org/{orgId}/blueprint` with a base64 encodes JSON body like the following:
+    PUT to `/org/{orgId}/blueprint` with a base64 encodes JSON body like the following:
 
     ```json
     {
@@ -191,6 +191,10 @@ private-resources:
 
 For containerized applications, you can define blueprints using Docker labels.
 
+<Note>
+Blueprints will **continuously apply** from changes in the docker stack, newt restarting, or when viewing the resource in the dashboard.
+</Note>
+
 ### Enabling Docker Socket Access
 
 To use Docker labels, enable the Docker socket when running Newt:
@@ -206,6 +210,10 @@ DOCKER_SOCKET=/var/run/docker.sock
 ```
 
 ### Docker Compose Example
+
+<Note>
+The compose file will be the source of truth, any edits through the resources dashboard will be **overwritten** by the blueprint labels defined in the compose stack.
+</Note>
 
 ```yaml
 services:
@@ -362,7 +370,7 @@ Not allowed on TCP/UDP resources.
 | `basic-auth` | object | No | Basic authentication configuration | Requires `user` and `password` fields |
 | `sso-enabled` | boolean | No | Enable SSO authentication | Defaults to `false` |
 | `sso-roles` | array | No | Allowed SSO roles | Cannot include "Admin" role |
-| `sso-users` | array | No | Allowed SSO user emails | Must be valid email addresses |
+| `sso-users` | array | No | Allowed SSO usernames | Must be valid usernames |
 | `whitelist-users` | array | No | Whitelisted user emails | Must be valid email addresses |
 | `auto-login-idp` | number | No | Automatic login identity provider ID | Must be a positive integer |
 
