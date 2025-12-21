@@ -57,34 +57,77 @@ gerbil:
 
 ### Getting the Real Client IP
 
-Pangolin needs to know the original client IP address for features like rate limiting. When Cloudflare proxy is enabled, the API server sees Cloudflare's IP instead of the real client IP.
+Pangolin needs to know the original client IP address for features like rate limiting and logging. When Cloudflare proxy is enabled, the API server sees Cloudflare's IP instead of the real client IP.
 
-Cloudflare sets special headers with the real IP that need to be processed by Traefik before forwarding to Pangolin. Configure Traefik to parse these headers using a community plugin for Traefik: [Real IP from Cloudflare Proxy Tunnel](https://plugins.traefik.io/plugins/62e97498e2bf06d4675b9443/real-ip-from-cloudflare-proxy-tunnel).
+**Badger**, Pangolin's middleware for Traefik, automatically handles Cloudflare proxy IP extraction. Badger versions 1.3.0 and later automatically:
+- Trust Cloudflare IP ranges
+- Extract the real client IP from the `CF-Connecting-IP` header
+- Set `X-Real-IP` and `X-Forwarded-For` headers for downstream services
 
-Add the plugin to your Traefik configuration:
+<Info>
+**Automatic Configuration**: Pangolin installer versions 1.14.0 and greater automatically add Badger to all Pangolin routes in Traefik. If you're using a newer installer, no manual configuration is needed.
+</Info>
 
-```yaml
-experimental:
-  plugins:
-    cloudflarewarp:
-      moduleName: github.com/BetterCorp/cloudflarewarp
-      version: v1.3.0
+#### Manual Configuration
 
-entryPoints:
-  websecure:
-    address: ':443'
-    http:
+If you're using an older installer or need to manually configure Badger, add it to your Traefik configuration. Badger must be applied to all routers that handle Pangolin traffic (API, dashboard, and WebSocket routes):
+
+```yaml title="dynamic_config.yml"
+http:
+  middlewares:
+    badger:
+      plugin:
+        badger:
+          disableForwardAuth: true
+
+  routers:
+    # Next.js router (handles dashboard)
+    next-router:
+      rule: "Host(`pangolin.example.com`) && !PathPrefix(`/api/v1`)"
+      service: next-service
+      entryPoints:
+        - websecure
       middlewares:
-        - cloudflarewarp@file
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+    # API router (handles /api/v1 paths)
+    api-router:
+      rule: "Host(`pangolin.example.com`) && PathPrefix(`/api/v1`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+    # WebSocket router
+    ws-router:
+      rule: "Host(`pangolin.example.com`)"
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
 ```
 
-This creates a middleware called `cloudflarewarp` and applies it to the `websecure` entrypoint.
+**Why Badger is needed**: When `disableForwardAuth: true` is set, Badger extracts the real client IP from Cloudflare proxy headers without performing authentication. This is necessary because forward authentication is only needed for resources controlled by Pangolin, not for the main application routes. However, the main Pangolin containers and APIs still need the real client IP for proper rate limiting and IP tracking.
 
-Then set `trust_proxy: 2` in your Pangolin config file. This tells Pangolin to trust the second-level proxy (Traefik is proxy 1, Cloudflare is proxy 2):
-1
+#### Pangolin Configuration
+
+Set `trust_proxy: 2` in your Pangolin config file. This tells Pangolin to trust the second-level proxy (Traefik is proxy 1, Cloudflare is proxy 2):
+
 ```yaml
 server:
   trust_proxy: 2
 ```
+
+<Warning>
+**Update Badger**: Ensure you're running Badger version 1.3.0 or later to get real IP addresses in logs for Public resources. Update Badger if you're using an older version.
+</Warning>
 
 After making these changes, restart both Traefik and Pangolin for the configuration to take effect.
