@@ -46,8 +46,9 @@
                                         "pages": [
                                             "manage/resources/public/authentication",
                                             "manage/resources/public/targets",
-                                            "manage/healthchecks-failover",
-                                            "manage/resources/public/raw-resources"
+                                            "manage/resources/public/raw-resources",
+                                            "manage/resources/public/maintenance",
+                                            "manage/resources/public/healthchecks-failover"
                                         ]
                                     },
                                     {
@@ -282,6 +283,10 @@
         {
             "source": "/manage/resources/tcp-udp-resources",
             "destination": "/manage/resources/public/raw-resources"
+        },
+        {
+            "source": "manage/healthchecks-failover",
+            "destination": "manage/resources/public/healthchecks-failover"
         }
     ],
     "seo": {

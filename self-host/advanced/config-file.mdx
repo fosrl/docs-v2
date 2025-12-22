@@ -429,7 +429,7 @@ This section contains the complete reference for all configuration options in `c
       **Default**: `false`
 
       <Note>
-        When enabled, uses file-based dynamic configuration instead of API-based updates. 
+        When enabled, uses file-based dynamic configuration instead of API-based updates.
       </Note>
     </ResponseField>
 
@@ -459,6 +459,12 @@ This section contains the complete reference for all configuration options in `c
       Starting port for WireGuard tunnels.
 
       **Example**: `51820`
+    </ResponseField>
+
+    <ResponseField name="clients_start_port" type="integer">
+      Starting port for client WireGuard relay and hole punch port.
+
+      **Example**: `21820`
     </ResponseField>
 
     <ResponseField name="use_subdomain" type="boolean">
@@ -823,6 +829,6 @@ Some configuration values can be set using environment variables for enhanced se
 
 | Name | Variable | Config |
 |------|----------|--------|
-| Server Secret | `SERVER_SECRET` | `server.secret` | 
+| Server Secret | `SERVER_SECRET` | `server.secret` |
 | Email Password | `EMAIL_SMTP_PASS` | `email.smtp_pass` |
 | PostgreSQL Connection String | `POSTGRES_CONNECTION_STRING` | `postgres.connection_string` |
