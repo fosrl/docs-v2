@@ -21,6 +21,10 @@ Pangolin supports two blueprint formats:
 1. **YAML Configuration Files**: Standalone configuration files
 2. **Docker Labels**: Configuration embedded in Docker Compose files
 
+<Note type="info">
+Some features in this documentation are marked with **(EE)**, indicating they are available only in the Enterprise Edition of Pangolin.
+</Note>
+
 ## YAML Configuration Format
 
 YAML config can be applied using Docker labels, API, from a Newt site, or in the UI. _Application through a CLI tool is planned._
@@ -83,7 +87,7 @@ public-resources:
         match: ip
         value: 1.1.1.1
       - action: deny
-        match: cidr 
+        match: cidr
         value: 2.2.2.2/32
       - action: pass
         match: path
@@ -104,7 +108,7 @@ public-resources:
     protocol: tcp
     proxy-port: 3000
     targets:
-    - site: lively-yosemite-toad 
+    - site: lively-yosemite-toad
       hostname: localhost
       port: 3000
 ```
@@ -158,6 +162,35 @@ public-resources:
 <Note>
 When using targets-only resources, the `name` and `protocol` fields are not required. All other resource-level validations are skipped for these simplified configurations.
 </Note>
+
+### Maintenance Page Configuration **(EE)**
+
+<Note type="warning">
+This is an Enterprise Edition (EE) feature only. It allows you to display a maintenance page for a public resource when it's under maintenance or when targets are unhealthy.
+</Note>
+
+```yaml
+public-resources:
+  production-app:
+    name: Production Application
+    protocol: http
+    full-domain: app.example.com
+    maintenance:
+      enabled: true
+      type: forced
+      title: Scheduled Maintenance
+      message: We are performing system upgrades to improve performance. The service will be back online shortly.
+      estimated-time: 2 hours
+    targets:
+    - site: my-site
+      hostname: app-server
+      method: https
+      port: 443
+```
+
+**Maintenance Types:**
+- **`forced`**: Always displays the maintenance page regardless of target health status
+- **`automatic`**: Displays the maintenance page only when all targets are unhealthy or the sites are offline
 
 ### Private Resources
 
@@ -258,7 +291,7 @@ networks:
     name: pangolin_default
 ```
 
-This will create a resource that looks like the following: 
+This will create a resource that looks like the following:
 
 <Frame caption="Pangolin UI showing Docker Compose blueprint example">
   <img src="/images/docker-compose-blueprint-example.png" alt="Example resource"/>
@@ -295,6 +328,7 @@ This will create a resource that looks like the following:
 | `headers` | array | No | Custom headers to add to requests | Each header requires `name` and `value` (min 1 char each) |
 | `rules` | array | No | Access control rules | See Rules section below |
 | `auth` | object | HTTP only | Authentication configuration | See Authentication section below |
+| `maintenance` | object | No | Maintenance page configuration **(EE)** | Enterprise Edition only. See Maintenance Configuration section below |
 | `targets` | array | Yes | Target endpoints for the resource | See Targets section below |
 
 ### Target Configuration
@@ -373,6 +407,45 @@ Not allowed on TCP/UDP resources.
 | `sso-users` | array | No | Allowed SSO usernames | Must be valid usernames |
 | `whitelist-users` | array | No | Whitelisted user emails | Must be valid email addresses |
 | `auto-login-idp` | number | No | Automatic login identity provider ID | Must be a positive integer |
+
+### Maintenance Configuration **(EE)**
+
+<Note type="warning">
+This is an Enterprise Edition (EE) feature only. It allows you to display a maintenance page for a public resource.
+</Note>
+
+The `maintenance` object can be added to any public resource to display a maintenance page to users:
+
+```yaml
+public-resources:
+  my-service:
+    name: My Service
+    protocol: http
+    full-domain: service.example.com
+    maintenance:
+      enabled: true
+      type: automatic
+      title: Scheduled Maintenance
+      message: We are performing scheduled maintenance. Service will resume shortly.
+      estimated-time: 2 hours
+    targets:
+    - site: my-site
+      hostname: backend-server
+      method: https
+      port: 8443
+```
+
+| Property | Type | Required | Description | Constraints |
+|----------|------|----------|-------------|-------------|
+| `enabled` | boolean | No | Whether the maintenance page is enabled | Defaults to `false` |
+| `type` | string | No | Maintenance type (`forced` or `automatic`) | `forced` always shows maintenance page; `automatic` shows only when all targets are unhealthy or sites offline |
+| `title` | string | No | Title text for the maintenance page | Maximum 255 characters, can be null |
+| `message` | string | No | Message text explaining the maintenance | Maximum 2000 characters, can be null |
+| `estimated-time` | string | No | Estimated time for maintenance completion | Maximum 100 characters, can be null |
+
+**Maintenance Types:**
+- **`forced`**: Always displays the maintenance page regardless of target health status
+- **`automatic`**: Displays the maintenance page only when all targets are unhealthy
 
 ### Rules Configuration
 
