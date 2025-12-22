@@ -28,7 +28,7 @@ It is recommended that you create overlapping resources only if absolutely requi
 
 ## ICMP End to End?
 
-Pangolin supports testing connectivity to Resources using ICMP ping requests. However, it's important to note that while the Pangolin client can send ICMP echo requests to the destination, the actual ping request is captured and replayed from the Newt binary to the actually destination. This means that requests are not end to end but are still an effective way to test connectivity to a resource.
+Pangolin supports testing connectivity to Resources using ICMP ping requests. However, it's important to note that while the Pangolin client can send ICMP echo requests to the destination, **the actual ping request is captured and replayed from the Newt binary to the actually destination**. This means that requests are not end to end but are still an effective way to test connectivity to a resource.
 
 ## Unicast Only?
 

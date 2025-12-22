@@ -15,6 +15,12 @@ A alias can only be created for a Resource that is a single host (IP or FQDN). A
 
 Since aliases cannot be single-label domains, you must avoid using domain names that do not contain a dot (e.g., `pangolin`). A domain like `pangolin.net`, which includes a dot, is acceptable. Instead of a single-label domain, you should consider using a subdomain of a domain you control, such as `router.mywebsite.com`, or an existing private/internal domain name, like `router.internal` or `router.corp`.
 
+### Wildcards
+
+Wildcards allow you to define aliases that match multiple hostnames using special characters in the FQDN. For example, in an alias like `*.host-0?.autoco.internal`, the asterisk `*` matches any sequence of characters (including none), and the question mark `?` matches exactly one character.
+
+If you use a wildcard such as `*.proxy.internal`, it will match any hostname that ends with `.proxy.internal` and has something before the dot—such as `host.proxy.internal`, `longerhost.proxy.internal`, or even `sub.host.proxy.internal`. However, the wildcard will not match the base domain itself (`autoco.internal` without anything before the dot).
+
 ## Custom Upstream DNS
 
 Aliases work by overriding the DNS of your computer running the client so that all DNS requests are sent to the Pangolin client for resolution. The dns server on your computer is typically `100.96.128.1` (the first address inside of your utility subnet on the org) when connected to the tunnel which will forward request to an upstream server. By default, we use `9.9.9.9`, but this upstream address can be configured using [the flag](/manage/clients/configure-client) in the CLI / Olm or in the client settings.
