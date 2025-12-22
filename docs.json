@@ -74,6 +74,13 @@
                             },
                             "manage/domains",
                             {
+                                "group": "Organizations",
+                                "icon": "building",
+                                "pages": [
+                                    "manage/organizations/org-id"
+                                ]
+                            },
+                            {
                                 "group": "Access Control",
                                 "icon": "user-group",
                                 "pages": [
@@ -82,6 +89,7 @@
                                     "manage/access-control/forwarded-headers",
                                     "manage/access-control/login-page",
                                     "manage/geoblocking",
+                                    "manage/asnblocking",
                                     "manage/access-control/mfa",
                                     "manage/access-control/password-rotation",
                                     "manage/access-control/session-length",
@@ -151,6 +159,7 @@
                                     "self-host/advanced/database-options",
                                     "self-host/advanced/integration-api",
                                     "self-host/advanced/enable-geoblocking",
+                                    "self-host/advanced/enable-asnblocking",
                                     "self-host/advanced/metrics",
                                     "self-host/telemetry"
                                 ]

@@ -1,0 +1,65 @@
+---
+title: "Enable ASN Blocking"
+description: "Configuration requirements to enable ASN blocking in Pangolin"
+---
+
+To enable ASN blocking in Pangolin Community you must download and place the Maxmind ASN database into the `config/` directory and update the config file. This can be done for free.
+
+<Tip>
+Remember to keep the ASN database updated regularly, as ASN assignments and network mappings can change over time. You can just repeat the download and extraction steps periodically to ensure your database is current.
+</Tip>
+
+<Tip>
+It is possible to automate this process with a Docker container from Maxmind themself.
+Have a look at this [Community guide](/self-host/community-guides/geolite2automation) on how to implement this!
+</Tip>
+
+You can use the installer to download and place the database for you, just grab the latest installer:
+
+  ```bash
+  curl -fsSL https://static.pangolin.net/get-installer.sh | bash
+  ```
+Then run the installer again:
+
+  ```bash
+  ./installer
+  ```
+
+### Manual Installation Steps
+
+<Steps>
+<Step title="Download and extract the ASN database">
+  Download and extract the GeoLite2 ASN database using the following commands:
+  
+  ```bash
+  # Download the GeoLite2 ASN database
+  curl -L -o GeoLite2-ASN.tar.gz https://github.com/GitSquared/node-geolite2-redist/raw/refs/heads/master/redist/GeoLite2-ASN.tar.gz
+  
+  # Extract the database
+  tar -xzf GeoLite2-ASN.tar.gz
+  
+  # Move the .mmdb file to the config directory
+  mv GeoLite2-ASN_*/GeoLite2-ASN.mmdb config/
+  
+  # Clean up the downloaded files
+  rm -rf GeoLite2-ASN.tar.gz GeoLite2-ASN_*
+  ```
+</Step>
+<Step title="Update the Pangolin config file">
+  Update your Pangolin configuration to point to the new ASN database file. Edit your `config/config.yml` file to include the following entry:
+  
+  ```yaml
+  server:
+    maxmind_asn_path: "./config/GeoLite2-ASN.mmdb"
+  ```
+</Step>
+<Step title="Restart Pangolin">
+  Restart your Pangolin instance to apply the changes:
+  
+  ```bash
+    docker compose restart pangolin
+  ```
+</Step>
+</Steps>
+
+Alternatively you can create an account at [Maxmind](https://www.maxmind.com/en/geolite2/signup) to get a license key and download the database directly from them.
