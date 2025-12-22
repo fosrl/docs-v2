@@ -73,6 +73,13 @@
                             },
                             "manage/domains",
                             {
+                                "group": "Organizations",
+                                "icon": "building",
+                                "pages": [
+                                    "manage/organizations/org-id"
+                                ]
+                            },
+                            {
                                 "group": "Access Control",
                                 "icon": "user-group",
                                 "pages": [
