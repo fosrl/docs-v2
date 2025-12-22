@@ -1,13 +1,13 @@
 ---
 title: "GeoLite2 Automation"
-description: "A simple automation to download & update your GeoLite2 database with geoipupdate"
+description: "A simple automation to download & update your GeoLite2 databases with geoipupdate"
 ---
 
 <Note>
 This is a community guide and is not officially supported. If you have any issues, please reach out to the [author](https://github.com/txwgnd).
 </Note>
 
-This automation lets your system automatically download & upgrade the `GeoLite2-Country` database from Maxmind to use for geoblocking on your Pangolin host. It's utilizing Maxmind's [geoipupdate](https://github.com/maxmind/geoipupdate/tree/main) Docker container to achieve this.
+This automation lets your system automatically download & upgrade the `GeoLite2-Country` and `GeoLite2-ASN` databases from Maxmind to use for geoblocking and ASN blocking on your Pangolin host. It's utilizing Maxmind's [geoipupdate](https://github.com/maxmind/geoipupdate/tree/main) Docker container to achieve this.
 
 Maxmind's service is free of charge for development, personal or community use. [Quote](https://support.maxmind.com/knowledge-base/articles/create-a-maxmind-account#h_01G4G4NG5C63BQ6HRG6MSS50T3)
 
@@ -23,7 +23,7 @@ Maxmind's service is free of charge for development, personal or community use. 
 * Pangolin version 1.11.0 or higher
 
 ## 2. Maxmind Account
-To be able to use Maxmind's service you need to request access to the GeoLite2 database and create an account on their [website](https://www.maxmind.com/en/geolite2/signup?utm_source=kb&utm_medium=kb-link&utm_campaign=kb-create-account). 
+To be able to use Maxmind's service you need to request access to the GeoLite2 databases and create an account on their [website](https://www.maxmind.com/en/geolite2/signup?utm_source=kb&utm_medium=kb-link&utm_campaign=kb-create-account). 
 
 After you successfully created an account visit the mainpage again and login to your new account.
 
@@ -72,10 +72,10 @@ services:
     image: ghcr.io/maxmind/geoipupdate
     restart: unless-stopped
     environment:
-      - 'GEOIPUPDATE_ACCOUNT_ID='					# Account ID
-      - 'GEOIPUPDATE_LICENSE_KEY='					# API key
-      - 'GEOIPUPDATE_EDITION_IDS=GeoLite2-Country'	# Which db should be downloaded
-      - 'GEOIPUPDATE_FREQUENCY=72'					# Update intervall in hours
+      - 'GEOIPUPDATE_ACCOUNT_ID='							# Account ID
+      - 'GEOIPUPDATE_LICENSE_KEY='							# API key
+      - 'GEOIPUPDATE_EDITION_IDS=GeoLite2-Country GeoLite2-ASN'	# Which dbs should be downloaded
+      - 'GEOIPUPDATE_FREQUENCY=72'							# Update intervall in hours
     volumes:
       - './config/GeoLite2:/usr/share/GeoIP'
 ```
@@ -91,13 +91,14 @@ Navigate to `/config` within the same folder and open it with a text editor.
 cd config
 ```
 
-Add this line to the `server` object
+Add these lines to the `server` object
 
 ```yaml
 server:
   maxmind_db_path: "./config/GeoLite2/GeoLite2-Country.mmdb"
+  maxmind_asn_path: "./config/GeoLite2/GeoLite2-ASN.mmdb"
 ```
-This entry tells the Pangolin application where to find the database.
+These entries tell the Pangolin application where to find the databases.
 
 Save and close the file then navigate to the `pangolin` folder one level higher.
 
@@ -106,6 +107,6 @@ Restart your Pangolin stack with:
 docker compose up -d
 ```
 
-Et voilà, you are now able to define country rules for your ressources! 🏁
+Et voilà, you are now able to define country rules and ASN rules for your ressources! 🏁
 
-btw: you can use this exact database for your Traefik dashboard too -> [Community Guide](/self-host/community-guides/traefiklogsdashboard)
+btw: you can use these exact databases for your Traefik dashboard too -> [Community Guide](/self-host/community-guides/traefiklogsdashboard)
