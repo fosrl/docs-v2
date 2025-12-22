@@ -26,9 +26,9 @@ Pangolin smooths away overlapping networks and arbitrarily chooses a single site
 
 It is recommended that you create overlapping resources only if absolutely required. If you do, use [Aliases](/manage/resources/private/alias) to explicitly defined which host should be used for a given FQDN or IP address and use the alias to connect.
 
-## Why is ICMP Pinging Not Working?
+## ICMP End to End?
 
-Because Newt sites are proxying traffic out of the secure tunnel, ICMP needs to be handled specially just like UDP and TCP. Right now, ICMP **is not supported** through the Pangolin client. If you need to ping hosts on the remote network, consider using TCP or UDP-based tools like `hping3` or `nping` as alternatives. We plan to add ICMP support in a future release.
+Pangolin supports testing connectivity to Resources using ICMP ping requests. However, it's important to note that while the Pangolin client can send ICMP echo requests to the destination, the actual ping request is captured and replayed from the Newt binary to the actually destination. This means that requests are not end to end but are still an effective way to test connectivity to a resource.
 
 ## Unicast Only?
 
