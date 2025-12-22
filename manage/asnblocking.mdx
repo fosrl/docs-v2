@@ -1,0 +1,114 @@
+---
+title: "ASN Blocking"
+description: "Configure ASN blocking to restrict access based on Autonomous System Numbers"
+---
+
+<Note>
+ASN blocking is available in Pangolin community! Protect your resources by blocking or allowing specific networks and service providers.
+</Note>
+
+## Benefits of ASN Blocking
+
+ASN blocking provides several important security and operational advantages:
+
+### Security Benefits
+- **Block Malicious Networks**: Prevent access from autonomous systems known for hosting malicious activity, botnets, or spam operations
+- **Control Cloud Provider Access**: Restrict or allow access from specific cloud providers (AWS, Azure, GCP, etc.)
+- **Block VPN/Proxy Services**: Deny access from commercial VPN and proxy service providers to prevent anonymous access
+- **Datacenter Filtering**: Block traffic from datacenter networks while allowing residential ISPs
+- **Compliance Requirements**: Meet regulatory requirements that restrict access from certain network types or providers
+
+## Implementing ASN Blocking with Bypass Rules
+
+ASN blocking in Pangolin is implemented using [bypass rules](/manage/access-control/rules) with ASN-based matching. You can create rules that either allow or deny access based on the visitor's Autonomous System Number.
+
+<Frame caption="Screenshot of ASN rules from the Pangolin Dashboard.">
+  <img src="/images/asn_rules.png" alt="Pangolin Dashboard"/>
+</Frame>
+
+### Setting Up ASN Blocking Rules
+
+1. Navigate to your target resource and select the **Rules** tab
+2. Create a new rule and select **ASN** as the match type
+3. Choose an ASN from the dropdown of common providers, or manually enter a specific ASN number
+4. Choose your rule action:
+   - **Allow**: Bypass authentication for users from specific ASNs
+   - **Deny**: Block all access from specific ASNs
+   - **Pass to Auth**: Let users from specific ASNs proceed to authentication
+
+### Common ASNs
+
+The dropdown includes many commonly-used ASNs such as:
+
+- **Cloud Providers**: Amazon (AS16509), Google Cloud (AS15169), Microsoft Azure (AS8075), DigitalOcean (AS14061)
+- **Major ISPs**: Comcast (AS7922), AT&T (AS7018), Verizon (AS701), Deutsche Telekom (AS3320)
+- **VPN/Proxy Services**: NordVPN (various), ExpressVPN (various), Mullvad (AS42831)
+- **CDN Providers**: Cloudflare (AS13335), Fastly (AS54113), Akamai (various)
+
+If the ASN you need isn't in the dropdown, you can manually enter the ASN number (e.g., AS12345 or just 12345).
+
+### Common ASN Blocking Patterns
+
+#### Block VPN and Proxy Services
+Create deny rules for known VPN and proxy ASNs to prevent anonymous access:
+
+1. Create **Deny** rules for each VPN/proxy provider ASN
+2. Select ASNs from the dropdown or enter them manually
+3. Set appropriate priorities
+
+#### Block Datacenter Traffic
+Block access from datacenter and hosting provider ASNs while allowing residential users:
+
+1. Create **Deny** rules for major cloud and hosting provider ASNs
+2. Include providers like AWS, GCP, Azure, DigitalOcean, etc.
+3. This helps ensure only real users from residential ISPs can access your resources
+
+#### Allow Only Specific Networks
+Create a default deny rule and explicitly allow only approved ASNs:
+
+1. Create a **Deny** rule matching all traffic with priority 100
+2. Create **Allow** rules for specific approved ASNs with higher priority (e.g., 10, 20, 30)
+
+#### Regional ISP Control
+Allow access only from specific country ISPs while blocking others:
+
+1. **Combine with Country Rules**: Use ASN rules to specify which ISPs are allowed
+2. Create **Allow** rules for major residential ISPs in your target countries
+3. Block datacenter and VPN ASNs that might circumvent country restrictions
+
+### Best Practices
+
+<Warning>
+ASN blocking affects all users from that network. Be careful when blocking large ISPs or cloud providers, as legitimate users or your own infrastructure may be affected.
+</Warning>
+
+
+### Finding ASN Numbers
+
+If you need to find the ASN for a specific network or provider:
+
+1. Use online tools like [bgp.he.net](https://bgp.he.net/) or [ipinfo.io](https://ipinfo.io/)
+2. Search by company name, IP address, or ASN number
+3. Enter the ASN in the rule configuration (with or without the "AS" prefix)
+
+### Rule Priority Example
+
+```
+Priority 1: Allow - ASN: AS7922 (Comcast)
+Priority 2: Allow - ASN: AS7018 (AT&T)  
+Priority 3: Deny - ASN: AS13335 (Cloudflare - VPN)
+Priority 4: Deny - ASN: AS16509 (Amazon - Datacenter)
+```
+
+This configuration allows access from residential users on Comcast and AT&T while blocking Cloudflare's VPN service and Amazon datacenters.
+
+### Advanced Patterns
+
+#### Block Bot Networks
+Identify and block ASNs associated with automated bot traffic:
+
+1. Monitor your access logs for suspicious ASNs
+2. Create **Deny** rules for ASNs showing bot-like behavior
+3. Regularly review and update your blocklist
+
+
