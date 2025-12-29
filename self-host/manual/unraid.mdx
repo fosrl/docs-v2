@@ -170,6 +170,10 @@ The domain you enter here is what will be used to access the main Pangolin dashb
 ```yaml title="pangolin/config/traefik/dynamic_config.yml"
 http:
   middlewares:
+    badger:
+      plugin:
+        badger:
+          disableForwardAuth: true
     redirect-to-https:
       redirectScheme:
         scheme: https
@@ -183,6 +187,7 @@ http:
         - web
       middlewares:
         - redirect-to-https
+	- badger
 
     # Next.js router (handles everything except API and WebSocket paths)
     next-router:
@@ -190,6 +195,8 @@ http:
       service: next-service
       entryPoints:
         - websecure
+      middlewares:
+        - badger
       tls:
         certResolver: letsencrypt
 
@@ -199,6 +206,8 @@ http:
       service: api-service
       entryPoints:
         - websecure
+      middlewares:
+        - badger
       tls:
         certResolver: letsencrypt
 
@@ -208,6 +217,8 @@ http:
       service: api-service
       entryPoints:
         - websecure
+      middlewares:
+        - badger
       tls:
         certResolver: letsencrypt
 
