@@ -454,6 +454,13 @@ public-resources:
 | `action` | string | Yes | Rule action (`allow`, `deny`, or `pass`) | - |
 | `match` | string | Yes | Match type (`cidr`, `path`, `ip`, or `country`) | - |
 | `value` | string | Yes | Value to match against | Format depends on match type. For `country` match, use `ALL` to match all countries |
+| `priority` | number | No | Processing priority of the rule. | If not set, the priority is auto-assigned sequentially based on the rule order. |
+
+<Note>
+If no priority is defined, it is auto-assigned sequentially starting at 1 based on the rule order.
+Each rule consumes one priority slot, including rules with manually assigned priorities.
+Manual and auto-assigned priorities must be unique.
+</Note>
 
 ### Private Resources
 
