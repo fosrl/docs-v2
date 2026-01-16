@@ -791,38 +791,6 @@ This section contains the complete reference for all configuration options in `c
   </Expandable>
 </ResponseField>
 
-### DNS Configuration
-
-<ResponseField name="dns" type="object">
-  DNS settings for domain name resolution and CNAME extensions.
-
-  <Expandable title="DNS">
-    <ResponseField name="nameservers" type="array of strings">
-      List of nameservers used for DNS resolution.
-
-      **Example**: `["ns1.example.com", "ns2.example.com"]`
-
-      **Default**: `["ns1.pangolin.net", "ns2.pangolin.net", "ns3.pangolin.net"]`
-
-      <Note>
-        These nameservers are used for DNS queries and domain resolution.
-      </Note>
-    </ResponseField>
-
-    <ResponseField name="cname_extension" type="string">
-      Domain extension used for CNAME record management.
-
-      **Example**: `cname.example.com`
-
-      **Default**: `cname.pangolin.net`
-
-      <Note>
-        Used for creating CNAME records for dynamic domain routing.
-      </Note>
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
 ## Environment Variables
 
 Some configuration values can be set using environment variables for enhanced security:
