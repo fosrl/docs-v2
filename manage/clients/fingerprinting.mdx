@@ -1,0 +1,98 @@
+---
+title: 'Client Fingerprinting'
+description:
+  'A summary of device information that is collected during the connection'
+---
+
+## Device Fingerprinting
+
+Pangolin clients collect device fingerprinting information and can perform
+security posture checks to help determine trusted devices. This information can
+be used to enforce security policies, audit device configurations, or monitor
+compliance with organizational requirements. Snapshots of device information are
+collected periodically on each platform when clients are connected.
+
+## Collected Fingerprint Information
+
+The following device attributes are collected on each device when available:
+
+- Username
+- Hostname
+- OS version
+- Kernel version
+- Architecture
+- Device model
+- Serial number
+
+## Available Posture Checks
+
+Posture checks are also collected on each platform; this is device state that
+could potentially change, such as biometric availability, firewall settings, and
+other related information if it is available.
+
+Posture checks are supported on a per-platform basis.
+
+### Windows
+
+| Posture Check         | What It Reports                                                   |
+| --------------------- | ----------------------------------------------------------------- |
+| Hard drive encryption | Whether the system disk and other disks are encrypted (BitLocker) |
+| Screen lock           | If a password is required to unlock the screen                    |
+| Firewall              | If the firewall (Windows or third party) is enabled               |
+| Antivirus             | If antivirus (Windows or third party) is installed and active     |
+| Auto updates          | If automatic updates are enabled                                  |
+| TPM availability      | If a Trusted Platform Module is available                         |
+| Windows Defender      | If Windows Defender is enabled                                    |
+
+---
+
+### macOS
+
+| Posture Check                     | What It Reports                                       |
+| --------------------------------- | ----------------------------------------------------- |
+| Hard drive encryption             | If FileVault is enabled                               |
+| Screen lock                       | If a password is required after sleep or screen saver |
+| Biometric configuration           | If Touch ID or Face ID is configured                  |
+| Firewall                          | If the macOS firewall is enabled                      |
+| System Integrity Protection (SIP) | Whether SIP is active                                 |
+| Gatekeeper                        | Whether Gatekeeper is active                          |
+| Firewall stealth mode             | Whether firewall stealth mode is enabled              |
+
+---
+
+### Linux
+
+| Posture Check         | What It Reports                                  |
+| --------------------- | ------------------------------------------------ |
+| Hard drive encryption | If LUKS devices are detected on the system       |
+| Firewall              | Whether UFW, firewalld, or iptables are enabled  |
+| AppArmor              | If AppArmor is active                            |
+| SELinux               | If SELinux is active                             |
+| TPM availability      | If a Trusted Platform Module device is available |
+
+---
+
+### iOS
+
+| Posture Check           | What It Reports                      |
+| ----------------------- | ------------------------------------ |
+| Screen lock             | If a password or unlock is required  |
+| Biometric configuration | If Touch ID or Face ID is configured |
+| Minimum OS version      | If the OS version meets requirements |
+
+---
+
+### Android
+
+| Posture Check           | What It Reports                                    |
+| ----------------------- | -------------------------------------------------- |
+| Screen lock             | If any screen lock is configured                   |
+| Biometric configuration | If fingerprint or facial recognition is configured |
+| Hard drive encryption   | If File-Based Encryption is enabled                |
+
+---
+
+> Each fingerprint snapshot is uniquely identified and stored with a timestamp
+> (`collectedAt`) to allow historical analysis and tracking of changes over
+> time. These snapshots are deleted after a year. This will be configurable in
+> the future.
