@@ -69,7 +69,8 @@
                                     "manage/clients/install-client",
                                     "manage/clients/configure-client",
                                     "manage/clients/update-client",
-                                    "manage/clients/credentials"
+                                    "manage/clients/credentials",
+                                    "manage/clients/fingerprinting"
                                 ]
                             },
                             "manage/domains",
