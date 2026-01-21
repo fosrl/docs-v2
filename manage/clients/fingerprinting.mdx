@@ -37,7 +37,6 @@ Posture checks are supported on a per-platform basis.
 | Posture Check         | What It Reports                                                   |
 | --------------------- | ----------------------------------------------------------------- |
 | Hard drive encryption | Whether the system disk and other disks are encrypted (BitLocker) |
-| Screen lock           | If a password is required to unlock the screen                    |
 | Firewall              | If the firewall (Windows or third party) is enabled               |
 | Antivirus             | If antivirus (Windows or third party) is installed and active     |
 | Auto updates          | If automatic updates are enabled                                  |
@@ -48,15 +47,13 @@ Posture checks are supported on a per-platform basis.
 
 ### macOS
 
-| Posture Check                     | What It Reports                                       |
-| --------------------------------- | ----------------------------------------------------- |
-| Hard drive encryption             | If FileVault is enabled                               |
-| Screen lock                       | If a password is required after sleep or screen saver |
-| Biometric configuration           | If Touch ID or Face ID is configured                  |
-| Firewall                          | If the macOS firewall is enabled                      |
-| System Integrity Protection (SIP) | Whether SIP is active                                 |
-| Gatekeeper                        | Whether Gatekeeper is active                          |
-| Firewall stealth mode             | Whether firewall stealth mode is enabled              |
+| Posture Check                     | What It Reports                          |
+| --------------------------------- | ---------------------------------------- |
+| Biometric configuration           | If Touch ID or Face ID is configured     |
+| Firewall                          | If the macOS firewall is enabled         |
+| System Integrity Protection (SIP) | Whether SIP is active                    |
+| Gatekeeper                        | Whether Gatekeeper is active             |
+| Firewall stealth mode             | Whether firewall stealth mode is enabled |
 
 ---
 
@@ -76,9 +73,7 @@ Posture checks are supported on a per-platform basis.
 
 | Posture Check           | What It Reports                      |
 | ----------------------- | ------------------------------------ |
-| Screen lock             | If a password or unlock is required  |
 | Biometric configuration | If Touch ID or Face ID is configured |
-| Minimum OS version      | If the OS version meets requirements |
 
 ---
 
@@ -86,13 +81,14 @@ Posture checks are supported on a per-platform basis.
 
 | Posture Check           | What It Reports                                    |
 | ----------------------- | -------------------------------------------------- |
-| Screen lock             | If any screen lock is configured                   |
 | Biometric configuration | If fingerprint or facial recognition is configured |
 | Hard drive encryption   | If File-Based Encryption is enabled                |
+| Auto updates            | If automatic updates are enabled                   |
+| TPM availability        | If StrongBox is enabled to act as a TPM            |
 
 ---
 
 > Each fingerprint snapshot is uniquely identified and stored with a timestamp
-> (`collectedAt`) to allow historical analysis and tracking of changes over
-> time. These snapshots are deleted after a year. This will be configurable in
-> the future.
+> to allow historical analysis and tracking of changes over time. These
+> snapshots are deleted automatically after a year; this time period for
+> auto-deletion will be configurable in the future.
