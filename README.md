@@ -1,20 +1,5 @@
 # Pangolin Documentation
 
-Welcome to the official documentation for [Pangolin](https://github.com/fosrl/pangolin), a modern reverse proxy and networking solution. This documentation site is hosted at [docs.pangolin.net](https://docs.pangolin.net) and provides comprehensive guides, API references, and resources for getting started with Pangolin.
-
-## About This Documentation
-
-This documentation covers everything you need to know about Pangolin, including:
-- Installation and setup guides
-- Configuration options
-- API reference
-- Self-hosting instructions
-- Development and contribution guidelines
-
-All contributions to improve this documentation are welcome! Feel free to submit issues or pull requests to help make these docs better for everyone.
-
-## Development & Contributing
-
 This documentation site is built using [Mintlify](https://mintlify.com). If you'd like to contribute to the documentation or run it locally for development, follow the instructions below.
 
 ### Local Development
