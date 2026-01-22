@@ -182,6 +182,14 @@
                         ]
                     },
                     {
+		                "group": "Careers",
+	                    "pages": [
+		                    "careers/join-us",
+		                    "careers/software-engineer-full-stack",
+		                    "careers/software-engineer-go"
+	                    ]
+	                },
+                    {
                         "group": "Development",
                         "pages": [
                             "development/system-architecture",
