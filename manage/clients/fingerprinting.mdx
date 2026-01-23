@@ -7,8 +7,8 @@ description:
 ## Device Fingerprinting
 
 Pangolin clients collect device fingerprinting information and can perform
-security posture checks to help determine trusted devices. This information can
-be used to enforce security policies, audit device configurations, or monitor
+security posture checks to help determine trusted devices. This information is
+used to enforce security policies, audit device configurations, and monitor
 compliance with organizational requirements. Snapshots of device information are
 collected periodically on each platform when clients are connected.
 
@@ -26,6 +26,10 @@ The following device attributes are collected on each device when available:
 
 ## Available Posture Checks
 
+<Note>
+	Posture checks are only collected on Pangolin Cloud and Enterprise.
+</Note>
+
 Posture checks are also collected on each platform; this is device state that
 could potentially change, such as biometric availability, firewall settings, and
 other related information if it is available.
@@ -39,23 +43,19 @@ Posture checks are supported on a per-platform basis.
 | Hard drive encryption | Whether the system disk and other disks are encrypted (BitLocker) |
 | Firewall              | If the firewall (Windows or third party) is enabled               |
 | Antivirus             | If antivirus (Windows or third party) is installed and active     |
-| Auto updates          | If automatic updates are enabled                                  |
 | TPM availability      | If a Trusted Platform Module is available                         |
-| Windows Defender      | If Windows Defender is enabled                                    |
-
----
 
 ### macOS
 
 | Posture Check                     | What It Reports                          |
 | --------------------------------- | ---------------------------------------- |
+| Hard drive encryption             | Whether the system disk is encrypted     |
 | Biometric configuration           | If Touch ID or Face ID is configured     |
 | Firewall                          | If the macOS firewall is enabled         |
 | System Integrity Protection (SIP) | Whether SIP is active                    |
 | Gatekeeper                        | Whether Gatekeeper is active             |
 | Firewall stealth mode             | Whether firewall stealth mode is enabled |
-
----
+| Auto updates                      | If automatic updates are enabled         |
 
 ### Linux
 
@@ -67,28 +67,12 @@ Posture checks are supported on a per-platform basis.
 | SELinux               | If SELinux is active                             |
 | TPM availability      | If a Trusted Platform Module device is available |
 
----
-
 ### iOS
 
-| Posture Check           | What It Reports                      |
-| ----------------------- | ------------------------------------ |
-| Biometric configuration | If Touch ID or Face ID is configured |
-
----
+No posture checks are currently supported on iOS.
 
 ### Android
 
-| Posture Check           | What It Reports                                    |
-| ----------------------- | -------------------------------------------------- |
-| Biometric configuration | If fingerprint or facial recognition is configured |
-| Hard drive encryption   | If File-Based Encryption is enabled                |
-| Auto updates            | If automatic updates are enabled                   |
-| TPM availability        | If StrongBox is enabled to act as a TPM            |
-
----
-
-> Each fingerprint snapshot is uniquely identified and stored with a timestamp
-> to allow historical analysis and tracking of changes over time. These
-> snapshots are deleted automatically after a year; this time period for
-> auto-deletion will be configurable in the future.
+| Posture Check         | What It Reports                         |
+| --------------------- | --------------------------------------- |
+| Hard drive encryption | If File-Based Encryption is enabled     |

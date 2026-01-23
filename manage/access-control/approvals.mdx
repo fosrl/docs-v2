@@ -1,0 +1,33 @@
+---
+title: "Device Approvals"
+description: "Only allow trusted devices to connect to an organization"
+---
+
+By default, any client configured with valid credentials can connect to an organization. To enhance security, you can enable device approvals, which require each new device to be manually approved by an administrator before it can connect.
+
+When device approvals are enabled, the first time a user connects a new device to the organization, the device will be marked as "Pending Approval." An administrator must then review and approve the device in the management console before it can access organization resources.
+
+<Frame>
+  <img src="/images/device_waiting_approval.png" />
+</Frame>
+
+All approvals can also be managed from a central page as they stream in to allow admins to approve or deny devices quickly.
+
+<Frame>
+  <img src="/images/approvals_page.png" />
+</Frame>
+
+## Enabling Device Approvals
+
+Device approvals are enabled on a per-role basis. To enable device approvals for a role, follow these steps:
+
+1. Click on the **Roles** tab.
+2. Select the role you want to enable device approvals for.
+3. Toggle the **Require Device Approval** option to enable it.
+4. Save your changes.
+
+Once enabled, any new user connecting with that role will require approval from an administrator before it can access organization resources.
+
+<Tip>
+	You can not enable device approvals for the "Admin" role.
+</Tip>
