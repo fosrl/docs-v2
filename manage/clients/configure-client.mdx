@@ -3,12 +3,23 @@ title: "Configure Clients"
 description: "Configure Olm for connecting to Pangolin clients"
 ---
 
-## Mac and Windows
+## GUI Clients (Mac, Windows, Android, iOS/iPadOS)
 
-Each respective client has a preferences window with all currently available configuration parameters like DNS override and preferred DNS servers. In your desktop client, click the menu bar or system tray icon, select More in the menu, and click Preferences.
+Each respective client has a preferences window with all currently available configuration parameters like DNS override and preferred DNS servers. In your desktop client, click the menu bar or system tray icon, select More in the menu, and click Preferences. In the mobile apps, navigate to the Setting screen.
 
-<Frame caption="Screenshot of how to access preferences window on Mac client. The steps are the same on Windows.">
-  <img src="/images/mac-client-preferences.png" centered/>
+### Android Battery Optimization
+
+To ensure Pangolin functions correctly in the background on Android devices, it's recommended to disable battery optimization for the app. This prevents the operating system from restricting its background activities, which could lead to disconnections.
+
+1. Open the **Settings** app on your Android device.
+2. Navigate to **Apps & notifications** (or simply **Apps** on some devices).
+3. Find and select the Pangolin app from the list of installed apps.
+4. Tap on **App battery usage**.
+5. Select **Allow background usage** and enable if disabled.
+6. From the options menu, choose **Unrestricted**.
+
+<Frame>
+	<img src="/images/android_battery.png" alt="Android Battery Optimization Settings"   style={{width: "250px", height: "auto"}} />
 </Frame>
 
 ## Pangolin CLI

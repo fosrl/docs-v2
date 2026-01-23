@@ -29,13 +29,13 @@ Some features in this documentation are marked with **(EE)**, indicating they ar
 
 YAML config can be applied using Docker labels, API, from a Newt site, or in the UI. _Application through a CLI tool is planned._
 
-<Card title="Newt YAML">
+<Card title="CLI YAML">
 
-    Newt automatically discovers and applies blueprints defined in YAML format when passing the `--blueprint-file` argument. For example
+    You can apply blueprints directly through the Pangolin CLI.
 
-    ```bash
-    newt --blueprint-file /path/to/blueprint.yaml <other-args>
-    ```
+```bash
+pangolin apply blueprint --file /path/to/blueprint.yaml
+```
 
 </Card>
 
@@ -46,6 +46,16 @@ YAML config can be applied using Docker labels, API, from a Newt site, or in the
     <Frame>
         <img src="/images/create_blueprint.png" width="400" centered/>
     </Frame>
+
+</Card>
+
+<Card title="Newt YAML">
+
+    Newt automatically discovers and applies blueprints defined in YAML format when passing the `--blueprint-file` argument. For example
+
+    ```bash
+    newt --blueprint-file /path/to/blueprint.yaml <other-args>
+    ```
 
 </Card>
 
@@ -86,9 +96,15 @@ public-resources:
       - action: allow
         match: ip
         value: 1.1.1.1
+        priority: 1
       - action: deny
         match: cidr
         value: 2.2.2.2/32
+        priority: 2
+      - action: allow
+        match: asn
+        value: AS13335
+        priority: 3
       - action: pass
         match: path
         value: /admin
@@ -203,6 +219,9 @@ private-resources:
     mode: host
     destination: 192.168.1.100
     site: lively-yosemite-toad
+    tcp-ports: "22,3389"
+    udp-ports: "*"
+    disable-icmp: false
     roles:
       - Developer
       - DevOps
@@ -216,6 +235,9 @@ private-resources:
     mode: cidr
     destination: 10.0.0.0/24
     site: lively-yosemite-toad
+    tcp-ports: "80,443,8000-9000"
+    udp-ports: "53,123"
+    disable-icmp: true
     users:
       - admin@example.com
 ```
@@ -452,8 +474,9 @@ public-resources:
 | Property | Type | Required | Description | Constraints |
 |----------|------|----------|-------------|-------------|
 | `action` | string | Yes | Rule action (`allow`, `deny`, or `pass`) | - |
-| `match` | string | Yes | Match type (`cidr`, `path`, `ip`, or `country`) | - |
-| `value` | string | Yes | Value to match against | Format depends on match type. For `country` match, use `ALL` to match all countries |
+| `match` | string | Yes | Match type (`cidr`, `path`, `ip`, `country`, or `asn`) | - |
+| `value` | string | Yes | Value to match against | Format depends on match type. For `ip`: valid IPv4/IPv6 address. For `cidr`: valid CIDR notation. For `country`: 2-letter country code or `ALL`. For `asn`: `AS<number>` format or `ALL` |
+| `priority` | number | No | Rule priority for evaluation order | Integer value, lower numbers evaluated first |
 
 ### Private Resources
 
@@ -465,6 +488,9 @@ These are resources used with Pangolin clients (e.g., SSH, RDP).
 | `mode` | string | Yes | Resource mode (`host` or `cidr`) | - |
 | `destination` | string | Yes | Target IP address, hostname, or CIDR block | For `host` mode: IP address or domain. For `cidr` mode: valid CIDR notation |
 | `site` | string | Yes | Site identifier where the resource is located | - |
+| `tcp-ports` | string | No | TCP port ranges to allow | Port range string (e.g., `"80,443,8000-9000"`), defaults to `"*"` (all ports) |
+| `udp-ports` | string | No | UDP port ranges to allow | Port range string (e.g., `"53,123,5000-6000"`), defaults to `"*"` (all ports) |
+| `disable-icmp` | boolean | No | Disable ICMP (ping) for this resource | Defaults to `false` |
 | `alias` | string | No | Fully qualified domain name alias | Must be a valid FQDN (e.g., example.com). Required when destination is a domain in `host` mode |
 | `roles` | array | No | Allowed SSO roles | Cannot include "Admin" role |
 | `users` | array | No | Allowed user emails | Must be valid email addresses |

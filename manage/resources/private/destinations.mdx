@@ -26,10 +26,10 @@ Pangolin smooths away overlapping networks and arbitrarily chooses a single site
 
 It is recommended that you create overlapping resources only if absolutely required. If you do, use [Aliases](/manage/resources/private/alias) to explicitly defined which host should be used for a given FQDN or IP address and use the alias to connect.
 
-## ICMP End to End?
+### ICMP End to End?
 
 Pangolin supports testing connectivity to Resources using ICMP ping requests. However, it's important to note that while the Pangolin client can send ICMP echo requests to the destination, **the actual ping request is captured and replayed from the Newt binary to the actually destination**. This means that requests are not end to end but are still an effective way to test connectivity to a resource.
 
-## Unicast Only?
+### Unicast Only?
 
 Right now unicast TCP and UDP traffic is supported through the Pangolin client. Multicast and broadcast traffic is not supported at this time.
