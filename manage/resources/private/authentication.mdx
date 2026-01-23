@@ -16,3 +16,11 @@ When removing access to a resource, the client will automatically tear down the 
     <Frame>
         <img src="/images/private_access_controls.png" centered/>
     </Frame>
+    
+### Port Restrictions
+
+By default, when access to a Resource is granted, all ports on that Resource are accessible. However, you can restrict access to specific ports on a Resource by defining port restrictions. When port restrictions are defined, only the specified ports will be accessible to users, roles, or machines that have access to the Resource. To specify specific ports, enter either a single port (e.g., `80`), a comma-separated list of ports (e.g., `80,443,8080`), or a port range using a hyphen (e.g., `8000-8100`).
+
+### ICMP Access
+
+By default, ICMP (ping) access to Resources is enabled. To disable ICMP access, you can uncheck the "ICMP" option when configuring access to a Resource. This will prevent users, roles, or machines with access to the Resource to send ICMP echo requests (ping) to the Resource's destination.

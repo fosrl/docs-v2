@@ -125,10 +125,8 @@
                                 "group": "Remote Nodes",
                                 "icon": "circle-nodes",
                                 "pages": [
-                                    "manage/remote-node/ha",
-                                    "manage/remote-node/nodes",
+                                    "manage/remote-node/understanding-nodes",
                                     "manage/remote-node/quick-install-remote",
-                                    "manage/remote-node/convert-remote",
                                     "manage/remote-node/config-file"
                                 ]
                             },
@@ -178,10 +176,19 @@
                                     "self-host/community-guides/geolite2automation"
                                 ]
                             },
+                            "self-host/ha",
                             "self-host/supporter-program",
                             "self-host/enterprise-edition"
                         ]
                     },
+                    {
+		                "group": "Careers",
+	                    "pages": [
+		                    "careers/join-us",
+		                    "careers/software-engineer-full-stack",
+		                    "careers/software-engineer-go"
+	                    ]
+	                },
                     {
                         "group": "Development",
                         "pages": [
