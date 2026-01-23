@@ -1,0 +1,206 @@
+---
+title: "Private Configuration File"
+description: "Configure advanced Pangolin settings using the privateConfig.yml file for enterprise features"
+---
+
+The `privateConfig.yml` file provides advanced configuration options for enterprise deployments. This file is mounted at `config/privateConfig.yml` in your Docker container.
+
+<Note>
+The private configuration file is only used on enterprise deployments. If you're using Pangolin Community, refer to the [main configuration file documentation](/self-host/advanced/config-file) instead. The private config file is not required.
+</Note>
+
+## Setting up your `privateConfig.yml`
+
+Here's a basic example with common settings:
+
+```yaml title="private-config.yml"
+flags:
+  use_org_only_idp: false
+
+branding:
+  app_name: "My Company Portal"
+  hide_auth_layout_footer: false
+```
+
+## Reference
+
+This section contains the complete reference for all configuration options in `private-config.yml`.
+
+### Application Settings
+
+<ResponseField name="app" type="object">
+  Regional and base domain configuration for multi-region deployments.
+
+  <Expandable title="properties">
+    <ResponseField name="region" type="string" default="default">
+      The region identifier for this Pangolin instance. Used for multi-region deployments.
+      
+      ```yaml
+      app:
+        region: "us-east-1"
+      ```
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Server Configuration
+
+<ResponseField name="server" type="object">
+  Advanced server configuration including encryption keys and API integrations.
+
+  <Expandable title="properties">
+    <ResponseField name="encryption_key_path" type="string" default="./config/encryption.pem" required>
+      Path to the RSA private key used for encrypting sensitive data. Must be at least 8 characters long. THIS IS ONLY USED WITH pangolin_dns FEATURE FLAG ENABLED AND REQUIRES EXTERNAL COMPONENTS.
+      
+      ```yaml
+      server:
+        encryption_key_path: "./config/encryption.pem"
+      ```
+      
+		<Warning>
+		The `encryption_key_path` must point to a valid RSA key file. Generate one using:
+		```bash
+		openssl genrsa -out encryption.pem 4096
+		```
+		Keep this key secure and backed up - it encrypts sensitive data in your database.
+		</Warning>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Redis Configuration
+
+<ResponseField name="redis" type="object">
+  Redis connection settings for caching, sessions, and rate limiting. Useful for clustering Pangolin nodes.
+
+  <Expandable title="properties">
+    <ResponseField name="host" type="string" required>
+      Redis server hostname or IP address.
+      
+      ```yaml
+      redis:
+        host: "redis.example.com"
+      ```
+    </ResponseField>
+
+    <ResponseField name="port" type="number" required>
+      Redis server port (1-65535).
+      
+      ```yaml
+      redis:
+        port: 6379
+      ```
+    </ResponseField>
+
+    <ResponseField name="password" type="string">
+      Redis authentication password.
+      
+      ```yaml
+      redis:
+        password: "your-secure-password"
+      ```
+    </ResponseField>
+
+    <ResponseField name="db" type="number" default="0">
+      Redis database number (0-15 typically).
+      
+      ```yaml
+      redis:
+        db: 0
+      ```
+    </ResponseField>
+
+    <ResponseField name="replicas" type="array">
+      Array of read replica configurations for high-availability deployments.
+      
+      ```yaml
+      redis:
+        host: "redis-primary"
+        port: 6379
+        replicas:
+          - host: "redis-replica-1"
+            port: 6379
+            password: "replica-password"
+            db: 0
+          - host: "redis-replica-2"
+            port: 6379
+            password: "replica-password"
+            db: 0
+      ```
+      
+      <Expandable title="replica properties">
+        <ResponseField name="host" type="string" required>
+          Replica server hostname.
+        </ResponseField>
+        
+        <ResponseField name="port" type="number" required>
+          Replica server port.
+        </ResponseField>
+        
+        <ResponseField name="password" type="string">
+          Replica authentication password.
+        </ResponseField>
+        
+        <ResponseField name="db" type="number" default="0">
+          Database number on replica.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Gerbil Tunnel Configuration
+
+<ResponseField name="gerbil" type="object">
+  Configuration for the Gerbil tunnel exit node integration.
+
+  <Expandable title="properties">
+    <ResponseField name="local_exit_node_reachable_at" type="string" default="http://gerbil:3004">
+      URL where the local Gerbil exit node can be reached by Pangolin. Useful when clustering multiple pangolin nodes. Overrides the value stored in the database. Useful when using Docker and address the local gerbil container using the host's address.
+      
+      ```yaml
+      gerbil:
+        local_exit_node_reachable_at: "http://gerbil:3004"
+      ```
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Feature Flags
+
+<ResponseField name="flags" type="object">
+  Feature toggles for advanced functionality.
+
+  <Expandable title="properties">
+    <ResponseField name="use_org_only_idp" type="boolean" default="false">
+      Restrict identity provider (IdP) authentication to organization-level only.
+      
+      ```yaml
+      flags:
+        use_org_only_idp: true
+      ```
+    </ResponseField>
+    
+    <ResponseField name="enable_redis" type="boolean" default="false">
+      Enable Redis for caching and session management. Requires `redis` configuration.
+      
+      ```yaml
+      flags:
+        enable_redis: true
+      ```
+    </ResponseField>
+
+    <ResponseField name="use_pangolin_dns" type="boolean" default="false">
+      Use Pangolin DNS servers for client connections instead of external DNS servers for DNS delegation and CNAME setups. Used for clustering Pangolin nodes. REQUIRES EXTERNAL COMPONENTS. PLEASE CONTACT SUPPORT TO OBTAIN ACCESS BEFORE ENABLING.
+      
+      ```yaml
+      flags:
+        use_pangolin_dns: true
+      ```
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Branding Configuration
+
+Please refer to the [branding configuration documentation](/manage/branding).

@@ -34,6 +34,9 @@ flags:
 <Warning>
 
 Generate a strong secret for `server.secret`. Use at least 32 characters with a mix of letters, numbers, and special characters.
+
+If you need to CHANGE the server secret after the server has been started you must use the `pangctl rotate-server-secret` command to re-encrypt sensitive data. [Follow docs here](/self-host/advanced/container-cli-tool#rotate-server-secret).
+
 </Warning>
 
 ## Reference
@@ -262,6 +265,9 @@ This section contains the complete reference for all configuration options in `c
 
       <Warning>
         Generate a strong, random secret. This is used for encrypting sensitive data and should be kept secure.
+        
+        If you need to CHANGE the server secret after the server has been started you must use the `pangctl rotate-server-secret` command to re-encrypt sensitive data. [Follow docs here](/self-host/advanced/container-cli-tool#rotate-server-secret).
+       
       </Warning>
     </ResponseField>
 
@@ -709,6 +715,12 @@ This section contains the complete reference for all configuration options in `c
       <Note>
         When enabled, only advanced WireGuard configurations are allowed.
       </Note>
+    </ResponseField>
+    
+    <ResponseField name="disable_product_help_banners" type="boolean">
+	  Whether to disable product help banners in the UI at the top of screens.
+
+      **Default**: `false`
     </ResponseField>
 
     <ResponseField name="disable_config_managed_domains" type="boolean">

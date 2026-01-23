@@ -26,6 +26,24 @@ Here is an example using Microsoft Azure Entra ID as SSO for Pangolin:
   <img src="/images/create-idp.png" />
 </Frame>
 
+## Identity Provider Types
+
+### Organization Identity Providers
+
+Organization identity providers are configured per organization and only apply to that specific organization. Each org can have its own identity providers, allowing for authentication methods based on the organization's needs.
+
+<Note>
+	In Pangolin Enterprise you must enable `use_org_only_idp` in the [private config file](/self-host/advanced/private-config-file#param-use-org-only-idp) `privateConfig.yml`.
+</Note>
+
+### Global Identity Providers
+
+Global identity providers are managed at the server level and not the individual organization. They can apply to all or some organizations on the server. This means you must define policies per organization to map users to specific organizations and roles within those organizations. 
+
+<Tip>
+	Global identity providers are the only supported method in Pangolin Community.
+</Tip>
+
 ## Supported Identity Providers
 
 ### OAuth2/OIDC
@@ -40,7 +58,7 @@ This can be used to connect to any external identity provider that supports the 
 ### Google
 
 <Note>
-Google IdP is only available in Pangolin Cloud.
+Google IdP is only available in Pangolin Cloud or Pangolin Enterprise with org identity providers. See above to enable.
 </Note>
 
 Easily set up Google Workspace authentication for your organization. Users can sign in with their Google accounts and access Pangolin resources using their existing Google credentials. Perfect for organizations already using Google Workspace for email, calendar, and other services.
@@ -48,7 +66,7 @@ Easily set up Google Workspace authentication for your organization. Users can s
 ### Azure Entra ID
 
 <Note>
-Azure Entra ID IdP is only available in Pangolin Cloud.
+Azure Entra ID IdP is only available in Pangolin Cloud or Pangolin Enterprise with org identity providers. See above to enable.
 </Note>
 
 Integrate with Microsoft's enterprise identity platform to allow users to authenticate using their Azure Active Directory accounts. Ideal for organizations using Microsoft 365 or other Azure services, providing seamless single sign-on across your Microsoft ecosystem.
@@ -56,7 +74,7 @@ Integrate with Microsoft's enterprise identity platform to allow users to authen
 ## How to Add an Identity Provider
 
 <Note>
-In the CE and EE, identity providers are created and managed via the Server Admin UI rather than the organization settings.
+When using global IDPs, identity providers are created and managed via the Server Admin UI rather than the organization settings.
 </Note>
 
 <Steps>

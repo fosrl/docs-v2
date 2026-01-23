@@ -3,6 +3,10 @@ title: "Azure Entra ID"
 description: "Configure Azure Entra ID Single Sign-On"
 ---
 
+<Note>
+Azure SSO is only available on Pangolin Cloud and Enterprise deployments. In enterprise, you must enable `use_org_only_idp` in your [private config file](/self-host/advanced/private-config-file) `privateConfig.yml`.
+</Note>
+
 The following steps will integrate Microsoft SSO using the built in Azure Entra ID identity provider in Pangolin.
 
 <iframe
@@ -58,6 +62,6 @@ In the OAuth2/OIDC Configuration, you'll need the following fields:
 
 When you're done, click "Create Identity Provider". Then, copy the Redirect URL in the "General" tab as you will now need this for your app registration.
 
-## Returning to Google Developers Console
+## Returning to Azure
 
-Lastly, you'll need to return to your app registration in order to add the redirect URI created by Pangolin. On the "Overview" tab, click "Add a Redirect URI". The click "Add a platform", and select "Web". Here, you can add the redirect URL from Pangolin and click "Configure". Your configuration should now be complete. You'll now need to add an external user to Pangolin, or if you have "Auto Provision Users" enabled, you can now log in using Google SSO.
+Lastly, you'll need to return to your app registration in order to add the redirect URI created by Pangolin. On the "Overview" tab, click "Add a Redirect URI". The click "Add a platform", and select "Web". Here, you can add the redirect URL from Pangolin and click "Configure". Your configuration should now be complete. You'll now need to add an external user to Pangolin, or if you have "Auto Provision Users" enabled, you can now log in using Azure SSO.

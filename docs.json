@@ -151,6 +151,7 @@
                                 "group": "Advanced Configuration",
                                 "pages": [
                                     "self-host/advanced/config-file",
+                                    "self-host/advanced/private-config-file",
                                     "self-host/advanced/wild-card-domains",
                                     "self-host/advanced/cloudflare-proxy",
                                     "self-host/advanced/without-tunneling",

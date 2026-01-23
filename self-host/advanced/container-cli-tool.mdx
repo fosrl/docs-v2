@@ -81,3 +81,40 @@ This command performs a critical operation that affects all encrypted data in yo
 - After rotation, you must restart the server for the new secret to take effect
 - Using `--force` with an incorrect old secret will cause the rotation to fail or corrupt encrypted data
 </Warning>
+
+## Clear License Keys
+
+Clear all license keys from the database:
+
+```bash
+docker exec -it pangolin pangctl clear-license-keys
+```
+
+<Warning>
+This command permanently deletes all license keys from the database. This action cannot be undone.
+</Warning>
+
+## Delete Client
+
+Delete a client and all associated data (OLMs, current fingerprint, userClients, approvals). Snapshots are preserved.
+
+```bash
+docker exec -it pangolin pangctl delete-client --orgId "org-123" --niceId "client-identifier"
+```
+
+### Options
+
+- `--orgId` (required): The organization ID
+- `--niceId` (required): The client niceId (identifier)
+
+<Warning>
+This command permanently deletes the client and its associated data:
+- All OLMs (One-time Login Mechanisms) associated with the client
+- Current fingerprint entries
+- Approval records
+- UserClient associations
+
+**Note:** Snapshots are preserved and will not be deleted.
+
+This action cannot be undone. Ensure you have backups if needed.
+</Warning>
