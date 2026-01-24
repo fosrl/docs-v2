@@ -30,3 +30,7 @@ Aliases work by overriding the DNS of your computer running the client so that a
 ## Disable Aliases
 
 If you wish to disable this behavior and prevent aliases from being resolved and leave your DNS alone, you can do so by adding [the flag](/manage/clients/configure-client) to the CLI / Olm or disable override dns in the client settings.
+
+## ICMP Ping
+
+Aliases do not currently support ICMP ping requests. If you attempt to ping an alias, it will not respond, even if the underlying Resource is reachable. This is because the Pangolin client does not intercept ICMP packets for alias resolution.
