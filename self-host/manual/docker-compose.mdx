@@ -137,21 +137,22 @@ Files marked with `(*)` must be created manually. Volumes and other files are ge
 Create `docker-compose.yml` in your project root:
 
 ```yaml title="docker-compose.yml"
+name: pangolin
 services:
   pangolin:
-    image: fosrl/pangolin:latest # https://github.com/fosrl/pangolin/releases
+    image: docker.io/fosrl/pangolin:latest # https://github.com/fosrl/pangolin/releases
     container_name: pangolin
     restart: unless-stopped
     volumes:
       - ./config:/app/config
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
-      interval: "3s"
-      timeout: "3s"
+      interval: "10s"
+      timeout: "10s"
       retries: 15
 
   gerbil:
-    image: fosrl/gerbil:latest # https://github.com/fosrl/gerbil/releases
+    image: docker.io/fosrl/gerbil:latest # https://github.com/fosrl/gerbil/releases
     container_name: gerbil
     restart: unless-stopped
     depends_on:
@@ -169,14 +170,16 @@ services:
     ports:
       - 51820:51820/udp
       - 21820:21820/udp
-      - 443:443 # Port for traefik because of the network_mode
-      - 80:80 # Port for traefik because of the network_mode
+      - 443:443
+      - 80:80
 
   traefik:
-    image: traefik:v3.4.0
+    image: docker.io/traefik:v3.6
     container_name: traefik
     restart: unless-stopped
+
     network_mode: service:gerbil # Ports appear on the gerbil service
+
     depends_on:
       pangolin:
         condition: service_healthy
@@ -191,6 +194,7 @@ networks:
   default:
     driver: bridge
     name: pangolin
+    #enable_ipv6: true # activate if your system supports IPv6
 ```
 
 ## Traefik Static Configuration
@@ -213,18 +217,22 @@ experimental:
   plugins:
     badger:
       moduleName: "github.com/fosrl/badger"
-      version: "v1.3.0"
+      version: "v1.3.1"
 
 log:
   level: "INFO"
   format: "common"
+  maxSize: 100
+  maxBackups: 3
+  maxAge: 3
+  compress: true
 
 certificatesResolvers:
   letsencrypt:
     acme:
       httpChallenge:
         entryPoint: web
-      email: admin@example.com # REPLACE WITH YOUR EMAIL
+      email: "admin@example.com" # REPLACE WITH YOUR EMAIL
       storage: "/letsencrypt/acme.json"
       caServer: "https://acme-v02.api.letsencrypt.org/directory"
 
@@ -239,12 +247,15 @@ entryPoints:
     http:
       tls:
         certResolver: "letsencrypt"
+      encodedCharacters:
+        allowEncodedSlash: true
+        allowEncodedQuestionMark: true
 
 serversTransport:
   insecureSkipVerify: true
 
 ping:
-    entryPoint: "web"
+  entryPoint: "web"
 ```
 
 ## Traefik Dynamic Configuration
@@ -271,7 +282,7 @@ http:
         - web
       middlewares:
         - redirect-to-https
-	- badger
+        - badger
 
     # Next.js router (handles everything except API and WebSocket paths)
     next-router:
@@ -310,12 +321,21 @@ http:
     next-service:
       loadBalancer:
         servers:
-          - url: "http://pangolin:3002" # Next.js server
+          - url: "http://pangolin:3002"  # Next.js server
 
     api-service:
       loadBalancer:
         servers:
-          - url: "http://pangolin:3000" # API/WebSocket server
+          - url: "http://pangolin:3000"  # API/WebSocket server
+
+tcp:
+  serversTransports:
+    pp-transport-v1:
+      proxyProtocol:
+        version: 1
+    pp-transport-v2:
+      proxyProtocol:
+        version: 2
 ```
 
 ## Pangolin Configuration
