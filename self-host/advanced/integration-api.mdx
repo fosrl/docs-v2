@@ -35,7 +35,7 @@ Add the following configuration to your `config/traefik/dynamic_config.yml` to e
         - web
       middlewares:
         - redirect-to-https
-	- badger # If you have Badger >=1.3.0 and it's enabled in the middlewares section of the dynamic config
+        - badger # If you have Badger >=1.3.0 and it's enabled in the middlewares section of the dynamic config
 
     int-api-router:
       rule: "Host(`api.example.com`)"
