@@ -12,24 +12,37 @@ To get started, create a basic configuration file with the essential settings:
 Minimal Pangolin configuration:
 
 ```yaml title="config.yml"
-app:
-  dashboard_url: "https://pangolin.example.com"
-
-domains:
-  domain1:
-    base_domain: "pangolin.example.com"
-    cert_resolver: "letsencrypt"
-
-server:
-  secret: "your-strong-secret"
+# To see all available options, please visit the docs:
+# https://docs.pangolin.net/
 
 gerbil:
-  base_endpoint: "pangolin.example.com"
+    start_port: 51820
+    base_endpoint: "pangolin.example.com" # REPLACE WITH YOUR DOMAIN
+
+app:
+    dashboard_url: "https://pangolin.example.com" # REPLACE WITH YOUR DOMAIN
+    log_level: "info"
+    telemetry:
+        anonymous_usage: true
+
+domains:
+    domain1:
+        base_domain: "example.com" # REPLACE WITH YOUR DOMAIN
+        cert_resolver: "letsencrypt"
+
+server:
+    secret: "your-strong-secret" # REPLACE
+    cors:
+        origins: ["https://pangolin.example.com"] # REPLACE WITH YOUR DOMAIN
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        allowed_headers: ["X-CSRF-Token", "Content-Type"]
+        credentials: false
 
 flags:
-  require_email_verification: false
-  disable_signup_without_invite: true
-  disable_user_create_org: true
+    require_email_verification: false
+    disable_signup_without_invite: true
+    disable_user_create_org: false
+    allow_raw_resources: true
 ```
 <Warning>
 
