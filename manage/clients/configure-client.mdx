@@ -129,13 +129,13 @@ Refer to the [documentation in the official repository](https://github.com/fosrl
 </ResponseField>
 
 <ResponseField name="override-dns" type="boolean">
-  Override system DNS settings.
+	When enabled, the client uses custom DNS servers to resolve internal resources and aliases. This overrides your system's default DNS settings. Queries that cannot be resolved as a Pangolin resource will be forwarded to your configured Upstream DNS Server. (default true)
 
   **Default**: `false`
 </ResponseField>
 
 <ResponseField name="tunnel-dns" type="boolean">
-  Force connectivity to the upstream DNS server to go via the tunnel to a resource.
+	When enabled, DNS queries are routed through the tunnel for remote resolution. To ensure queries are tunneled correctly, you must define the DNS server as a Pangolin resource and enter its address as an Upstream DNS Server.
 
   **Default**: `false`
 </ResponseField>
