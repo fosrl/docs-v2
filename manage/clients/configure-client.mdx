@@ -5,9 +5,41 @@ description: "Configure Olm for connecting to Pangolin clients"
 
 ## GUI Clients (Mac, Windows, Android, iOS/iPadOS)
 
-Each respective client has a preferences window with all currently available configuration parameters like DNS override and preferred DNS servers. In your desktop client, click the menu bar or system tray icon, select More in the menu, and click Preferences. In the mobile apps, navigate to the Setting screen.
+Each respective client has a preferences window with all currently available configuration parameters. In your desktop client, click the menu bar or system tray icon, select "More" in the menu, and click "Preferences". In the mobile apps, navigate to the "Settings" screen.
 
-### Android Battery Optimization
+## Preferences
+
+The following preferences control how your client handles DNS resolution and network routing. Understanding these settings helps you configure Pangolin to work best with your network setup.
+
+#### Enable Aliases (Override DNS)
+
+When enabled, the client uses custom DNS servers to resolve internal resources and aliases. This overrides your system's default DNS settings. Queries that cannot be resolved as a Pangolin resource will be forwarded to your configured Upstream DNS Server.
+
+**When to use it**: This is required if you use aliases on resources in Pangolin. Aliases are friendly domain names assigned to private resources. Pangolin resolves these alias addresses over a private DNS server running in your client.
+
+**How it works**: The client loops back to itself to resolve the alias. This is why you may see your DNS server as an unfamiliar address (often like `100.90.128.x`) when this is enabled. When a request doesn't resolve to a Pangolin resource and is bound for another website (like `google.com`), it falls back to your configured upstream DNS server.
+
+#### DNS Over Tunnel
+
+When enabled, DNS queries are routed through the tunnel for remote resolution. To ensure queries are tunneled correctly, you must define the DNS server as a Pangolin resource and enter its address as an Upstream DNS Server.
+
+**When to use it**: Tunnel DNS is used when you want to send all DNS queries over the tunnel to a private resource made available in Pangolin. For example, if you host a DNS server like Pi-hole, you could define a private resource for Pi-hole on your remote network. Then in the Pangolin client, you would enable Tunnel DNS and set the host of the Pi-hole private resource as the tunnel DNS server.
+
+**How it works**: When a request needs to be resolved, Pangolin sends it over the tunnel to the site of the private resource with your DNS server. You must enable DNS Over Tunnel and also set the upstream DNS server to your private DNS server.
+
+<Warning>
+You cannot use an alias name for your DNS server. It must be the IP address of the resource. This is because it's pointing to the DNS server, so the DNS server can't resolve itself.
+</Warning>
+
+#### Primary Upstream DNS
+
+This is the DNS server that will be used if Override DNS is enabled or DNS Over Tunnel is enabled. It serves as the primary resolver for queries that cannot be resolved as Pangolin resources.
+
+#### Secondary Upstream DNS
+
+This is a fallback DNS server that the system can use if the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution.
+
+## Android Battery Optimization
 
 To ensure Pangolin functions correctly in the background on Android devices, it's recommended to disable battery optimization for the app. This prevents the operating system from restricting its background activities, which could lead to disconnections.
 
@@ -18,7 +50,7 @@ To ensure Pangolin functions correctly in the background on Android devices, it'
 5. Select **Allow background usage** and enable if disabled.
 6. From the options menu, choose **Unrestricted**.
 
-<Frame>
+<Frame caption="Android Battery Optimization Settings">
 	<img src="/images/android_battery.png" alt="Android Battery Optimization Settings"   style={{width: "250px", height: "auto"}} />
 </Frame>
 
@@ -27,6 +59,14 @@ To ensure Pangolin functions correctly in the background on Android devices, it'
 Refer to the [documentation in the official repository](https://github.com/fosrl/cli/blob/main/docs/pangolin.md) for the available commands, default values, and more.
 
 ## Olm CLI
+
+<Tip>
+We recommend using the Pangolin CLI for both user and machine clients if you're looking for a CLI interface. Olm is the underlying client for the Pangolin CLI.
+</Tip>
+
+Olm is a command-line client for connecting machine clients in Pangolin. You can configure it using command-line flags, environment variables, or a configuration file. Expand the section below to view all available configuration options.
+
+<Accordion title="CLI Arguments and Options">
 
 ### Flags
 
@@ -304,3 +344,5 @@ Default locations:
 ### API
 
 Olm can be started with a HTTP or socket API to configure and manage it. See the [API documentation](https://github.com/fosrl/olm/blob/main/API.md) for more details.
+
+</Accordion>
