@@ -1,0 +1,47 @@
+---
+title: "Clustering for High Availability"
+---
+
+<Note>
+Clustering is only available in Enterprise Edition. [Please reach out to us to deploy](https://pangolin.net/talk-to-us).
+</Note>
+
+Deploy multiple Pangolin servers enterprise-grade high availability and performance in large deployments.
+
+## Overview
+
+For organizations requiring maximum uptime and performance, Pangolin supports clustered deployments where multiple server instances work together as a unified system. This architecture enables regional distribution, automatic failover, and horizontal scaling to handle demanding production workloads.
+
+## How Clustering Works
+
+In a clustered configuration, multiple Pangolin server instances operate together, sharing state and coordinating through a Postgres database and Valkey server. Each instance can independently serve user requests, manage authentication, and coordinate with multiple Gerbil instances to support thousands of sites.
+
+### Shared Database Backend
+
+All Pangolin instances connect to a shared PostgreSQL database that stores the system's persistent state - including user accounts, site configurations, resources, access policies, and organizational settings. This ensures that changes made through any server instance are immediately available across the entire cluster.
+
+### Real-time State Synchronization
+
+Redis or Valkey provides real-time state synchronization and pub sub between cluster nodes like active sessions, WebSocket connections, and tunnel status. When a user authenticates or a site connector establishes a connection to one Pangolin instance, Redis ensures other nodes are aware of these active sessions for failover.
+
+### Tunnel Management with Gerbil
+
+Each Pangolin instance runs alongside its own Gerbil tunnel manager, which handles WireGuard connections to site connectors. When a site connector needs to establish a tunnel, it can connect to any available Gerbil instance in the cluster. For public resources, Gerbil instances are aware of all of the other nodes in the network and can route incoming requests to any other Gerbil to exit through the right site. The distributed architecture ensures that tunnel connectivity remains available even if individual nodes fail.
+
+## Benefits of Clustering
+
+**High Availability**: Eliminate single points of failure. If one server instance fails, traffic automatically routes to healthy nodes without user disruption.
+
+**Regional Distribution**: Deploy servers closer to your users and sites across different geographic regions to minimize latency and improve performance.
+
+**Horizontal Scaling**: Add more server instances to handle increased load as your organization grows, without architectural changes.
+
+**Zero-Downtime Updates**: Perform rolling updates by taking nodes offline one at a time while others continue serving traffic.
+
+## Enterprise Support
+
+Clustered deployments require careful planning around database replication, Redis configuration, network topology, and monitoring. These advanced architectures are available as part of Pangolin's Enterprise Edition with dedicated support for design, deployment, and ongoing operations.
+
+For organizations interested in clustering for high availability or regional distribution, please [contact our enterprise team](https://pangolin.net/talk-to-us) to discuss your requirements and receive implementation guidance.
+
+

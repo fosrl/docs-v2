@@ -163,6 +163,7 @@
                                     "self-host/advanced/enable-geoblocking",
                                     "self-host/advanced/enable-asnblocking",
                                     "self-host/advanced/metrics",
+                                    "self-host/advanced/clustering",
                                     "self-host/telemetry"
                                 ]
                             },
