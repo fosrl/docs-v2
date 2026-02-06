@@ -33,7 +33,7 @@ Here is an example using Microsoft Azure Entra ID as SSO for Pangolin:
 Organization identity providers are configured per organization and only apply to that specific organization. Each org can have its own identity providers, allowing for authentication methods based on the organization's needs.
 
 <Note>
-	Available in Pangolin Cloud and Enterprise. Enterprise users must enable `use_org_only_idp` in the [private config file](/self-host/advanced/private-config-file#param-use-org-only-idp) `privateConfig.yml`.
+	Available in Pangolin Cloud and [Enterprise Edition](/self-host/enterprise-edition). For [Enterprise Edition](/self-host/enterprise-edition), you must enable `use_org_only_idp` in the [private config file](/self-host/advanced/private-config-file#param-use-org-only-idp) `privateConfig.yml`.
 </Note>
 
 ### Global Identity Providers
@@ -58,7 +58,7 @@ This can be used to connect to any external identity provider that supports the 
 ### Google
 
 <Note>
-Google IdP is only available in Pangolin Cloud or Pangolin Enterprise with org identity providers. See above to enable.
+Google IdP is only available in Pangolin Cloud or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
 </Note>
 
 Easily set up Google Workspace authentication for your organization. Users can sign in with their Google accounts and access Pangolin resources using their existing Google credentials. Perfect for organizations already using Google Workspace for email, calendar, and other services.
@@ -66,7 +66,7 @@ Easily set up Google Workspace authentication for your organization. Users can s
 ### Azure Entra ID
 
 <Note>
-Azure Entra ID IdP is only available in Pangolin Cloud or Pangolin Enterprise with org identity providers. See above to enable.
+Azure Entra ID IdP is only available in Pangolin Cloud or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
 </Note>
 
 Integrate with Microsoft's enterprise identity platform to allow users to authenticate using their Azure Active Directory accounts. Ideal for organizations using Microsoft 365 or other Azure services, providing seamless single sign-on across your Microsoft ecosystem.
