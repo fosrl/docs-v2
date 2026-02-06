@@ -22,7 +22,7 @@ Pangolin supports two blueprint formats:
 2. **Docker Labels**: Configuration embedded in Docker Compose files
 
 <Note type="info">
-Some features in this documentation are marked with **(EE)**, indicating they are available only in the Enterprise Edition of Pangolin.
+Some features in this documentation are marked with **(EE)**, indicating they are available only in [Enterprise Edition](/self-host/enterprise-edition) of Pangolin.
 </Note>
 
 ## YAML Configuration Format
@@ -182,7 +182,7 @@ When using targets-only resources, the `name` and `protocol` fields are not requ
 ### Maintenance Page Configuration **(EE)**
 
 <Note type="warning">
-This is an Enterprise Edition (EE) feature only. It allows you to display a maintenance page for a public resource when it's under maintenance or when targets are unhealthy.
+This is an [Enterprise Edition](/self-host/enterprise-edition) (EE)-only feature. It allows you to display a maintenance page for a public resource when it's under maintenance or when targets are unhealthy.
 </Note>
 
 ```yaml
@@ -350,7 +350,7 @@ This will create a resource that looks like the following:
 | `headers` | array | No | Custom headers to add to requests | Each header requires `name` and `value` (min 1 char each) |
 | `rules` | array | No | Access control rules | See Rules section below |
 | `auth` | object | HTTP only | Authentication configuration | See Authentication section below |
-| `maintenance` | object | No | Maintenance page configuration **(EE)** | Enterprise Edition only. See Maintenance Configuration section below |
+| `maintenance` | object | No | Maintenance page configuration **(EE)** | [Enterprise Edition](/self-host/enterprise-edition) only. See Maintenance Configuration section below |
 | `targets` | array | Yes | Target endpoints for the resource | See Targets section below |
 
 ### Target Configuration
@@ -433,7 +433,7 @@ Not allowed on TCP/UDP resources.
 ### Maintenance Configuration **(EE)**
 
 <Note type="warning">
-This is an Enterprise Edition (EE) feature only. It allows you to display a maintenance page for a public resource.
+This is an [Enterprise Edition](/self-host/enterprise-edition) (EE)-only feature. It allows you to display a maintenance page for a public resource.
 </Note>
 
 The `maintenance` object can be added to any public resource to display a maintenance page to users:
