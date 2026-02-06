@@ -28,6 +28,10 @@ For additional information, consult the following resources:
 
 The GeoBlock plugin for Traefik is a middleware that restricts access based on the client’s geographic location. It runs within a Traefik container and uses IP-based geolocation to allow or block traffic from specific countries. This is useful for security, compliance, or access control in Traefik-managed services.
 
+<Note>
+Pangolin now supports native geoblocking. The GeoBlock plugin is considered legacy in Pangolin setups. If you previously installed it, follow [Remove GeoBlock Plugin](/self-host/community-guides/remove-geoblock-plugin) before enabling native geoblocking.
+</Note>
+
 For more details, please refer to the following resources:
 
 - [Github Repository](https://github.com/PascalMinder/geoblock)
@@ -69,4 +73,3 @@ The Traefik Logs Dashboard is a real-time dashboard for analyzing Traefik logs w
 For more details, please refer to the following resources:
 
 - [Github Repository](https://github.com/hhftechnology/traefik-log-dashboard)
-

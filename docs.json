@@ -172,6 +172,7 @@
                                 "group": "Community Guides",
                                 "pages": [
                                     "self-host/community-guides/overview",
+                                    "self-host/community-guides/remove-geoblock-plugin",
                                     "self-host/community-guides/crowdsec",
                                     "self-host/community-guides/metrics",
                                     "self-host/community-guides/homeassistant",
