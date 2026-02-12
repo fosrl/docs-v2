@@ -14,8 +14,8 @@ The private configuration file is only used on enterprise deployments. If you're
 Here's a basic example with common settings:
 
 ```yaml title="private-config.yml"
-flags:
-  use_org_only_idp: false
+app:
+  identity_provider_mode: "org"
 
 branding:
   app_name: "My Company Portal"
@@ -31,7 +31,20 @@ This section contains the complete reference for all configuration options in `p
 <ResponseField name="app" type="object">
   Regional and base domain configuration for multi-region deployments.
 
-  <Expandable title="properties">
+    <Expandable title="properties">
+	  <ResponseField name="identity_provider_mode" type="string" default="global">
+	    Set the identity provider (IdP) mode for authentication. By default both global and org pages will show until set. See the [Identity Providers documentation](/manage/identity-providers/add-an-idp#identity-provider-types) for more details on how this affects authentication and user management.
+					
+		Possible values:
+		- `global`: (default) Both global and organization-level IdP login pages are available. Users can authenticate using either global or organization-specific identity providers.
+		- `org`: Only organization-level IdP login pages are available. Users must authenticate using identity providers defined at the organization
+					
+	    ```yaml
+	    app:
+	      identity_provider_mode: "org"
+	    ```
+	  </ResponseField>
+  
     <ResponseField name="region" type="string" default="default">
       The region identifier for this Pangolin instance. Used for multi-region deployments.
       
@@ -49,7 +62,7 @@ This section contains the complete reference for all configuration options in `p
   Advanced server configuration including encryption keys and API integrations.
 
   <Expandable title="properties">
-    <ResponseField name="encryption_key_path" type="string" default="./config/encryption.pem" required>
+    <ResponseField name="encryption_key" type="string" default="./config/encryption.pem" required>
       Path to the RSA private key used for encrypting sensitive data. Must be at least 8 characters long. THIS IS ONLY USED WITH pangolin_dns FEATURE FLAG ENABLED AND REQUIRES EXTERNAL COMPONENTS.
       
       ```yaml
@@ -173,6 +186,8 @@ This section contains the complete reference for all configuration options in `p
 
   <Expandable title="properties">
     <ResponseField name="use_org_only_idp" type="boolean" default="false">
+      **DEPRECATED**! See `app.identity_provider_mode: "org"` instead.
+    
       Restrict identity provider (IdP) authentication to organization-level only.
       
       ```yaml

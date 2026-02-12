@@ -33,7 +33,7 @@ Here is an example using Microsoft Azure Entra ID as SSO for Pangolin:
 Organization identity providers are configured per organization and only apply to that specific organization. Each org can have its own identity providers, allowing for authentication methods based on the organization's needs.
 
 <Note>
-	Available in Pangolin Cloud and [Enterprise Edition](/self-host/enterprise-edition). For [Enterprise Edition](/self-host/enterprise-edition), you must enable `use_org_only_idp` in the [private config file](/self-host/advanced/private-config-file#param-use-org-only-idp) `privateConfig.yml`.
+	Available in Pangolin Cloud and [Enterprise Edition](/self-host/enterprise-edition). For [Enterprise Edition](/self-host/enterprise-edition), you must set `app.identity_provider_mode: "org"` in the [private config file](/self-host/advanced/private-config-file#param-identity-provider-mode) `privateConfig.yml`.
 </Note>
 
 ### Global Identity Providers
