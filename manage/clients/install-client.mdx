@@ -155,13 +155,100 @@ Replace `{version}` with the desired version and `{architecture}` with your arch
 
 3. **Start Pangolin**
 
-   Connect Pangolin by running:
+   When logged in as a Pangolin user, connect by running:
 
    ```bash
    pangolin up
    ```
 
-## Olm CLI
+   To launch a machine client without logging in, use your client credentials:
+
+   ```bash
+   pangolin up --id {client_id} --secret {client_secret} --endpoint {endpoint_url} --attach
+   ```
+
+   <Tip>
+   The `--attach` flag runs the client in the foreground instead of spawning it as a background process.
+   </Tip>
+
+Pangolin CLI can be installed as a systemd service or run in a container. See the sections below for advanced setups.
+
+### Systemd Service (Pangolin CLI)
+
+Create a basic systemd service for Pangolin CLI:
+
+```ini title="/etc/systemd/system/pangolin-cli.service"
+[Unit]
+Description=Pangolin CLI
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/pangolin up --id {client_id} --secret {client_secret} --endpoint {endpoint_url} --attach
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+<Warning>
+Make sure to move the binary to `/usr/local/bin/pangolin` before creating the service. Replace `{client_id}`, `{client_secret}`, and `{endpoint_url}` with your machine client credentials and endpoint.
+</Warning>
+
+### Docker (Pangolin CLI)
+
+You can run Pangolin CLI with Docker Compose. For example, a service in your `docker-compose.yml` might look like this using environment variables (recommended):
+
+```yaml
+services:
+  pangolin-cli:
+    image: pangolin-cli:latest
+    container_name: pangolin-cli
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - PANGOLIN_ENDPOINT=https://app.pangolin.net
+      - CLIENT_ID=5n52gnzfgl3tdox
+      - CLIENT_SECRET=wyael1dhftekp0ii2ni0ym6xczwjnwmucy2vr6u9kgkp8tw9
+```
+
+You can also pass the CLI args to the container:
+
+```yaml
+services:
+  pangolin-cli:
+    image: pangolin-cli:latest
+    container_name: pangolin-cli
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    command:
+      - up
+      - --id
+      - "5n52gnzfgl3tdox"
+      - --secret
+      - "wyael1dhftekp0ii2ni0ym6xczwjnwmucy2vr6u9kgkp8tw9"
+      - --endpoint
+      - https://app.pangolin.net
+      - --attach
+```
+
+**Docker Configuration Notes:**
+
+- `network_mode: host` brings the Pangolin CLI network interface to the host system, allowing the WireGuard tunnel to function properly
+- `cap_add: - NET_ADMIN` is required to grant the container permission to manage network interfaces
+- `devices: - /dev/net/tun:/dev/net/tun` is required to give the container access to the TUN device for creating WireGuard interfaces
+
+## Olm (Advanced)
+
+<Accordion title="Olm CLI (advanced use only)">
 
 Olm CLI is the most basic form of a client. All other clients implement Olm under the hood in some form.
 
@@ -348,3 +435,4 @@ Olm creates a native tun interface. This usually requires sudo / admin permissio
 5. If the container is running, shut it down and start it up again.
 
 Once /dev/net/tun is available, the olm can run within the LXC.
+</Accordion>
