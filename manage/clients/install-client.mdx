@@ -208,7 +208,7 @@ You can run Pangolin CLI with Docker Compose. For example, a service in your `do
 ```yaml
 services:
   pangolin-cli:
-    image: pangolin-cli:latest
+    image: fosrl/pangolin-cli:latest
     container_name: pangolin-cli
     restart: unless-stopped
     network_mode: host
@@ -227,7 +227,7 @@ You can also pass the CLI args to the container:
 ```yaml
 services:
   pangolin-cli:
-    image: pangolin-cli:latest
+    image: fosrl/pangolin-cli:latest
     container_name: pangolin-cli
     restart: unless-stopped
     network_mode: host
