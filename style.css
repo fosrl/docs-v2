@@ -1,0 +1,9 @@
+/* Hide the Pangolin Cloud CTA source wrapper so it doesn't show in main content before the script moves it to the TOC */
+.pangolin-toc-cta-source {
+  display: none !important;
+}
+
+/* Space above the Pangolin Cloud CTA (below the table of contents links) */
+#table-of-contents > *:last-child {
+  margin-top: 1.25rem;
+}
