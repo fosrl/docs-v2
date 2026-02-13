@@ -9,14 +9,14 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-A site is a connection to a remote network that allows Pangolin to provide access to resources, whether public or private, to users anywhere. Sites are the foundation for exposing resources because all resources exist on one or more sites. Newt is Pangolin's custom software connector that facilitates the connection and addresses the targets on the remote networks.
+A site is a connection to a network where your resources live. Pangolin uses sites to make public and private resources available to users. Every resource belongs to one or more sites. Newt is Pangolin's connector that establishes this connection and routes traffic to targets on remote networks.
 
 ## The Basics
 
-- **Tunneled sites should always run behind a firewall.** Never provide public access to a site.
-- **Users do not connect to a site directly.** Instead, admins define public (browser-based) or private resources on the local network of the site and Pangolin provides acess to these resources.
-- **You can run one or multiple sites per network.** You need at least on site to facilitate access to resources, but you can run more than one site in the same network for redundancy, for example. It's up to your preferred deployment method.
-- **Sites are software-defined proxies and deny all traffic by default.** Just because a site is deployed to a network doesn't mean users have access to resources on the network. By default, sites don't allow any traffic to hosts on the network. Admins must define explicit resources and delegate access to users.
+- **Tunneled sites should always run behind a firewall.** Do not expose a site directly to the public internet.
+- **Users do not connect to a site directly.** Admins define public (browser-based) or private resources on the site's network, and users connect to those resources.
+- **You can run one or multiple sites per network.** You need at least one site to provide access, but you can run multiple sites in the same network for redundancy.
+- **Sites are software-defined proxies and deny traffic by default.** Deploying a site does not automatically expose hosts. Admins must define resources and assign access.
 
 ## Site Types
 
@@ -24,9 +24,9 @@ Pangolin supports three different types of sites, each designed for different us
 
 ### Newt Site (Recommended)
 
-This site allows you to expose resources on a remote network via a fully managed tunnel and websocket. This requires the Newt connector to be running on the remote network. It's the easiest to use and requires the least amount of setup. No NAT configuration required.
+This site type exposes resources on a remote network through a managed tunnel and websocket connection. It requires the Newt connector on the remote network. This is the easiest setup and does not require NAT configuration.
 
-We recommend using Newt sites in almost all cases. Newt is the primary connector type and supports the most features.
+Use Newt sites in most deployments. Newt is the primary connector type and supports the broadest feature set.
 
 Newt sites support:
 - Public HTTPS proxied resources
@@ -34,14 +34,14 @@ Newt sites support:
 - Load balancing
 - Health checking
 - Docker socket scanning
-- And more...
+- And more
 
 
 ### Local Site
 
-Use this if you want to expose resources on the same host as the Pangolin server (this is for self-hosted Pangolin only). No tunnels are created. Ports must be opened on the host running Pangolin (this has to happen anyway for Pangolin to work).
+Use this to expose resources on the same host as your Pangolin server (self-hosted only). No tunnels are created. Required ports must be open on the Pangolin host.
 
-Use local sites if you want to expose a public resource on the same host as your self-hosted Pangolin server.
+Use local sites when the resource runs on the same machine as your self-hosted Pangolin instance.
 
 Local sites do not support:
 - Private resources
@@ -50,9 +50,9 @@ Local sites do not support:
 
 ### Basic WireGuard Site
 
-This is self-hosted only. This uses a raw WireGuard connection without Newt, thus there is no websocket connection, requiring more manual management. These sites require NAT to address targets running on other hosts on the remote network. Otherwise, you can only expose resources on the remote WireGuard peer itself.
+This option is self-hosted only. It uses a raw WireGuard connection without Newt, so there is no websocket control channel and setup is more manual. NAT is required to reach targets on other hosts in the remote network. Without NAT, you can expose only resources on the WireGuard peer host itself.
 
-Generally, we do not reccomend you use basic WireGuard sites unless you have a specific use case.
+In general, use Basic WireGuard sites only for specific advanced use cases.
 
 Basic WireGuard sites do not support:
 - Using LAN-style addresses as targets
