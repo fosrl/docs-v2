@@ -58,6 +58,10 @@ You can enable SSH in two ways:
 | SSH into the **same server** that runs Newt | **Option 1**: Run Newt with auth-daemon support (built-in). |
 | SSH into **other servers** on the same network as Newt | **Option 2**: Run Newt on one host (e.g. bastion) and run the auth daemon on each server you want to SSH into. |
 
+<Note>
+A single Newt instance cannot run as the auth daemon for its own host **and** use external auth daemons. You must choose one mode: either Option 1 (built-in auth daemon on this host) or Option 2 (external auth daemons on other hosts).
+</Note>
+
 Both options require the SSH server on each target host to be configured to trust the Pangolin CA and to use the auth daemon for principals (see [Configure the SSH server](#configure-the-ssh-server-on-the-host) below). You also need a **private resource** on the site for each host you want to SSH into (see below).
 
 ## Create a private resource (required)
@@ -148,28 +152,59 @@ flowchart LR
 
 ### Prerequisites
 
-- **Newt** running on one host (the “site” / bastion) with auth-daemon support and a preshared key for external auth daemons.
+- **Newt** running on one host (the “site” / bastion) with auth-daemon support and a pre-shared key for external auth daemons.
 - **Pangolin CLI** installed on each server where you will run the auth daemon. See [Install Clients — Quick Install (Recommended)](/manage/clients/install-client#quick-install-recommended).
 
 ### Step 1: On the server running Newt
 
-Start Newt with auth-daemon enabled and a **preshared key** so external auth daemons can authenticate to it:
+Start Newt with a **pre-shared key** so external auth daemons can authenticate to it:
 
 ```bash
-sudo newt --id <id> --secret <secret> --endpoint <endpoint> --auth-daemon --ad-preshared-key <preshared-key>
+sudo newt --id <id> --secret <secret> --endpoint <endpoint> --ad-pre-shared-key <pre-shared-key>
 ```
 
 <Note>
-Choose a strong, random value for `<preshared-key>` and use the same value when starting the auth daemon on each target server.
+Choose a strong, random value for `<pre-shared-key>` and use the same value when starting the auth daemon on each target server.
 </Note>
 
 ### Step 2: On each server you want to SSH into
 
-On every host that should accept Pangolin SSH (and is not running Newt), run the auth daemon with the same preshared key:
+On every host that should accept Pangolin SSH (and is not running Newt), run the auth daemon with the same pre-shared key:
 
 ```bash
-sudo pangolin auth-daemon --pre-shared-key <preshared-key>
+sudo pangolin auth-daemon --pre-shared-key <pre-shared-key>
 ```
+
+#### Run as a systemd service
+
+Create a systemd unit so the auth daemon runs on boot:
+
+```ini title="/etc/systemd/system/pangolin-auth-daemon.service"
+[Unit]
+Description=Pangolin SSH auth daemon
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/pangolin auth-daemon --pre-shared-key <pre-shared-key>
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Replace `<pre-shared-key>` with the same value used on Newt. Then:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable pangolin-auth-daemon
+sudo systemctl start pangolin-auth-daemon
+sudo systemctl status pangolin-auth-daemon
+```
+
+<Warning>
+Ensure the Pangolin CLI binary is at `/usr/local/bin/pangolin` (or update `ExecStart` to its path) before creating the service.
+</Warning>
 
 ### Step 3: Configure the SSH server on each target host
 
@@ -188,11 +223,7 @@ These ports do not need to be exposed to the public internet. They only need to 
 
 For both Option 1 and Option 2, the host’s SSH server must trust the Pangolin CA and use the auth daemon to resolve principals. Do the following on **every** host that will accept Pangolin SSH (the host running Newt in Option 1, or each host running the external auth daemon in Option 2).
 
-### 1. Add the CA public key
-
-Place your organization’s CA public key on the server (e.g. at `/etc/ssh/ca.pem`). You can obtain this from the Pangolin dashboard or your administrator.
-
-### 2. Update `sshd_config`
+### 1. Update `sshd_config`
 
 Add or adjust these lines in `/etc/ssh/sshd_config`:
 
@@ -215,7 +246,7 @@ AuthorizedPrincipalsCommand /usr/local/bin/pangolin auth-daemon principals --use
 AuthorizedPrincipalsCommandUser root
 ```
 
-### 3. Restart the SSH server
+### 2. Restart the SSH server
 
 ```bash
 sudo systemctl restart ssh
