@@ -255,6 +255,12 @@ Traefik supports most DNS providers. You can find a full list of supported provi
   - Check API token permissions and scope
   - Ensure DNS propagation has completed
   - Review provider-specific configuration
+
+  <Info>
+  **Known issue with Netcup**: DNS-01 can fail on Netcup due to how their provider firewall handles UDP. DNS replies may be treated as inbound traffic **from source port `53`** and get dropped.
+
+  **Workaround**: Allow **ingress UDP** with **source port `53`** (to your server's UDP ports, or `ANY`). Repeat this for other UDP-based services if needed.
+  </Info>
 </Accordion>
 
 <Accordion title="Old certificates still being used">
