@@ -33,17 +33,19 @@ When enabled, DNS queries are routed through the tunnel for remote resolution. T
 
 **How it works**: When a request needs to be resolved, Pangolin sends it over the tunnel to the site of the private resource with your DNS server. You must enable DNS Over Tunnel and also set the upstream DNS server to your private DNS server.
 
+This requires aliases "override DNS" to be enabled as well. This is because the client must take control of your DNS settings to route queries through the tunnel to your private DNS server.
+
 <Warning>
 You cannot use an alias name for your DNS server. It must be the IP address of the resource. This is because it's pointing to the DNS server, so the DNS server can't resolve itself.
 </Warning>
 
 #### Primary Upstream DNS
 
-This is the DNS server that will be used if Override DNS is enabled or DNS Over Tunnel is enabled. It serves as the primary resolver for queries that cannot be resolved as Pangolin resources.
+This is the DNS server that will be used if Override DNS is enabled or DNS Over Tunnel is enabled. It serves as the primary resolver for queries that cannot be resolved as Pangolin resources. Not used when override DNS (aliases) are disabled.
 
 #### Secondary Upstream DNS
 
-This is a fallback DNS server that the system can use if the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution.
+This is a fallback DNS server that the system can use if the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution. Not used when override DNS (aliases) are disabled.
 
 ## Android Battery Optimization
 

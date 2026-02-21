@@ -29,13 +29,13 @@ If you use a wildcard such as `*.proxy.internal`, it will match any hostname tha
 
 ## Custom Upstream DNS
 
-Aliases work by overriding the DNS of your computer running the client so that all DNS requests are sent to the Pangolin client for resolution. The dns server on your computer is typically `100.96.128.1` (the first address inside of your utility subnet on the org) when connected to the tunnel which will forward request to an upstream server. By default, we use `9.9.9.9`, but this upstream address can be configured using [the flag](/manage/clients/configure-client) in the CLI / Olm or in the client settings.
+Aliases work by overriding the DNS of your computer running the client so that all DNS requests are sent to the Pangolin client for resolution. The dns server on your computer is typically `100.96.128.1` (the first address inside of your utility subnet on the org) when connected to the tunnel which will forward request to an upstream server. By default, we use `9.9.9.9`, but this upstream address can be configured in the CLI or in the client settings.
 
-**If you are attempting to set an upstream DNS server that is only accessible via the tunnel, ensure that you create a resource and check the tunnel DNS option in the client configuration settings or use the --tunnel-dns flag.** Otherwise, connectivity to the server may fail when connected to the tunnel.
+**If you are attempting to set an upstream DNS server that is only accessible via the tunnel, ensure that you create a resource and check the tunnel DNS option in the client configuration settings or use the --tunnel-dns flag.** Otherwise, connectivity to the server may fail when connected to the tunnel. You must also be overriding the dns of the computer (as discussed above) for this to work because the client needs to intercept the DNS request to forward it to the upstream server.
 
 ## Disable Aliases
 
-If you wish to disable this behavior and prevent aliases from being resolved and leave your DNS alone, you can do so by adding [the flag](/manage/clients/configure-client) to the CLI / Olm or disable override dns in the client settings.
+If you wish to disable this behavior and prevent aliases from being resolved and leave your DNS alone, you can do so by adding `--override-dns=false` to the CLI or disable override dns in the client settings.
 
 ## ICMP Ping
 
