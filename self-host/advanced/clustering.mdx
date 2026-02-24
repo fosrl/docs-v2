@@ -12,27 +12,132 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 Clustering is only available in [Enterprise Edition](/self-host/enterprise-edition). [Please reach out to us to deploy](https://pangolin.net/talk-to-us).
 </Note>
 
-Deploy multiple Pangolin servers enterprise-grade high availability and performance in large deployments.
+Deploy multiple Pangolin servers for enterprise-grade high availability and performance in large deployments.
 
 ## Overview
 
 For organizations requiring maximum uptime and performance, Pangolin supports clustered deployments where multiple server instances work together as a unified system. This architecture enables regional distribution, automatic failover, and horizontal scaling to handle demanding production workloads.
 
-## How Clustering Works
+In a clustered configuration, multiple Pangolin server instances operate together, sharing state through a PostgreSQL database and Valkey server. Each instance can independently serve user requests, manage authentication, and coordinate with Gerbil instances to support thousands of sites across your organization.
 
-In a clustered configuration, multiple Pangolin server instances operate together, sharing state and coordinating through a Postgres database and Valkey server. Each instance can independently serve user requests, manage authentication, and coordinate with multiple Gerbil instances to support thousands of sites.
+## Architecture Components
 
-### Shared Database Backend
+A Pangolin cluster consists of several coordinated components that work together to provide high availability and seamless failover. Each component plays a specific role in ensuring your deployment remains online and performant.
 
-All Pangolin instances connect to a shared PostgreSQL database that stores the system's persistent state - including user accounts, site configurations, resources, access policies, and organizational settings. This ensures that changes made through any server instance are immediately available across the entire cluster.
+### Pangolin Instances
 
-### Real-time State Synchronization
+**Purpose**: Serve the web UI, API, and manage cluster coordination.
 
-Redis or Valkey provides real-time state synchronization and pub sub between cluster nodes like active sessions, WebSocket connections, and tunnel status. When a user authenticates or a site connector establishes a connection to one Pangolin instance, Redis ensures other nodes are aware of these active sessions for failover.
+**How It Works**:
+- Multiple Pangolin instances run simultaneously across different nodes
+- Each instance can independently handle user authentication and requests
+- All instances share state through the PostgreSQL database and Valkey
+- Instances coordinate to manage site configurations, resources, and access policies
 
-### Tunnel Management with Gerbil
+**High Availability**: A load balancer sits in front of all Pangolin instances. If any instance goes down, the load balancer automatically routes traffic to healthy nodes, ensuring the UI and API remain accessible from the same domain without interruption.
 
-Each Pangolin instance runs alongside its own Gerbil tunnel manager, which handles WireGuard connections to site connectors. When a site connector needs to establish a tunnel, it can connect to any available Gerbil instance in the cluster. For public resources, Gerbil instances are aware of all of the other nodes in the network and can route incoming requests to any other Gerbil to exit through the right site. The distributed architecture ensures that tunnel connectivity remains available even if individual nodes fail.
+### DNS Servers
+
+**Purpose**: Provide dynamic DNS resolution for certificate generation and failover management.
+
+**How It Works**:
+- Each cluster node runs a DNS server in the same Docker stack as Pangolin
+- DNS servers listen on port 53 UDP and serve DNS records for cluster resources
+- You must create NS (name server) records in your domain provider pointing to each DNS instance
+- You must delegate domains for resources to these name servers
+- Multiple DNS instances prevent single points of failure
+
+**Key Responsibilities**:
+- Host ACME challenge tokens for Let's Encrypt certificate generation
+- Automatically update DNS records when sites move between nodes
+- Redirect traffic to healthy nodes when a node fails
+- Enable failover by pointing resources to available instances
+
+### PostgreSQL Database
+
+**Purpose**: Store all persistent cluster state in a centralized, shared database.
+
+**How It Works**:
+- All Pangolin instances connect to a shared PostgreSQL database
+- Stores user accounts, site configurations, resources, access policies, and organizational settings
+- Certificates are stored encrypted in the database for security
+- Changes made through any instance are immediately available cluster-wide
+
+**High Availability**: Database replication and backup strategies ensure data persistence and availability across the cluster.
+
+### Valkey (Redis)
+
+**Purpose**: Provide real-time state synchronization between cluster nodes.
+
+**How It Works**:
+- Pub/sub messaging keeps nodes synchronized on ephemeral state
+- Tracks active user sessions, WebSocket connections, and tunnel status
+- When a user authenticates to one instance, all nodes become aware via Valkey
+- Enables rapid failover by sharing connection state across the cluster
+
+**High Availability**: Ensures that session and connection information remains available even when individual nodes fail.
+
+### Certificate Generation Server
+
+**Purpose**: Automate TLS certificate issuance and renewal for all cluster resources.
+
+**How It Works**:
+- Dedicated server communicates with Let's Encrypt for certificate issuance
+- Uses DNS-01 challenge validation through the cluster's DNS servers
+- Generates certificates and stores them encrypted in the PostgreSQL database
+- Handles automatic certificate renewal across the entire cluster
+
+**High Availability**: Centralized certificate management ensures all resources maintain valid TLS certificates regardless which node they are served from.
+
+### Traefik Instances
+
+**Purpose**: Route HTTP/HTTPS traffic to resources and terminate TLS connections.
+
+**How It Works**:
+- Each cluster node runs its own Traefik instance
+- Pangolin writes configuration files and certificates to a shared volume with Traefik
+- Each resource pulls its certificate from the database to files Traefik can read
+- Traefik reads router configurations from local files to serve resources
+- Sits behind Gerbil, which runs an SNI proxy for traffic routing
+
+**High Availability**: Multiple Traefik instances ensure traffic routing continues even if individual nodes fail.
+
+### Gerbil Instances
+
+**Purpose**: Manage WireGuard tunnels to site connectors and route traffic between cluster nodes.
+
+**How It Works**:
+- Each Pangolin instance runs alongside its own Gerbil tunnel manager
+- Handles WireGuard VPN connections from site connectors
+- Site connectors can establish tunnels to any available Gerbil instance
+- All Gerbil instances are aware of other nodes in the network
+- Routes incoming requests to the correct Gerbil instance to exit through the appropriate site
+- When DNS caching causes traffic to hit the wrong node, Gerbil routes requests to the correct node
+
+**High Availability**: Distributed tunnel management ensures connectivity remains available even if individual Gerbil instances fail. The distributed architecture allows automatic failover between nodes.
+
+### Load Balancer
+
+**Purpose**: Distribute incoming traffic across healthy Pangolin instances.
+
+**How It Works**:
+- Sits in front of all Pangolin instances serving the UI and API
+- Monitors instance health and routes traffic only to available nodes
+- Ensures all traffic accesses the cluster through a single, consistent domain
+- Provides seamless failover when instances become unavailable
+
+**High Availability**: Essential for ensuring continuous access to the Pangolin UI and API regardless of individual instance failures. **You must provide your own HA load balancer** in front of the cluster.
+
+## Traffic Flow
+
+Understanding how requests flow through the cluster helps clarify how these components work together:
+
+1. **User Access**: Users access the Pangolin UI/API through the load balancer, which routes to any healthy Pangolin instance
+2. **Resource Requests**: When accessing a resource, DNS resolves to the appropriate Gerbil instance
+3. **Cross-Node Routing**: If DNS caching points to the wrong node, Gerbil automatically routes to the correct node
+4. **Tunnel Routing**: Gerbil receives the request and routes it to the local Traefik instance
+5. **TLS Termination**: Traefik handles TLS termination using certificates pulled from the shared volume configuration to the right site connector tunnel
+6. **Failover**: When nodes fail the load balancer and DNS automatically route traffic to healthy nodes
 
 ## Benefits of Clustering
 
@@ -44,8 +149,12 @@ Each Pangolin instance runs alongside its own Gerbil tunnel manager, which handl
 
 **Zero-Downtime Updates**: Perform rolling updates by taking nodes offline one at a time while others continue serving traffic.
 
+**Resilient DNS**: Multiple DNS servers ensure certificate generation and failover continue operating even during outages.
+
+**Dynamic Failover**: Automatic DNS updates and traffic routing ensure resources remain accessible when nodes fail.
+
 ## Enterprise Support
 
-Clustered deployments require careful planning around database replication, Redis configuration, network topology, and monitoring. These advanced architectures are available as part of Pangolin's [Enterprise Edition](/self-host/enterprise-edition) with dedicated support for design, deployment, and ongoing operations.
+Clustered deployments require careful planning around database replication, Valkey configuration, network topology, DNS infrastructure, and monitoring. These advanced architectures are available as part of Pangolin's [Enterprise Edition](/self-host/enterprise-edition) with dedicated support for design, deployment, and ongoing operations.
 
 For organizations interested in clustering for high availability or regional distribution, please [contact our enterprise team](https://pangolin.net/talk-to-us) to discuss your requirements and receive implementation guidance.
