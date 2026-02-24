@@ -20,6 +20,10 @@ For organizations requiring maximum uptime and performance, Pangolin supports cl
 
 In a clustered configuration, multiple Pangolin server instances operate together, sharing state through a PostgreSQL database and Valkey server. Each instance can independently serve user requests, manage authentication, and coordinate with Gerbil instances to support thousands of sites across your organization.
 
+<Frame caption="Pangolin clsuter diagram with two nodes">
+  <img src="/images/pangolin-cluster.png" alt="Pangolin Cluster"/>
+</Frame>
+
 ## Architecture Components
 
 A Pangolin cluster consists of several coordinated components that work together to provide high availability and seamless failover. Each component plays a specific role in ensuring your deployment remains online and performant.
