@@ -91,6 +91,7 @@
                                     "manage/access-control/rules",
                                     "manage/access-control/forwarded-headers",
                                     "manage/access-control/login-page",
+                                    "manage/ssh",
                                     "manage/geoblocking",
                                     "manage/asnblocking",
                                     "manage/access-control/mfa",

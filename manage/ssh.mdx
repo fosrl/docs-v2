@@ -7,14 +7,24 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
+<Note>
+Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
 ## Overview
 
 Pangolin includes a built-in SSH client so you can connect to remote servers and manage them directly from the terminal. You use your existing Pangolin identity—no separate SSH keys to create or copy. Pangolin generates and signs temporary access keys, pushes them to the remote server, and creates or updates your user account there. All of this happens automatically when you start a connection.
 
 You can SSH into any Pangolin site or private resource. Two components handle SSH on the server side:
 
-- **Newt (site connector)** — Runs as a daemon and handles SSH for the host it runs on.
-- **Auth daemon** — Handles SSH for other servers on the same network. It can run inside Newt or as a separate process on another machine (for example, a bastion Newt plus auth daemons on other hosts).
+<CardGroup cols={2}>
+  <Card title="Newt (site connector)" icon="plug" href="#option-1-newt-as-the-auth-daemon-same-host">
+    Runs as a daemon and handles SSH for the host it runs on. Use this when the machine you want to SSH into is the same server running Newt.
+  </Card>
+  <Card title="Auth daemon" icon="server" href="#option-2-external-auth-daemon-ssh-on-another-server-that-doesnt-run-newt">
+    Handles SSH for other servers on the same network. Run the auth daemon on each target host; Newt on a bastion proxies connections to them.
+  </Card>
+</CardGroup>
 
 You connect using the Pangolin CLI as the SSH client. The tunnel can be provided by the CLI or by another Pangolin client (e.g. the macOS app); you can run the GUI for the tunnel and use the CLI only for SSH if you prefer.
 
@@ -175,6 +185,8 @@ On every host that should accept Pangolin SSH (and is not running Newt), run the
 sudo pangolin auth-daemon --pre-shared-key <pre-shared-key>
 ```
 
+To use a non-default port, add `--port <port>` and set the same port in the resource’s SSH settings in the dashboard.
+
 #### Run as a systemd service
 
 Create a systemd unit so the auth daemon runs on boot:
@@ -193,7 +205,7 @@ User=root
 WantedBy=multi-user.target
 ```
 
-Replace `<pre-shared-key>` with the same value used on Newt. Then:
+Replace `<pre-shared-key>` with the same value used on Newt. If you use a custom port (set in the resource’s SSH settings), add `--port <port>` to `ExecStart`. Then:
 
 ```bash
 sudo systemctl daemon-reload
@@ -212,8 +224,12 @@ On each of these hosts, configure the SSH server as in [Configure the SSH server
 
 ### Step 4: Ensure network connectivity
 
-- **Newt → auth daemon:** Newt must be able to reach **TCP port 22123** on each server running the auth daemon (used for HTTPS between Newt and the auth daemon).
+- **Newt → auth daemon:** Newt must be able to reach the auth daemon port on each target server (default **TCP 22123**; configurable in the resource’s SSH settings and via the auth daemon’s `--port` flag).
 - **Clients → SSH:** Port **22** must be open for SSH to each target server (from wherever your users connect—often only within your private network).
+
+<Note>
+To change the auth daemon port from the default 22123, configure the port in the resource’s SSH settings in Pangolin and pass the same port with `--port` when starting the auth daemon.
+</Note>
 
 <Warning>
 These ports do not need to be exposed to the public internet. They only need to be reachable within the network where Newt and the target servers live.
@@ -280,4 +296,6 @@ Pangolin derives the remote username from your Pangolin identity (the part befor
 
 ### How does Newt communicate with the external auth daemon?
 
-Newt talks to the auth daemon over **HTTPS** on **TCP 22123**. When you SSH into a server that uses the external auth daemon, Newt calls the auth daemon on that host to create or update your user and resolve principals. Port 22123 only needs to be open between Newt and the auth daemon hosts on your internal network; it should not be exposed to the internet.
+Newt talks to the auth daemon over **HTTPS**. **TCP 22123** is used by default. When you SSH into a server that uses the external auth daemon, Newt calls the auth daemon on that host to create or update your user and resolve principals. Port 22123 only needs to be open between Newt and the auth daemon hosts on your internal network; it should not be exposed to the internet.
+
+To use a different port, set the port in the resource’s SSH settings in the Pangolin dashboard and pass the same port to the auth daemon with the `--port` flag (e.g. `pangolin auth-daemon --pre-shared-key <key> --port 22124`). Newt and the auth daemon must use the same port.
