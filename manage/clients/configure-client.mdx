@@ -49,7 +49,7 @@ This is a fallback DNS server that the system can use if the primary server is u
 
 ## Windows Client (Advanced)
 
-On Windows, you can preconfigure the Pangolin GUI client by editing the JSON config at `%LOCALAPPDATA%\Pangolin\pangolin.json` before the user signs in (for example, `C:\Users\USER\AppData\Local\Pangolin\pangolin.json`).
+On Windows, you can centrally preconfigure the Pangolin GUI client by editing the JSON config at `%LOCALAPPDATA%\Pangolin\pangolin.json` before the user signs in (for example, `C:\Users\USER\AppData\Local\Pangolin\pangolin.json`). This is useful for system administrators who want to enforce consistent DNS behavior and login flows across many machines without relying on end users to choose the right options. In particular, `defaultServerURL` and `authPath` let you direct users straight to the correct server and, if needed, a specific organization-branded login page on every launch.
 
 <ResponseField name="Config" type="object">
   JSON configuration for the Windows Pangolin client stored in `pangolin.json`.
