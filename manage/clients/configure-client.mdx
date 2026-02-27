@@ -49,13 +49,41 @@ This is a fallback DNS server that the system can use if the primary server is u
 
 ## Windows Client (Advanced)
 
-On Windows, you can preconfigure the Pangolin GUI client by editing the JSON config at `%LOCALAPPDATA%\Pangolin\pangolin.json` before the user signs in. This file uses the following fields:
+On Windows, you can preconfigure the Pangolin GUI client by editing the JSON config at `%LOCALAPPDATA%\Pangolin\pangolin.json` before the user signs in (for example, `C:\Users\USER\AppData\Local\Pangolin\pangolin.json`).
 
-- **DNSOverride** / **DNSTunnel**: Match the **Enable Aliases (Override DNS)** and **DNS Over Tunnel** preferences, controlling whether the client takes over DNS and whether DNS goes through the tunnel.
-- **PrimaryDNS** / **SecondaryDNS**: Set the upstream DNS servers used when override/tunnel DNS is enabled.
-- **DefaultServerURL**: When set, skips the deployment option screen; all login flows start directly with this server URL.
-- **AuthPath**: Optional path appended to the server URL for authentication, for example `/auth/org/my-org` to always send users to a specific organization or branded login page. Most deployments should leave this unset.
-- **UserSettingsDisabled**: Disables the settings form in the GUI so users cannot change these values themselves.
+<ResponseField name="Config" type="object">
+  JSON configuration for the Windows Pangolin client stored in `pangolin.json`.
+
+  <Expandable title="Config">
+    <ResponseField name="dnsOverride" type="boolean">
+      When true, matches the **Enable Aliases (Override DNS)** preference and lets the client take over DNS resolution for Pangolin resources.
+    </ResponseField>
+
+    <ResponseField name="dnsTunnel" type="boolean">
+      When true, matches the **DNS Over Tunnel** preference and sends DNS queries through the Pangolin tunnel.
+    </ResponseField>
+
+    <ResponseField name="primaryDNS" type="string">
+      Primary upstream DNS server used when override/tunnel DNS is enabled.
+    </ResponseField>
+
+    <ResponseField name="secondaryDNS" type="string">
+      Optional secondary upstream DNS server used as a fallback when the primary is unavailable.
+    </ResponseField>
+
+    <ResponseField name="defaultServerURL" type="string">
+      When set, skips the deployment option screen during login; all login flows start directly with this server URL.
+    </ResponseField>
+
+    <ResponseField name="authPath" type="string">
+      Optional path appended to the server URL for authentication, for example `/auth/org/my-org` to always send users to a specific organization or branded login page. Most deployments should leave this unset.
+    </ResponseField>
+
+    <ResponseField name="userSettingsDisabled" type="boolean">
+      When true, hides and disables the settings form in the GUI so users cannot change these values themselves.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
 
 As a system administrator, you can script placing this file into `%LOCALAPPDATA%\Pangolin\pangolin.json` to preconfigure user installations and automate rollouts.
 
