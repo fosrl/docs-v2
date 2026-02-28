@@ -113,23 +113,29 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
    Tap the Connect button to establish a VPN connection. On the first connection, you may be prompted to allow the VPN connection.
 
-## Pangolin CLI (Linux)
+## Pangolin CLI (Linux, macOS, Windows)
 
-Pangolin CLI is the recommended way to run a client using a command line interface on Mac or Linux. Support for Windows is coming soon.
+Pangolin CLI is the recommended way to run a client using a command line interface on Mac and Linux.
+
+Pangolin CLI can run on Windows, but the CLI VPN functionality is not supported. You can still use Pangolin CLI on Windows for SSH alongside the Windows GUI client.
 
 Pangolin CLI supports running as user device with authentication or a machine client.
 
-### Quick Install (Recommended)
+
+### Quick Install (Recommended) — Linux and macOS
 
 Use this command to automatically install Pangolin CLI. It detects your system architecture automatically and always pulls the latest version, adding `pangolin` to your PATH:
 
 ```bash
 curl -fsSL https://static.pangolin.net/get-cli.sh | bash
 ```
+### Windows
+
+Go to [GitHub releases](https://github.com/fosrl/cli/releases) and download the latest **MSI installer** or **EXE** for Windows.
 
 ### Manual Download
 
-Binaries for Linux and macOS are available in the [GitHub releases](https://github.com/fosrl/cli/releases) for ARM and AMD64 (x86_64) architectures.
+Binaries for all platforms are available in the [GitHub releases](https://github.com/fosrl/cli/releases) for ARM and AMD64 (x86_64) architectures.
 
 Download and install manually:
 

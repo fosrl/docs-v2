@@ -47,6 +47,60 @@ This is the DNS server that will be used if Override DNS is enabled or DNS Over 
 
 This is a fallback DNS server that the system can use if the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution. Not used when override DNS (aliases) are disabled.
 
+## Windows Client (Advanced)
+
+On Windows, you can centrally preconfigure the Pangolin GUI client by editing the JSON config at `%LOCALAPPDATA%\Pangolin\pangolin.json` before the user signs in (for example, `C:\Users\USER\AppData\Local\Pangolin\pangolin.json`). This is useful for system administrators who want to enforce consistent DNS behavior and login flows across many machines without relying on end users to choose the right options. In particular, `defaultServerURL` and `authPath` let you direct users straight to the correct server and, if needed, a specific organization-branded login page on every launch.
+
+<ResponseField name="Config" type="object">
+  JSON configuration for the Windows Pangolin client stored in `pangolin.json`.
+
+  <Expandable title="Config">
+    <ResponseField name="dnsOverride" type="boolean">
+      When true, matches the **Enable Aliases (Override DNS)** preference and lets the client take over DNS resolution for Pangolin resources.
+    </ResponseField>
+
+    <ResponseField name="dnsTunnel" type="boolean">
+      When true, matches the **DNS Over Tunnel** preference and sends DNS queries through the Pangolin tunnel.
+    </ResponseField>
+
+    <ResponseField name="primaryDNS" type="string">
+      Primary upstream DNS server used when override/tunnel DNS is enabled.
+    </ResponseField>
+
+    <ResponseField name="secondaryDNS" type="string">
+      Optional secondary upstream DNS server used as a fallback when the primary is unavailable.
+    </ResponseField>
+
+    <ResponseField name="defaultServerURL" type="string">
+      When set, skips the deployment option screen during login; all login flows start directly with this server URL.
+    </ResponseField>
+
+    <ResponseField name="authPath" type="string">
+      Optional path appended to the server URL for authentication, for example `/auth/org/my-org` to always send users to a specific organization or branded login page. Most deployments should leave this unset.
+    </ResponseField>
+
+    <ResponseField name="userSettingsDisabled" type="boolean">
+      When true, hides and disables the settings form in the GUI so users cannot change these values themselves.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+As a system administrator, you can script placing this file into `%LOCALAPPDATA%\Pangolin\pangolin.json` to preconfigure user installations and automate rollouts.
+
+<Tip>
+ For enterprise customers, contact us if you need a custom MSI installer with baked-in configuration; we can maintain custom installers as an add-on to your enterprise license.
+</Tip>
+
+### Windows client log level
+
+To configure the log level for the Windows client system-wide, edit `%ProgramData%\Pangolin\pangolin.json`. For example:
+
+```json
+{ "logLevel": "debug" }
+```
+
+The default log level is `info`.
+
 ## Android Battery Optimization
 
 To ensure Pangolin functions correctly in the background on Android devices, it's recommended to disable battery optimization for the app. This prevents the operating system from restricting its background activities, which could lead to disconnections.

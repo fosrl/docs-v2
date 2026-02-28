@@ -255,6 +255,8 @@ Traefik supports most DNS providers. You can find a full list of supported provi
   - Check API token permissions and scope
   - Ensure DNS propagation has completed
   - Review provider-specific configuration
+  - If your DNS provider has a firewall in place, ensure it allows incoming DNS traffic (typically UDP on port **53**). Adding an ingress rule to permit such traffic may help resolve the issue, especially if the firewall is stateless.
+
 </Accordion>
 
 <Accordion title="Old certificates still being used">
