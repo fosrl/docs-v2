@@ -18,6 +18,7 @@ This guide describes how to set up your local development environment for contri
 - Go 1.25
 - Git
 - Docker & Docker Compose
+- Python (for NPM builds)
 
 <Info>
 For managing multiple versions of Go, you may want to use [gvm](https://github.com/moovweb/gvm).
@@ -212,7 +213,28 @@ The easiest way to resolve this is to run Gerbil and have it register in your de
 --remoteConfig=http://localhost:3001/api/v1/
 ```
 
-Or enter in a dummy exit-node manually to the database. 
+Or enter in a dummy exit-node manually to the database:
+
+```
+INSERT INTO "exitNodes" (
+    "name", 
+    "address", 
+    "endpoint", 
+    "publicKey", 
+    "listenPort", 
+    "reachableAt", 
+    "type"
+) 
+VALUES (
+    'exit-node-1', 
+    '10.0.0.1/24', 
+    'gerbil.pangolin.net', 
+    'abc123', 
+    1234, 
+    'gerbil.pangolin.net', 
+    'gerbil'
+);
+```
 
 ## Windows Development Considerations
 

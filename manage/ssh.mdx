@@ -278,6 +278,14 @@ You can ask Pangolin to sign a key for a resource without starting an interactiv
 pangolin ssh sign vm-01.prod.example.com --key-file /path/to/public/key.pub
 ```
 
+## Generating passwords for users
+
+If you need a password to be generated for your user on the remote system (e.g. for sudo access or if you have passwords required in your sshd config), you can use:
+
+`--generate-random-password` to have Pangolin generate a random password when users are created on the device
+
+```bash
+
 ## FAQ
 
 ### How long are the temporary keys valid?
