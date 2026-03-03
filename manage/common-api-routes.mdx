@@ -1,0 +1,357 @@
+---
+title: "Common API Routes"
+description: "API routes and patterns for the most common actions and flows"
+---
+
+All routes in this guide require an API key. See [Integration API](/manage/integration-api) for creating and using API keys (Bearer token in the `Authorization` header). Many routes use an organization ID in the path — see [Organization ID](/manage/organizations/org-id) for where to find it.
+
+<Note>
+This guide is a **minimal** walkthrough for creating core Pangolin components (sites, resources, targets) via the API. It is not exhaustive — some elements are omitted for simplicity — but everything shown here works and illustrates patterns used elsewhere in the API. For full coverage of endpoints (get, update, delete, list, etc.), use the [Swagger docs](https://api.pangolin.net/v1/docs).
+</Note>
+
+## Create site
+
+This section assumes you're creating a **Newt** site. For all Site endpoints, see [Site API (Swagger)](https://api.pangolin.net/v1/docs/#/Site).
+
+<Steps>
+<Step title="Get site defaults">
+  Call the pick-site-defaults endpoint to get values you pass into the create-site endpoint, such as the Newt ID and secret.
+</Step>
+<Step title="Create the site">
+  Call the create-site endpoint with the values from the defaults response.
+</Step>
+</Steps>
+
+### Get site defaults
+
+**GET** `/org/{orgId}/pick-site-defaults`
+
+Returns values you pass into the create-site endpoint.
+
+**Path**
+- `orgId` (string) — organization ID
+
+**Example Response**
+```json
+{
+  "data": {
+    "newtId": "jwhk5154mfmos0s",
+    "newtSecret": "8afipi4i79jjbsxjqpkgc0xe2ge143s54oi64mw5567mxgr8",
+    "clientAddress": "100.90.128.0"
+  },
+  "success": true,
+  "error": false,
+  "message": "Site defaults chosen successfully",
+  "status": 200
+}
+```
+
+### Create site
+
+**PUT** `/org/{orgId}/site`
+
+**Path**
+- `orgId` (string) — organization ID
+
+**Body (Newt)**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Display name for the site |
+| `address` | string | Yes | From pick-site-defaults `clientAddress` |
+| `type` | string | Yes | Use `"newt"` |
+| `newtId` | string | Yes | From pick-site-defaults `newtId` |
+| `secret` | string | Yes | From pick-site-defaults `newtSecret` |
+
+**Example Response**
+```json
+{
+  "data": {
+    "siteId": 8723,
+    "niceId": "quiet-lerista-labialis",
+    "name": "My Site",
+    "type": "newt",
+    "online": false,
+    "address": "100.90.128.0/24"
+  },
+  "success": true,
+  "error": false,
+  "message": "Site created successfully",
+  "status": 201
+}
+```
+
+## Create public HTTP resource
+
+You need a **domain ID** before creating a resource. List your org's domains, then create the resource with the chosen domain. For all Resource endpoints, see [Resource API (Swagger)](https://api.pangolin.net/v1/docs/#/Resource).
+
+<Steps>
+<Step title="List domains">
+  Call the list-domains endpoint to get available domains and their `domainId` values.
+</Step>
+<Step title="Create the resource">
+  Call the create-resource endpoint with `http: true` and the `domainId` from step 1.
+</Step>
+<Step title="Add targets to the resource">
+  Call the create-target endpoint for each backend (site + ip:port) that should serve traffic for the resource.
+</Step>
+</Steps>
+
+### List domains
+
+**GET** `/org/{orgId}/domains`
+
+Returns all domains for the organization. Use `domainId` from a domain when creating a resource.
+
+**Path**
+- `orgId` (string) — organization ID
+
+**Query** (optional)
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `limit` | number | 1000 | Max domains to return |
+| `offset` | number | 0 | Pagination offset |
+
+**Example Response**
+```json
+{
+  "data": {
+    "domains": [
+      {
+        "domainId": "pg3i1k4lhibhl3i",
+        "baseDomain": "pangolin.net",
+        "verified": true,
+        "type": "ns"
+      },
+      {
+        "domainId": "q1ngj5341k7oydo",
+        "baseDomain": "bitwarden.pangolin.net",
+        "verified": true,
+        "type": "cname"
+      }
+    ],
+    "pagination": {
+      "total": 2,
+      "limit": 1000,
+      "offset": 0
+    }
+  },
+  "success": true,
+  "error": false,
+  "message": "Domains retrieved successfully",
+  "status": 200
+}
+```
+
+### Create public HTTP resource
+
+**PUT** `/org/{orgId}/resource`
+
+**Path**
+- `orgId` (string) — organization ID
+
+**Body (HTTP resource)**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Display name for the resource (1–255 chars) |
+| `http` | boolean | Yes | Use `true` for public HTTP resource |
+| `domainId` | string | Yes | From list-domains |
+| `protocol` | string | Yes | `"tcp"` |
+| `subdomain` | string \| null | No | See below. |
+
+**Subdomain and domain types**
+
+Domains come in three types: **ns** | **cname** | **wildcard**.
+
+<Note>
+**Wildcard** is only available in self-hosted Pangolin. Pangolin Cloud uses **ns** and **cname** only.
+</Note>
+
+- **ns** — You can use the base domain (set `subdomain` to `null`) or set a subdomain (e.g. `my-app` → `my-app.digpangolin.io`).
+- **cname** — Only the base domain is used; set `subdomain` to `null` (the domain’s `baseDomain` is the FQDN).
+- **wildcard** — Same as ns for subdomain behavior (self-hosted only).
+
+The `subdomain` value is combined with the base domain from `domainId` to form the FQDN. Omit `subdomain` or pass `null` when using the base domain alone.
+
+**Example request**
+```json
+{
+  "name": "My Resource",
+  "http": true,
+  "subdomain": "my-subdomain",
+  "domainId": "pg3i1k4lhibhl3i",
+  "protocol": "tcp"
+}
+```
+
+**Example Response**
+```json
+{
+  "data": {
+    "resourceId": 9942,
+    "niceId": "decent-louisiana-waterthrush",
+    "name": "My Resource",
+    "subdomain": "my-subdomain",
+    "fullDomain": "my-subdomain.pangolin.net",
+    "domainId": "pg3i1k4lhibhl3i",
+    "enabled": true
+  },
+  "success": true,
+  "error": false,
+  "message": "Http resource created successfully",
+  "status": 201
+}
+```
+
+### Add targets to the resource
+
+**PUT** `/resource/{resourceId}/target`
+
+Add a target (backend) to a resource. Use the numeric `resourceId` from the create-resource response. The target is the site and address (ip + port) that will receive traffic for the resource. For all Target endpoints, see [Target API (Swagger)](https://api.pangolin.net/v1/docs/#/Target).
+
+**Path**
+- `resourceId` (number) — From create-resource response (e.g. `9943`)
+
+**Body**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `siteId` | number | Yes | Site that hosts the backend (from create-site or list sites) |
+| `ip` | string | Yes | Backend IP or hostname |
+| `port` | number | Yes | Backend port |
+| `method` | string | Yes | e.g. `"http"` for HTTP resources |
+| `enabled` | boolean | No | Default `true` |
+
+**Example request**
+```json
+{
+  "ip": "localhost",
+  "port": 8080,
+  "method": "http",
+  "enabled": true,
+  "siteId": 5165
+}
+```
+
+**Example response**
+```json
+{
+  "data": {
+    "targetId": 11280,
+    "resourceId": 9942,
+    "siteId": 8723,
+    "ip": "localhost",
+    "method": "http",
+    "port": 8080,
+    "enabled": true
+  },
+  "success": true,
+  "error": false,
+  "message": "Target created successfully",
+  "status": 201
+}
+```
+
+## Create private resource
+
+In the API Private Resources are called **site resources**. You need an existing site. For more endpoints, see [API docs (Swagger)](https://api.pangolin.net/v1/docs/#/Resource).
+
+### Create site resource
+
+**PUT** `/org/{orgId}/site-resource`
+
+**Path**
+- `orgId` (string) — organization ID
+
+**Body**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Display name (1–255 chars) |
+| `siteId` | number | Yes | Site that hosts the resource (from create-site or list sites) |
+| `mode` | string | Yes | `"host"` \| `"cidr"` |
+| `destination` | string | Yes | For `host`: IP or hostname (e.g. `localhost`). For `cidr`: CIDR (e.g. `10.0.0.0/24`). |
+| `enabled` | boolean | No | Default `true` |
+| `alias` | string | For host+domain | Alias hostname (e.g. `private-resource.internal`). Required when `destination` is a domain; optional for IP. Must be unique in the org. |
+| `tcpPortRangeString` | string | Yes | See below. |
+| `udpPortRangeString` | string | Yes | See below. |
+| `disableIcmp` | boolean | No | Default `false` |
+| `authDaemonMode` | string | No | `"site"` \| `"remote"` |
+| `roleIds` | number[] | No | Role IDs that can access (default `[]`) |
+| `userIds` | string[] | No | User IDs that can access (default `[]`) |
+
+**TCP/UDP port range strings:** Control which ports are allowed for the private resource.
+
+- **`"*"`** — Allow all ports (common for TCP when you want full access to the host).
+- **`""`** (empty string) — Allow no ports. Use when you don’t need that protocol (e.g. `udpPortRangeString: ""` if only TCP is used).
+- **Specific ports or ranges** — Comma-separated list: single ports (e.g. `"80,443"`) or ranges (e.g. `"8000-9000"`). Example: `"80,443,8080-8090"` allows 80, 443, and 8080–8090.
+
+Use `tcpPortRangeString` and `udpPortRangeString` independently (e.g. TCP all, UDP none, or vice versa).
+
+If you omit `roleIds`/`userIds`, the org admin role is granted access by default. Add IDs to restrict access.
+
+**Example request**
+```json
+{
+  "name": "My Private Resource",
+  "siteId": 8723,
+  "mode": "host",
+  "destination": "localhost",
+  "enabled": true,
+  "alias": "private-resource.internal",
+  "tcpPortRangeString": "*",
+  "udpPortRangeString": "",
+  "disableIcmp": false,
+  "authDaemonMode": "site",
+  "roleIds": [],
+  "userIds": []
+}
+```
+
+**Example response**
+```json
+{
+  "data": {
+    "siteResourceId": 1165,
+    "siteId": 8723,
+    "niceId": "unsung-round-tailed-ground-squirrel",
+    "name": "My Private Resource",
+    "mode": "host",
+    "destination": "localhost",
+    "enabled": true,
+    "alias": "private-resource.internal",
+    "tcpPortRangeString": "*",
+    "udpPortRangeString": "",
+    "disableIcmp": false,
+    "authDaemonPort": 22123,
+    "authDaemonMode": "site"
+  },
+  "success": true,
+  "error": false,
+  "message": "Site resource created successfully",
+  "status": 201
+}
+```
+
+## Assign users and roles to a resource (public or private)
+
+You can grant access to a **public resource** or a **private (site) resource** by adding roles or users. First list roles and users in the org to get IDs, then call the add endpoints. The Admin role cannot be assigned via these endpoints.
+
+### Get role and user IDs
+
+**GET** `/org/{orgId}/roles` — Returns roles in the org. Use `roleId` (number) when adding a role to a resource. Query: `limit`, `offset` (optional).
+
+**GET** `/org/{orgId}/users` — Returns users in the org. Use `id` (string) as `userId` when adding a user to a resource. Query: `limit`, `offset` (optional).
+
+### Public resource (HTTP/resources)
+
+**POST** `/resource/{resourceId}/roles/add` — **Path:** `resourceId` (number, from create-resource). **Body:** `{ "roleId": number }`. Admin role not allowed.
+
+**POST** `/resource/{resourceId}/users/add` — **Path:** `resourceId` (number). **Body:** `{ "userId": string }`.
+
+Both return `{ "data": {}, "success": true, "error": false, "message": "...", "status": 201 }`.
+
+### Private resource (site resource)
+
+**POST** `/site-resource/{siteResourceId}/roles/add` — **Path:** `siteResourceId` (number, from create site-resource). **Body:** `{ "roleId": number }`. Admin role not allowed.
+
+**POST** `/site-resource/{siteResourceId}/users/add` — **Path:** `siteResourceId` (number). **Body:** `{ "userId": string }`.
+
+Same response shape as above. Role must belong to the same org as the site resource. For more endpoints (list/remove), see [Resource API](https://api.pangolin.net/v1/docs/#/Resource).
