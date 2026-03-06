@@ -192,8 +192,7 @@ The `subdomain` value is combined with the base domain from `domainId` to form t
     "name": "My Resource",
     "subdomain": "my-subdomain",
     "fullDomain": "my-subdomain.pangolin.net",
-    "domainId": "pg3i1k4lhibhl3i",
-    "enabled": true
+    "domainId": "pg3i1k4lhibhl3i"
   },
   "success": true,
   "error": false,
@@ -218,7 +217,6 @@ Add a target (backend) to a resource. Use the numeric `resourceId` from the crea
 | `ip` | string | Yes | Backend IP or hostname |
 | `port` | number | Yes | Backend port |
 | `method` | string | Yes | e.g. `"http"` for HTTP resources |
-| `enabled` | boolean | No | Default `true` |
 
 **Example request**
 ```json
@@ -226,7 +224,6 @@ Add a target (backend) to a resource. Use the numeric `resourceId` from the crea
   "ip": "localhost",
   "port": 8080,
   "method": "http",
-  "enabled": true,
   "siteId": 5165
 }
 ```
@@ -240,8 +237,7 @@ Add a target (backend) to a resource. Use the numeric `resourceId` from the crea
     "siteId": 8723,
     "ip": "localhost",
     "method": "http",
-    "port": 8080,
-    "enabled": true
+    "port": 8080
   },
   "success": true,
   "error": false,
@@ -268,7 +264,6 @@ In the API Private Resources are called **site resources**. You need an existing
 | `siteId` | number | Yes | Site that hosts the resource (from create-site or list sites) |
 | `mode` | string | Yes | `"host"` \| `"cidr"` |
 | `destination` | string | Yes | For `host`: IP or hostname (e.g. `localhost`). For `cidr`: CIDR (e.g. `10.0.0.0/24`). |
-| `enabled` | boolean | No | Default `true` |
 | `alias` | string | For host+domain | Alias hostname (e.g. `private-resource.internal`). Required when `destination` is a domain; optional for IP. Must be unique in the org. |
 | `tcpPortRangeString` | string | Yes | See below. |
 | `udpPortRangeString` | string | Yes | See below. |
@@ -294,7 +289,6 @@ If you omit `roleIds`/`userIds`, the org admin role is granted access by default
   "siteId": 8723,
   "mode": "host",
   "destination": "localhost",
-  "enabled": true,
   "alias": "private-resource.internal",
   "tcpPortRangeString": "*",
   "udpPortRangeString": "",
@@ -315,7 +309,6 @@ If you omit `roleIds`/`userIds`, the org admin role is granted access by default
     "name": "My Private Resource",
     "mode": "host",
     "destination": "localhost",
-    "enabled": true,
     "alias": "private-resource.internal",
     "tcpPortRangeString": "*",
     "udpPortRangeString": "",
