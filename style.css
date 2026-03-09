@@ -6,4 +6,101 @@
 /* Space above the Pangolin Cloud CTA (below the table of contents links) */
 #table-of-contents > *:last-child {
   margin-top: 1.25rem;
+  background-color: #F2F0E7;
+}
+
+#navbar .max-w-8xl {
+  max-width: 100%;
+  background-color: #F2F0E7;
+  border-bottom: 1px solid #E8E7E5;
+}
+
+/* No border between search row and tab links */
+#navbar .border-b {
+  border-bottom: none !important;
+}
+
+#sidebar {
+  left: 0;
+  padding-right: 30px;
+  background-color: #F2F0E7;
+}
+
+#sidebar-content {
+  padding-left: 2rem;
+}
+
+#sidebar-content ul.sidebar-group {
+  gap: 0;
+}
+
+#sidebar-content ul.sidebar-group li {
+  margin-top: 0 !important;
+}
+
+#sidebar .relative .sticky {
+  opacity: 0;
+}
+
+#header {
+  padding-bottom: 25px;
+  padding-top: 25px;
+  border-bottom: 1px solid #E8E7E5;
+  margin-bottom: 50px;
+}
+
+#content-area .mt-8 .block {
+  background-color: #F2F0E7;
+  border: none !important;
+}
+
+/* No borders on cards */
+[class*="card"],
+[class*="Card"],
+#table-of-contents > *:last-child {
+  border: none !important;
+}
+
+/* Step number circle: match card background */
+[data-component-part="step-number"] .rounded-full,
+[data-component-part="step-number"] .bg-gray-50,
+[data-component-part="step-number"] .dark\:bg-white\/10 {
+  background-color: #F2F0E7 !important;
+}
+
+#topbar-cta-button .group .flex {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+/* Fully rounded (pill) buttons */
+#navbar .links a,
+#topbar-cta-button .group .absolute,
+#topbar-cta-button a {
+  border-radius: 9999px !important;
+}
+
+/* CTA button background (navbar + footer) */
+#topbar-cta-button .group .absolute,
+#topbar-cta-button a {
+  background-color: #202020 !important;
+}
+
+#footer {
+  background-color: #F2F0E7;
+  border-color: #E8E7E5 !important;
+}
+
+#footer .border-t {
+  border-color: #E8E7E5 !important;
+}
+
+#footer .bg-gray-100,
+#footer .dark\:bg-white\/5 {
+  background-color: #E8E7E5 !important;
+}
+
+/* Remove the divider line above "Powered by" */
+#footer div[class*="1px"] {
+  display: none !important;
 }
