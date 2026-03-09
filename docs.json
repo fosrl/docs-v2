@@ -1,18 +1,26 @@
 {
     "$schema": "https://mintlify.com/docs.json",
-    "theme": "aspen",
+    "theme": "mint",
     "name": "Pangolin Docs",
-    "description": "Pangolin is the easiest to use identity-based remote access platform based on WireGuard.",
+    "description": "Zero trust access to all your infrastructure, self-hosted applications, and SaaS tools. Easy to deploy and scale. Better than your existing VPN.",
     "colors": {
-        "primary": "#F36117",
-        "light": "#F36117",
+        "primary": "#202020",
+        "light": "#202020",
         "dark": "#F36117"
     },
-    "favicon": "/favicon.svg",
+    "background": {
+        "color": {
+            "light": "#FAF9F2"
+        }
+    },
+    "styling": {
+        "codeblocks": "dark"
+    },
+    "favicon": "/favicon.png",
     "navigation": {
         "tabs": [
             {
-                "tab": "Docs",
+                "tab": "Documentation",
                 "groups": [
                     {
                         "group": "About",
@@ -187,60 +195,43 @@
                         ]
                     },
                     {
-		                "group": "Careers",
-	                    "pages": [
-		                    "careers/join-us",
-		                    "careers/software-engineer-full-stack"
-	                    ]
-	                },
-                    {
                         "group": "Development",
                         "pages": [
                             "development/system-architecture",
                             "development/contributing",
                             "development/feature-requests-and-bug-reports"
                         ]
-                    },
-                    {
-                        "group": "Additional Resources",
-                        "pages": [
-                            "additional-resources/changelog",
-                            "additional-resources/trust-center"
-                        ]
                     }
                 ]
             },
             {
-                "tab": "Blog",
-                "href": "https://pangolin.net/blog"
+                "tab": "Guides",
+                "href": "https://pangolin.net/news"
+            },
+            {
+                "tab": "Downloads",
+                "href": "https://pangolin.net/downloads"
             },
             {
                 "tab": "Website",
                 "href": "https://pangolin.net/"
+            },
+            {
+                "tab": "Careers",
+                "href": "https://pangolin.net/careers"
+            },
+            {
+                "tab": "Trust Center",
+                "href": "https://trust.pangolin.net/"
             }
-        ],
-        "global": {
-            "anchors": [
-                {
-                    "anchor": "GitHub",
-                    "href": "https://github.com/fosrl/pangolin",
-                    "icon": "github"
-                },
-                {
-                    "anchor": "Slack",
-                    "href": "https://pangolin.net/slack",
-                    "icon": "slack"
-                },
-                {
-                    "anchor": "Discord",
-                    "href": "https://pangolin.net/discord",
-                    "icon": "discord"
-                }
-            ]
-        }
+        ]
     },
     "interaction": {
         "drilldown": true
+    },
+    "appearance": {
+        "default": "light",
+        "strict": true
     },
     "logo": {
         "light": "/logo/light.png",
@@ -250,26 +241,93 @@
     "navbar": {
         "links": [
             {
-                "label": "Log In",
+                "label": "Log in",
                 "href": "https://app.pangolin.net/auth/login"
-            },
-            {
-                "label": "Contact Us",
-                "icon": "envelope",
-                "href": "mailto:contact@pangolin.net"
             }
         ],
         "primary": {
             "type": "button",
-            "label": "Pangolin Dashboard",
+            "label": "Start for free",
             "href": "https://app.pangolin.net/auth/signup"
         }
     },
     "footer": {
         "socials": {
+            "slack": "https://pangolin.net/slack",
             "github": "https://github.com/fosrl/pangolin",
-            "linkedin": "https://linkedin.com/company/digpangolin"
-        }
+            "linkedin": "https://linkedin.com/company/digpangolin",
+            "youtube": "https://youtube.com/@pangolin"
+        },
+        "links": [
+            {
+                "header": "Product",
+                "items": [
+                    {
+                        "label": "Documentation",
+                        "href": "https://docs.pangolin.net"
+                    },
+                    {
+                        "label": "Downloads",
+                        "href": "https://app.pangolin.net/auth/signup"
+                    },
+                    {
+                        "label": "Status",
+                        "href": "https://status.pangolin.net"
+                    }
+                ]
+            },
+            {
+                "header": "Company",
+                "items": [
+                    {
+                        "label": "Careers",
+                        "href": "https://docs.pangolin.net/careers/join-us"
+                    },
+                    {
+                        "label": "Contact",
+                        "href": "mailto:contact@pangolin.net"
+                    },
+                    {
+                        "label": "News & Articles",
+                        "href": "https://pangolin.net/news"
+                    }
+                ]
+            },
+            {
+                "header": "Legal",
+                "items": [
+                    {
+                        "label": "Trust Center",
+                        "href": "https://trust.pangolin.net/"
+                    },
+                    {
+                        "label": "Privacy",
+                        "href": "https://pangolin.net/privacy-policy.html"
+                    },
+                    {
+                        "label": "Terms",
+                        "href": "https://pangolin.net/terms-of-service.html"
+                    }
+                ]
+            },
+            {
+                "header": "Follow",
+                "items": [
+                    {
+                        "label": "GitHub",
+                        "href": "https://github.com/fosrl/pangolin"
+                    },
+                    {
+                        "label": "LinkedIn",
+                        "href": "https://linkedin.com/company/pangolin-net"
+                    },
+                    {
+                        "label": "YouTube",
+                        "href": "https://youtube.com/@pangolin"
+                    }
+                ]
+            }
+        ]
     },
     "integrations": {
         "posthog": {
