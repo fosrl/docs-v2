@@ -1,7 +1,7 @@
 ---
 title: "Invitations"
 icon: "envelope"
-description: "Invite users to join your Pangolin organization."
+description: "View and manage outstanding invitations to your organization."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,17 +9,47 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <PangolinCloudTocCta />
 
 
+Invitations is the **Open Invitations** page. It shows outstanding invites for users who have not joined yet.
 
-!TODO: Expand this scaffold page with complete product documentation.
+## What This Page Is For
 
-Invitations let organization admins grant access to users by sending invite links into the organization.
+- View pending invites in a table
+- Search invitations by email
+- Check expiration and assigned role
+- Refresh the list
+- Regenerate invitation links for existing entries
 
-## What You Can Do
+## Best Practices
 
-- Create invite links for new users
-- Track invitation state
-- Revoke invitations that are no longer needed
+- Keep invite lists clean by revoking stale invitations.
+- Verify the correct email and intended role before sending.
+- Reissue invites instead of leaving expired or invalid ones pending.
 
-## Notes
+## Table Fields
 
-This page is a scaffold and will be expanded with invitation lifecycle details and role assignment behavior.
+- **Email**: The invited user email.
+- **Expires At**: When the invitation link becomes invalid.
+- **Role**: The role the invited user will receive on acceptance (for example, `Member`).
+
+## Actions
+
+- **Refresh**: Reload the invitation list.
+- **Regenerate**: Create a new invitation link/token for the selected invite when the user cannot use the previous one.
+- **More Actions (`...`)**: Open row actions, including **Remove Invitation**.
+
+## Troubleshooting
+
+If users cannot complete onboarding:
+
+- Confirm the invitation is still active.
+- Confirm they are signing in with the same email/account that was invited.
+- Revoke and resend the invitation if it is stale or invalid.
+- Check [Approval Requests](/manage/access-control/approvals) if additional approval is required.
+- If SMTP is not configured, Pangolin will present an invite link in the UI. Copy that link and send it to the user manually.
+
+## Related Documentation
+
+- [Create User](/manage/access-control/create-user)
+- [Roles](/manage/access-control/roles)
+- [Approval Requests](/manage/access-control/approvals)
+- [Identity Providers](/manage/identity-providers/add-an-idp)

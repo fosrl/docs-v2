@@ -1,7 +1,7 @@
 ---
 title: "Roles"
 icon: "shield"
-description: "Define and manage role-based access for your organization."
+description: "Create roles, assign users, and tie resources to those roles."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,17 +9,77 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <PangolinCloudTocCta />
 
 
+Roles are labels you assign to users, then use in resource access rules and SSH policy.
 
-!TODO: Expand this scaffold page with complete product documentation.
+By default, each organization includes two roles:
 
-Roles are used to group permissions and simplify access assignment across users and resources.
+- **Admin**: Can configure the organization and manage access.
+- **Member**: Can view and access resources assigned to them, but cannot manage organization configuration.
+
+The first account created in an organization is assigned the **Admin** role.
+
+## Default Role Behavior
+
+The default roles are enough for many teams:
+
+- **Admin** for operators who manage setup and policy.
+- **Member** for users who primarily consume resources.
+
+You can create additional roles when you need different resource mapping or different SSH behavior.
+
+## Recommended Workflow
+
+<Steps>
+<Step title="Define role boundaries">
+  Define user cohorts first (team, environment, or function), then create one role per cohort.
+</Step>
+<Step title="Assign users to the role">
+  Add users through invitations or user management, then map them to the appropriate role.
+</Step>
+<Step title="Tie resources to the role">
+  Use resource rules to allow this role to access the resources it needs.
+</Step>
+<Step title="Set SSH behavior">
+  Configure SSH options for the role (allow/disallow, sudo mode, Unix groups, home directory).
+</Step>
+</Steps>
+
+## Create Role Fields
+
+The **Create Role** dialog is split into two tabs: **General** and **SSH Access**.
+
+### General
+
+- **Role Name**: Display name for the role in your organization.
+- **Description**: Human-readable purpose and scope of the role.
+- **Require Device Approvals**: Requires admin approval for new devices before users with this role can connect to resources.
+
+### SSH Access
+
+- **Allow SSH**:
+  - **Allow**: Role can connect to resources via SSH.
+  - **Disallow**: Role cannot use SSH access.
+- **Sudo Access**:
+  - **None**: No sudo privileges.
+  - **Full Sudo**: Full sudo privileges on target hosts.
+  - **Commands**: Command-scoped sudo permissions.
+- **Unix Groups**: Comma-separated Unix groups to add the user to on the target host.
+- **Create Home Directory**: Automatically creates a home directory for the user on the target host.
+
+<Note>
+Use the most restrictive SSH settings that still satisfy the user's job function.
+</Note>
 
 ## Related Documentation
 
+- [Create User](/manage/access-control/create-user)
+- [Invitations](/manage/access-control/invitations)
 - [Rules](/manage/access-control/rules)
 - [Forwarded Headers](/manage/access-control/forwarded-headers)
-- [Login Page](/manage/access-control/login-page)
+- [SSH Access](/manage/ssh)
 
-## Notes
+## Operational Notes
 
-This page is a scaffold and will be expanded with role design and management workflows.
+- Keep role names descriptive and stable (for example, `prod-admin`, `dev-team`, `contractor-limited`).
+- Prefer fewer roles with clear purpose over many overlapping roles.
+- Document who approves role changes in your internal process.

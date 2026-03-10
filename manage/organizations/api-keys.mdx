@@ -9,21 +9,50 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <PangolinCloudTocCta />
 
 
+API keys are used to authenticate with the Integration API for organization automation.
 
-!TODO: Expand this scaffold page with complete product documentation.
+## Manage API Keys
 
-API keys allow programmatic access to Pangolin APIs with scoped permissions.
+The **Manage API Keys** page provides:
 
-## What You Can Do
+- Search by key name
+- Key list table (`Name`, `Key`, `Created At`)
+- **Refresh**
+- **Generate API Key**
 
-- Create API keys for automation and integrations
-- Assign permissions based on least privilege
-- Rotate and revoke keys when needed
+## Generate API Key
+
+The **Generate API Key** flow has two parts:
+
+1. **API Key Information**
+   - `Name`
+2. **Permissions**
+   - `Allow All Permissions` (global toggle)
+   - Granular permission groups (for example: Organization, Domain, Site, Resource, Target, Role, Access Token, Resource Rule, Client, Logs)
+
+<Note>
+The permission matrix is intentionally extensive and can change over time. Use the UI as the source of truth for available actions.
+</Note>
+
+## Recommended Permission Strategy
+
+- Create one API key per integration or service.
+- Start with minimal permissions, then add only required actions.
+- Prefer scoped permissions over `Allow All Permissions`.
+- Separate production and non-production keys.
+- Rotate keys on a schedule and immediately on suspected exposure.
+
+## Typical Workflow
+
+1. Create a key with a clear name (service + environment).
+2. Assign only required permission groups/actions.
+3. Store the token in a secret manager.
+4. Validate the integration behavior.
+5. Rotate/revoke as part of operations.
 
 ## Related Documentation
 
 - [Integration API](/manage/integration-api)
-
-## Notes
-
-This page is a scaffold and will be expanded with key lifecycle and permission examples.
+- [Common API Routes](/manage/common-api-routes)
+- [Organization ID](/manage/organizations/org-id)
+- [Action Logs](/manage/analytics/action)

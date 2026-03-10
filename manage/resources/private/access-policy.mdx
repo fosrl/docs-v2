@@ -1,0 +1,56 @@
+---
+title: "Access Policy"
+icon: "shield"
+description: "Control which roles, users, and machine clients can access a private resource."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Use **Access Policy** to define who can access this private resource when connected.
+
+## Access Control
+
+Select access principals:
+
+- **Roles**
+- **Users**
+- **Machine Clients**
+
+Admins always have access.
+
+By default, connected clients do **not** have access to private resources unless access is explicitly granted here.
+
+<Frame>
+  <img src="/images/private_access_controls.png" centered/>
+</Frame>
+
+## Guidance
+
+- Prefer role-based assignment for teams.
+- Use direct user assignment for exceptions.
+- Use machine-client assignment for non-human workloads.
+- Machine clients cannot be added to roles; assign them directly.
+- Review assignments during onboarding/offboarding.
+
+## Behavior Notes
+
+- When access is granted, the client can establish tunnel access to this resource.
+- If access is removed and no other resources on the same site remain accessible, the client tunnel to that site is torn down automatically.
+
+## Port and ICMP Controls
+
+Port restrictions and ICMP behavior are configured in [Network Settings](/manage/resources/private/network-settings):
+
+- Restrict **TCP** and **UDP** to all or specific ports
+- Toggle **ICMP** allow/deny
+- Port lists can be entered as single ports, comma-separated values, or ranges (for example `80`, `80,443,8080`, `8000-8100`)
+
+## Related Documentation
+
+- [Roles](/manage/access-control/roles)
+- [Create User](/manage/access-control/create-user)
+- [Invitations](/manage/access-control/invitations)
+- [Manage Machine Clients](/manage/clients/manage-machine-clients)
+- [Network Settings](/manage/resources/private/network-settings)

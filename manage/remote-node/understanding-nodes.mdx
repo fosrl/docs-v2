@@ -11,10 +11,10 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 <Note>
-	Remote Nodes are available in Pangolin Cloud and self-hosted [Enterprise Edition](/self-host/enterprise-edition).
+	Remote Nodes are available in [Pangolin Cloud](https://app.pangolin.net/auth/signup).
 </Note>
 
-Remote nodes, you run your own Pangolin node - your tunnels, SSL termination, and traffic all stay on your server and use your bandwidth. The difference is that management and monitoring are handled through our cloud or your central self-hosted [Enterprise Edition](/self-host/enterprise-edition) server. The node just handles terminating Wireguard tunnels, serving HTTP(S) traffic, and routing relayed client connections - it is essentially a remote networking hub.
+Remote nodes, you run your own Pangolin node - your tunnels, SSL termination, and traffic all stay on your server and use your bandwidth. The difference is that management and monitoring are handled through our cloud. The node just handles terminating Wireguard tunnels, serving HTTP(S) traffic, and routing relayed client connections - it is essentially a remote networking hub.
 
 Think of different nodes as the "front doors" to your applications - users connect to the closest one, and it securely routes their requests to your backend services.
 
@@ -30,7 +30,7 @@ Think of different nodes as the "front doors" to your applications - users conne
 - **Failover**: If you have multiple nodes, the control plane will failover between them. If one node becomes unavailable, traffic can optionally fail over to our cloud infrastructure or other nodes until you restore service.
 
 <Frame>
-  <img src="/images/ha.svg" width="400" centered/>
+  <img src="/images/ha.png" width="400" centered/>
 </Frame>
 
 ## Some Benefits

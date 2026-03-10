@@ -9,20 +9,45 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <PangolinCloudTocCta />
 
 
+Machine Clients are non-human identities used by servers, workloads, and automation to access private resources.
 
-!TODO: Expand this scaffold page with complete product documentation.
+Machine clients do **not** authenticate with username/password. They authenticate using a generated client **`id`** and **`secret`**.
 
-Machine Clients is where you create and manage clients that servers and systems use to privately connect to resources.
+## What This Page Is For
 
-## What You Can Do
+Use this page to manage machine identities for workloads that cannot use interactive user login.
 
-- Create clients for machines and services
-- Manage existing client configurations
-- Rotate or revoke client access when needed
+Typical actions include:
+
+- Creating new machine clients
+- Reviewing existing client entries
+- Finding a client by name/environment
+- Removing or rotating clients that are no longer needed
+
+## Use Cases
+
+- Backend services connecting to private APIs or databases
+- CI/CD jobs requiring internal network access
+- Scheduled automation tasks running headless
+
+## Lifecycle
+
+1. Create a machine client.
+2. Store credentials securely (`id` and `secret`).
+3. Install and run the client on target infrastructure.
+4. Monitor health and rotate credentials on schedule.
+
+## Operational Guidance
+
+- Use separate machine clients per workload and environment.
+- Avoid sharing one machine credential across unrelated systems.
+- Prefer short operational ownership chains (each key has a clear owner/team).
+- Revoke unused machine clients during regular access reviews.
 
 ## Related Documentation
 
-- [Understanding Clients](/manage/clients/understanding-clients)
-- [Install Client](/manage/clients/install-client)
+- [Create Machine Client](/manage/clients/create-machine-client)
 - [Install Machine Client](/manage/clients/install-machine-client)
-- [Configure Client](/manage/clients/configure-client)
+- [Machine Client Operations](/manage/clients/machine-client-operations)
+- [Machine Client Security](/manage/clients/machine-client-security)
+- [Machine Client Troubleshooting](/manage/clients/machine-client-troubleshooting)

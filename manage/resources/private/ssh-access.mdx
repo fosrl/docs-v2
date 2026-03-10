@@ -1,0 +1,31 @@
+---
+title: "SSH Access"
+icon: "terminal"
+description: "Configure SSH behavior for a private resource."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Use **SSH Access** to configure how SSH authentication is handled for this private resource.
+
+## Availability
+
+In some deployments, SSH resource features may require an eligible plan or edition.  
+If unavailable, the UI shows an upgrade prompt.
+
+## SSH Auth Daemon Location
+
+Choose where the SSH authentication daemon runs:
+
+- **On Site**: Auth daemon runs on the site connector host (Newt).
+- **Remote Host**: Auth daemon runs on the resource destination host.
+
+This controls where SSH key signing and PAM authentication handling occurs for the resource.
+
+## Related Documentation
+
+- [SSH Access (Feature Overview)](/manage/ssh)
+- [Network Settings](/manage/resources/private/network-settings)
+- [Access Policy](/manage/resources/private/access-policy)

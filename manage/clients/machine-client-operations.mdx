@@ -10,18 +10,52 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-!TODO: Expand this scaffold page with complete product documentation.
+This page covers day-2 operations for machine clients in production.
 
-This page should describe how to run and manage machine clients reliably across environments.
+## Operating Model
 
-## Include In This Page
+- Run machine clients as managed processes (`systemd`, container runtime, or orchestrator).
+- Configure automatic restart behavior for process resilience.
+- Keep runtime configuration and credentials externalized from application code.
+- Validate connectivity after each change to runtime, credentials, or network policy.
 
-- Running machine clients as background services
-- Restart behavior and health checks
-- Logging and observability patterns
-- Update and rollback strategy
+## Runbook Checklist
+
+- Health checks in place
+- Alerting for disconnect/restart loops
+- Centralized log collection enabled
+- Rollback path documented and tested
+- Ownership defined for each machine client
+
+## Health and Observability
+
+- Monitor connection status and expected traffic volume.
+- Watch for repeated reconnect loops or sudden drops in data transfer.
+- Correlate changes with [Request Logs](/manage/analytics/request) and [Action Logs](/manage/analytics/action).
+
+## Change Management
+
+- Roll changes through non-production first.
+- Use phased rollout for large fleets.
+- Pair credential rotation with deployment automation.
+- Keep runtime versions consistent across similar environments.
+
+## Upgrade and Rollback
+
+1. Upgrade one client in a low-risk environment.
+2. Validate connectivity and traffic behavior.
+3. Roll out broadly in phases.
+4. If regressions appear, roll back to the previous known-good version and re-validate.
+
+## Incident Response (Operations)
+
+- Isolate affected workloads if behavior is abnormal.
+- Confirm whether the issue is runtime, credentials, endpoint reachability, or network policy.
+- Restore service with rollback or credential refresh.
+- Capture a short post-incident note to improve future runbooks.
 
 ## Related Documentation
 
 - [Install Machine Client](/manage/clients/install-machine-client)
+- [Machine Client Security](/manage/clients/machine-client-security)
 - [Machine Client Troubleshooting](/manage/clients/machine-client-troubleshooting)

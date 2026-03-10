@@ -46,29 +46,9 @@ For admin-side policy controls, see [Session Length](/manage/access-control/sess
 
 For setup and policy details, see [Multi-Factor Authentication](/manage/access-control/mfa) and [Security Keys](/manage/access-control/security-keys).
 
-## Common Authentication Issues
+## Troubleshooting
 
-### Login Succeeds in Browser but Client Does Not Connect
-
-- Re-open the client and retry login.
-- Confirm your device can reach your Pangolin endpoint.
-- Verify system clock/timezone is correct.
-
-### Repeated MFA Prompts
-
-- Check whether your organization enforces short session durations.
-- Confirm the selected MFA method is available and correctly configured on your account.
-
-### Identity Provider Error During Sign-In
-
-- Confirm your user is assigned in the identity provider.
-- Verify organization IdP configuration and callback settings.
-- Retry from a fresh login attempt in the client.
-
-### Access Denied After Login
-
-- Confirm your user has required permissions and role assignments.
-- Review access rules on the target application/resource.
+For login and connection issue diagnosis, use [User Device Troubleshooting](/manage/clients/user-device-troubleshooting).
 
 ## Related Documentation
 
@@ -77,3 +57,4 @@ For setup and policy details, see [Multi-Factor Authentication](/manage/access-c
 - [Security Keys](/manage/access-control/security-keys)
 - [Session Length](/manage/access-control/session-length)
 - [Identity Providers](/manage/identity-providers/add-an-idp)
+- [User Device Troubleshooting](/manage/clients/user-device-troubleshooting)

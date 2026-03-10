@@ -1,18 +1,26 @@
 {
     "$schema": "https://mintlify.com/docs.json",
-    "theme": "aspen",
+    "theme": "mint",
     "name": "Pangolin Docs",
-    "description": "Pangolin is the easiest to use identity-based remote access platform based on WireGuard.",
+    "description": "Zero trust access to all your infrastructure, self-hosted applications, and SaaS tools. Easy to deploy and scale. Better than your existing VPN.",
     "colors": {
-        "primary": "#F36117",
-        "light": "#F36117",
+        "primary": "#202020",
+        "light": "#202020",
         "dark": "#F36117"
     },
-    "favicon": "/favicon.svg",
+    "background": {
+        "color": {
+            "light": "#FAF9F2"
+        }
+    },
+    "styling": {
+        "codeblocks": "dark"
+    },
+    "favicon": "/favicon.png",
     "navigation": {
         "tabs": [
             {
-                "tab": "Docs",
+                "tab": "Documentation",
                 "groups": [
                     {
                         "group": "About",
@@ -22,7 +30,7 @@
                         ]
                     },
                     {
-                        "group": "Manage",
+                        "group": "Network",
                         "pages": [
                             {
                                 "group": "Sites",
@@ -42,35 +50,48 @@
                                 "pages": [
                                     "manage/resources/understanding-resources",
                                     {
-                                        "group": "Public Resources",
+                                        "group": "Public",
                                         "icon": "globe",
                                         "pages": [
+                                            {
+                                                "group": "General",
+                                                "icon": "circle-info",
+                                                "pages": [
+                                                    "manage/resources/public/general",
+                                                    "manage/resources/public/maintenance"
+                                                ]
+                                            },
+                                            {
+                                                "group": "Proxy",
+                                                "icon": "arrow-right-arrow-left",
+                                                "pages": [
+                                                    "manage/resources/public/targets",
+                                                    "manage/resources/public/raw-resources",
+                                                    "manage/resources/public/healthchecks-failover"
+                                                ]
+                                            },
                                             "manage/resources/public/authentication",
-                                            "manage/resources/public/targets",
-                                            "manage/resources/public/raw-resources",
-                                            "manage/resources/public/maintenance",
-                                            "manage/resources/public/healthchecks-failover"
+                                            {
+                                                "group": "Rules",
+                                                "icon": "gears",
+                                                "pages": [
+                                                    "manage/access-control/rules",
+                                                    "manage/geoblocking",
+                                                    "manage/asnblocking"
+                                                ]
+                                            }
                                         ]
                                     },
                                     {
-                                        "group": "Private Resources",
+                                        "group": "Private",
                                         "icon": "lock",
                                         "pages": [
-                                            "manage/resources/private/authentication",
-                                            "manage/resources/private/destinations",
-                                            "manage/resources/private/alias"
+                                            "manage/resources/private/general",
+                                            "manage/resources/private/network-settings",
+                                            "manage/resources/private/access-policy",
+                                            "manage/resources/private/ssh-access"
                                         ]
-                                    },
-                                    {
-                                        "group": "Rules",
-                                        "icon": "gears",
-                                        "pages": [
-                                            "manage/access-control/rules",
-                                            "manage/geoblocking",
-                                            "manage/asnblocking"
-                                        ]
-                                    },
-                                    "manage/access-control/forwarded-headers"
+                                    }
                                 ]
                             },
                             {
@@ -93,9 +114,10 @@
                                         ]
                                     },
                                     {
-                                        "group": "Machine Clients",
+                                        "group": "Machines",
                                         "icon": "server",
                                         "pages": [
+                                            "manage/clients/manage-machine-clients",
                                             "manage/clients/install-machine-client",
                                             "manage/clients/create-machine-client",
                                             "manage/clients/machine-client-operations",
@@ -118,26 +140,22 @@
                         ]
                     },
                     {
-                        "group": "Access",
+                        "group": "Access Control",
                         "pages": [
                             {
-                                "group": "Users",
+                                "group": "Team",
                                 "icon": "user-group",
                                 "pages": [
                                     "manage/access-control/create-user",
+                                    "manage/access-control/roles",
                                     "manage/access-control/invitations",
+                                    "manage/access-control/forwarded-headers",
                                     "manage/access-control/mfa",
                                     "manage/access-control/change-password",
                                     "manage/access-control/password-rotation",
                                     "manage/access-control/session-length",
-                                    "manage/access-control/security-keys"
-                                ]
-                            },
-                            {
-                                "group": "Roles",
-                                "icon": "shield",
-                                "pages": [
-                                    "manage/access-control/roles"
+                                    "manage/access-control/security-keys",
+                                    "manage/ssh"
                                 ]
                             },
                             {
@@ -164,71 +182,42 @@
                         ]
                     },
                     {
-                        "group": "Logs & Analytics",
+                        "group": "Organization",
                         "pages": [
                             {
-                                "group": "Analytics",
+                                "group": "Logs & Analytics",
                                 "icon": "chart-bar",
                                 "pages": [
-                                    "manage/analytics/overview"
-                                ]
-                            },
-                            {
-                                "group": "Logs",
-                                "icon": "clipboard-list",
-                                "pages": [
+                                    "manage/analytics/overview",
                                     "manage/analytics/request",
                                     "manage/analytics/access",
                                     "manage/analytics/action"
                                 ]
-                            }
-                        ]
-                    },
-                    {
-                        "group": "Organization",
-                        "pages": [
-                            {
-                                "group": "Integration API",
-                                "icon": "code",
-                                "pages": [
-                                    "manage/integration-api"
-                                ]
                             },
                             {
-                                "group": "API Keys",
-                                "icon": "key",
+                                "group": "Management",
+                                "icon": "building",
                                 "pages": [
-                                    "manage/organizations/api-keys"
-                                ]
-                            },
-                            {
-                                "group": "Blueprints",
-                                "icon": "cubes",
-                                "pages": [
+                                    "manage/organizations/api-keys",
                                     "manage/blueprints"
+                                ]
+                            },
+                            {
+                                "group": "Billing & Licenses",
+                                "icon": "credit-card",
+                                "pages": [
+                                    "manage/organizations/billing",
+                                    "manage/organizations/licenses"
                                 ]
                             },
                             {
                                 "group": "Settings",
                                 "icon": "gear",
                                 "pages": [
+                                    "manage/organizations/org-id",
                                     "manage/organizations/settings",
                                     "manage/access-control/login-page",
                                     "manage/branding"
-                                ]
-                            },
-                            {
-                                "group": "Billing",
-                                "icon": "credit-card",
-                                "pages": [
-                                    "manage/organizations/billing"
-                                ]
-                            },
-                            {
-                                "group": "Licenses",
-                                "icon": "id-card",
-                                "pages": [
-                                    "manage/organizations/licenses"
                                 ]
                             }
                         ]
@@ -278,65 +267,50 @@
                                     "self-host/community-guides/geolite2automation"
                                 ]
                             },
+                            "self-host/purchase-license-key",
                             "self-host/enterprise-edition",
                             "self-host/supporter-program"
                         ]
                     },
                     {
-		                "group": "Careers",
-	                    "pages": [
-		                    "careers/join-us",
-		                    "careers/software-engineer-full-stack"
-	                    ]
-	                },
-                    {
                         "group": "Development",
                         "pages": [
                             "development/system-architecture",
                             "development/contributing",
-                            "development/feature-requests-and-bug-reports"
-                        ]
-                    },
-                    {
-                        "group": "Additional Resources",
-                        "pages": [
-                            "additional-resources/changelog",
-                            "additional-resources/trust-center"
+                            "development/feature-requests-and-bug-reports",
+                            "manage/integration-api"
                         ]
                     }
                 ]
             },
             {
-                "tab": "Blog",
-                "href": "https://pangolin.net/blog"
+                "tab": "Guides",
+                "href": "https://pangolin.net/news"
+            },
+            {
+                "tab": "Downloads",
+                "href": "https://pangolin.net/downloads"
             },
             {
                 "tab": "Website",
                 "href": "https://pangolin.net/"
+            },
+            {
+                "tab": "Careers",
+                "href": "https://pangolin.net/careers"
+            },
+            {
+                "tab": "Trust Center",
+                "href": "https://trust.pangolin.net/"
             }
-        ],
-        "global": {
-            "anchors": [
-                {
-                    "anchor": "GitHub",
-                    "href": "https://github.com/fosrl/pangolin",
-                    "icon": "github"
-                },
-                {
-                    "anchor": "Slack",
-                    "href": "https://pangolin.net/slack",
-                    "icon": "slack"
-                },
-                {
-                    "anchor": "Discord",
-                    "href": "https://pangolin.net/discord",
-                    "icon": "discord"
-                }
-            ]
-        }
+        ]
     },
     "interaction": {
         "drilldown": true
+    },
+    "appearance": {
+        "default": "light",
+        "strict": true
     },
     "logo": {
         "light": "/logo/light.png",
@@ -346,26 +320,93 @@
     "navbar": {
         "links": [
             {
-                "label": "Log In",
+                "label": "Log in",
                 "href": "https://app.pangolin.net/auth/login"
-            },
-            {
-                "label": "Contact Us",
-                "icon": "envelope",
-                "href": "mailto:contact@pangolin.net"
             }
         ],
         "primary": {
             "type": "button",
-            "label": "Pangolin Dashboard",
+            "label": "Start for free",
             "href": "https://app.pangolin.net/auth/signup"
         }
     },
     "footer": {
         "socials": {
+            "slack": "https://pangolin.net/slack",
             "github": "https://github.com/fosrl/pangolin",
-            "linkedin": "https://linkedin.com/company/digpangolin"
-        }
+            "linkedin": "https://linkedin.com/company/digpangolin",
+            "youtube": "https://youtube.com/@pangolin"
+        },
+        "links": [
+            {
+                "header": "Product",
+                "items": [
+                    {
+                        "label": "Documentation",
+                        "href": "https://docs.pangolin.net"
+                    },
+                    {
+                        "label": "Downloads",
+                        "href": "https://app.pangolin.net/auth/signup"
+                    },
+                    {
+                        "label": "Status",
+                        "href": "https://status.pangolin.net"
+                    }
+                ]
+            },
+            {
+                "header": "Company",
+                "items": [
+                    {
+                        "label": "Careers",
+                        "href": "https://docs.pangolin.net/careers/join-us"
+                    },
+                    {
+                        "label": "Contact",
+                        "href": "mailto:contact@pangolin.net"
+                    },
+                    {
+                        "label": "News & Articles",
+                        "href": "https://pangolin.net/news"
+                    }
+                ]
+            },
+            {
+                "header": "Legal",
+                "items": [
+                    {
+                        "label": "Trust Center",
+                        "href": "https://trust.pangolin.net/"
+                    },
+                    {
+                        "label": "Privacy",
+                        "href": "https://pangolin.net/privacy-policy.html"
+                    },
+                    {
+                        "label": "Terms",
+                        "href": "https://pangolin.net/terms-of-service.html"
+                    }
+                ]
+            },
+            {
+                "header": "Follow",
+                "items": [
+                    {
+                        "label": "GitHub",
+                        "href": "https://github.com/fosrl/pangolin"
+                    },
+                    {
+                        "label": "LinkedIn",
+                        "href": "https://linkedin.com/company/pangolin-net"
+                    },
+                    {
+                        "label": "YouTube",
+                        "href": "https://youtube.com/@pangolin"
+                    }
+                ]
+            }
+        ]
     },
     "integrations": {
         "posthog": {
@@ -404,6 +445,18 @@
         {
             "source": "manage/healthchecks-failover",
             "destination": "manage/resources/public/healthchecks-failover"
+        },
+        {
+            "source": "/manage/resources/private/authentication",
+            "destination": "/manage/resources/private/access-policy"
+        },
+        {
+            "source": "/manage/resources/private/destinations",
+            "destination": "/manage/resources/private/network-settings"
+        },
+        {
+            "source": "/manage/resources/private/alias",
+            "destination": "/manage/resources/private/network-settings"
         }
     ],
     "seo": {

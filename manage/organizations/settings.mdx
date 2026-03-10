@@ -9,16 +9,94 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <PangolinCloudTocCta />
 
 
+Organization Settings is split into three tabs:
 
-!TODO: Expand this scaffold page with complete product documentation.
+- **General**
+- **Security**
+- **Authentication Pages**
 
-Settings contains organization-level configuration used to control behavior and presentation across your Pangolin environment.
+At the top of the page, Pangolin displays organization metadata:
+
+- **Name**
+- **Organization ID**
+- **Subnet**
+
+## General Tab
+
+Use this tab to manage basic organization details.
+
+### Fields
+
+- **Name**: Display name for the organization.
+
+### Actions
+
+- **Save Settings**: Saves changes in the General tab.
+- **Delete Organization** (Danger Zone): Permanently deletes organization data.
+
+<Warning>
+Deleting an organization is destructive and permanent.
+</Warning>
+
+## Security Tab
+
+Use this tab to configure retention and security policy defaults.
+
+### Log Retention
+
+- **Request Log Retention**
+- **Access Log Retention**
+- **Action Log Retention**
+
+Each setting is a dropdown that controls how long logs are retained (or disabled where supported).
+
+### Security Settings
+
+- **Require Two-Factor Authentication for All Users**: Forces internal users to enroll in 2FA.
+- **Maximum Session Length**: Maximum allowed user session duration.
+- **Password Expiry**: Number of days before passwords must be changed.
+
+### Actions
+
+- **Save Settings**: Saves Security tab configuration.
+
+## Authentication Pages Tab
+
+Use this tab to customize authentication page branding and copy for the organization.
+
+### Custom Branding
+
+- **Primary Color**
+- **Logo URL or Path**
+- **Logo Width (px)**
+- **Logo Height (px)**
+
+### Resource Login Page
+
+- **Title for Resource Auth Page**
+- **Subtitle for Resource Auth Page**
+
+These fields support templates such as `{{resourceName}}`.
+
+### Actions
+
+- **Save Branding**: Saves Authentication Pages tab configuration.
+
+## Recommended Change Process
+
+1. Confirm the correct organization at the top of the page.
+2. Make changes in one tab at a time.
+3. Save and validate with a non-admin test account.
+4. Record changes for audit/operations.
 
 ## Related Documentation
 
 - [Organization ID](/manage/organizations/org-id)
+- [MFA](/manage/access-control/mfa)
+- [Session Length](/manage/access-control/session-length)
+- [Password Rotation](/manage/access-control/password-rotation)
+- [Request Logs](/manage/analytics/request)
+- [Access Logs](/manage/analytics/access)
+- [Action Logs](/manage/analytics/action)
 - [Branding](/manage/branding)
-
-## Notes
-
-This page is a scaffold and will be expanded with a full settings reference.
+- [Login Page](/manage/access-control/login-page)

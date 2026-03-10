@@ -124,3 +124,21 @@ This command permanently deletes the client and its associated data:
 
 This action cannot be undone. Ensure you have backups if needed.
 </Warning>
+
+## Generate Org CA Keys
+
+Generate an SSH CA public/private key pair for an organization and store them in the database. The private key is encrypted with the server secret.
+
+```bash
+docker exec -it pangolin pangctl generate-org-ca-keys --orgId "org-123"
+```
+
+### Options
+
+- `--orgId` (required): The organization ID
+- `--secret` (optional): Server secret used to encrypt the CA private key. If omitted, the secret is read from the config file (`config.yml` or `config.yaml` in the config directory).
+- `--force` (optional, default: `false`): Overwrite existing CA keys for the organization if they already exist
+
+<Warning>
+If the organization already has CA keys, the command fails unless you pass `--force`. Using `--force` overwrites the existing keys; ensure you have a backup or understand the impact before overwriting.
+</Warning>

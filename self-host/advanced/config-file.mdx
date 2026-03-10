@@ -24,6 +24,10 @@ Minimal Pangolin configuration:
 gerbil:
     start_port: 51820
     base_endpoint: "pangolin.example.com" # REPLACE WITH YOUR DOMAIN
+    # Optional network settings (defaults shown):
+    # subnet_group: "100.89.137.0/20"
+    # block_size: 24
+    # site_block_size: 30
 
 app:
     dashboard_url: "https://pangolin.example.com" # REPLACE WITH YOUR DOMAIN
@@ -43,6 +47,12 @@ server:
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
         allowed_headers: ["X-CSRF-Token", "Content-Type"]
         credentials: false
+
+# Optional organization network settings (defaults shown):
+# orgs:
+#     block_size: 24
+#     subnet_group: "100.90.128.0/20"
+#     utility_subnet_group: "100.96.128.0/20"
 
 flags:
     require_email_verification: false
@@ -505,19 +515,31 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="subnet_group" type="string">
       IP address CIDR range for Gerbil exit node subnets.
 
-      **Example**: `10.0.0.0/8`
+      **Default**: `100.89.137.0/20`
+
+      <Note>
+        The default uses the CGNAT range to avoid conflicts with typical private networks.
+      </Note>
     </ResponseField>
 
     <ResponseField name="block_size" type="integer">
       Block size for Gerbil exit node CIDR ranges.
 
-      **Example**: `24`
+      **Default**: `24`
+
+      <Note>
+        A /24 block provides 256 IP addresses for the Gerbil network.
+      </Note>
     </ResponseField>
 
     <ResponseField name="site_block_size" type="integer">
       Block size for site CIDR ranges connected to Gerbil.
 
-      **Example**: `26`
+      **Default**: `30`
+
+      <Note>
+        A /30 block provides 4 IP addresses per site. Consider using /29 (8 IPs) or /28 (16 IPs) for sites with heavy WireGuard usage.
+      </Note>
     </ResponseField>
   </Expandable>
 </ResponseField>
@@ -531,24 +553,32 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="block_size" type="integer">
       Block size for organization CIDR ranges.
 
-      **Example**: `24`
-
       **Default**: `24`
 
       <Note>
-        Determines the subnet size allocated to each organization for network isolation.
+        A /24 block provides 256 IP addresses per organization. Determines the subnet size allocated to each organization for network isolation.
       </Note>
     </ResponseField>
 
     <ResponseField name="subnet_group" type="string">
       IP address CIDR range for organization subnets.
 
-      **Example**: `100.90.128.0/24`
+      **Default**: `100.90.128.0/20`
 
-      **Default**: `100.90.128.0/24`
+      **Example**: `100.90.128.0/20`
 
       <Note>
-        Base subnet from which organization-specific subnets are allocated.
+        Base subnet from which organization-specific subnets are allocated. Uses CGNAT range by default.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="utility_subnet_group" type="string">
+      IP address CIDR range for utility subnets used by organizations.
+
+      **Default**: `100.96.128.0/20`
+
+      <Note>
+        Separate subnet range for utility network functions within organizations.
       </Note>
     </ResponseField>
   </Expandable>

@@ -1,7 +1,7 @@
 ---
 title: "Licenses"
 icon: "id-card"
-description: "License details and allocation information for your organization."
+description: "Generate and manage Enterprise license keys for self-hosted Pangolin instances."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -10,14 +10,48 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-!TODO: Expand this scaffold page with complete product documentation.
-
 <Note>
-License management is currently available for Pangolin Cloud organizations only.
+This page is for self-hosted [**Enterprise Edition**](/self-host/enterprise-edition) users. License keys are generated and managed from [Pangolin Cloud](https://app.pangolin.net).
 </Note>
 
-Licenses lets organization admins review license-related details tied to their Pangolin Cloud organization.
+The Licenses page is where self-hosted Enterprise Edition users generate and manage license keys for their self-hosted Pangolin deployments.
 
-## Notes
+## What This Page Is For
 
-This page is a scaffold and will be expanded with license assignment and lifecycle details.
+- Generate new license keys for self-hosted instances
+- View existing license keys and instance mappings
+- Check validity, type, limits, and expiration
+- Refresh and search license records
+
+## List View
+
+The page includes:
+
+- Search
+- **Refresh**
+- **Generate License Key**
+- License table columns:
+  - `License Key`
+  - `Instance Name`
+  - `Valid`
+  - `Type`
+  - `Users`
+  - `Sites`
+  - `Valid Until`
+
+## How Teams Typically Use It
+
+1. Generate a license key in Cloud.
+2. Apply that key to the target self-hosted Enterprise instance.
+3. Return to this page to confirm status, limits, and expiration.
+4. Generate additional keys as needed for other instances/environments.
+
+## Scope Clarification
+
+- **Cloud** hosts the license management UI.
+- **Self-hosted Enterprise Edition** consumes those generated license keys.
+
+## Related Documentation
+
+- [Billing](/manage/organizations/billing)
+- [Purchase a License Key](/self-host/purchase-license-key)

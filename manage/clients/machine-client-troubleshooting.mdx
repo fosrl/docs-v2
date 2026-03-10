@@ -10,18 +10,48 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-!TODO: Expand this scaffold page with complete product documentation.
+Use this page when machine clients fail to start, authenticate, or route traffic.
 
-This page should help operators debug install, connectivity, and runtime issues for machine clients.
+## Quick Checks
 
-## Include In This Page
+1. Verify `id`, `secret`, and `endpoint` values (or equivalent env vars).
+2. Confirm clock/time synchronization on host systems.
+3. Validate network reachability to the configured endpoint.
+4. Confirm TUN/network permissions for CLI and container runtimes.
 
-- Common startup failures and validation checks
-- Tunnel and routing diagnostics
-- Auth and credential mismatch errors
-- Platform-specific notes (Linux, Windows services, containers)
+## Common Failure Areas
+
+- **Startup failures**: Missing binary permissions, service misconfiguration, or missing runtime dependencies.
+- **Auth failures**: Invalid/rotated credentials or wrong environment secrets.
+- **Connectivity issues**: Firewall, DNS, endpoint, or route conflicts.
+- **Container issues**: Missing `NET_ADMIN`, missing `/dev/net/tun`, or unsupported network mode.
+
+## Triage Order
+
+1. Confirm credentials and endpoint are correct for the target organization.
+2. Confirm process health (service/container status and restart behavior).
+3. Confirm network path (DNS resolution, outbound access, host routing).
+4. Confirm client can establish and maintain the tunnel.
+5. Check logs for permission/auth/policy errors.
+
+## Common Recoveries
+
+- Restart the machine client process/service.
+- Re-copy credentials and redeploy the runtime configuration.
+- Rotate credentials if compromise or mismatch is suspected.
+- Roll back to the previous known-good client/runtime version.
+
+## Escalation Data To Collect
+
+- Service status and recent logs
+- Host networking details (routes, DNS, interface state)
+- Exact client command or service unit
+- Time of first failure and most recent successful run
+- Any recent changes (runtime image, credentials, firewall rules, DNS, host updates)
 
 ## Related Documentation
 
 - [Install Machine Client](/manage/clients/install-machine-client)
 - [Machine Client Operations](/manage/clients/machine-client-operations)
+- [Request Logs](/manage/analytics/request)
+- [Action Logs](/manage/analytics/action)
