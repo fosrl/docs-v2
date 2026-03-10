@@ -1,0 +1,77 @@
+---
+title: "Create Machine Client"
+icon: "plus"
+description: "Create machine clients for servers and automated systems."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Use this page to create a machine client for servers and automated systems that need private resource access.
+
+Machine clients authenticate with:
+
+- **Endpoint**
+- **Client ID**
+- **Client Secret**
+
+They do **not** use username/password.
+
+## Page Sections
+
+### Client Information
+
+- **Name**: Display name for the machine client.
+- **Advanced Settings**: Optional per-client tuning.
+
+### Credentials
+
+After creating the client, Pangolin provides:
+
+- **Endpoint**
+- **ID**
+- **Secret**
+
+Copy and store these securely. The secret should be treated like a password/token.
+
+### Install Machine Client
+
+The page includes generated install/run commands based on:
+
+- **Operating System** (`Linux & macOS`, `Docker`, `Windows`)
+- **Architecture**
+
+Use the on-page commands to avoid manual mistakes when passing `--id`, `--secret`, and `--endpoint`.
+
+## Creation Checklist
+
+- Use a clear name that reflects workload and environment.
+- Copy the generated `id` and `secret`.
+- Store credentials in managed secret storage.
+- Use the generated run command for your selected OS/runtime.
+
+## After Creation
+
+<Steps>
+<Step title="Create the machine client">
+  Enter a name and create the client.
+</Step>
+<Step title="Copy generated credentials">
+  Copy endpoint, ID, and secret from the credentials section.
+</Step>
+<Step title="Run installation command">
+  Select OS/runtime and copy the generated install/run command.
+</Step>
+<Step title="Validate connectivity">
+  Confirm the machine can reach intended resources and only intended resources.
+</Step>
+</Steps>
+
+## Related Documentation
+
+- [Machine Clients](/manage/clients/manage-machine-clients)
+- [Install Machine Client](/manage/clients/install-machine-client)
+- [Machine Client Operations](/manage/clients/machine-client-operations)
+- [Machine Client Security](/manage/clients/machine-client-security)

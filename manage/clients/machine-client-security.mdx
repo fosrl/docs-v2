@@ -1,0 +1,54 @@
+---
+title: "Machine Client Security"
+icon: "shield"
+description: "Security guidance for machine client credentials and deployment."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+Machine clients should be treated as privileged credentials tied to production infrastructure.
+
+## Security Baseline
+
+- Store machine client credentials (`id`, `secret`) in a secret manager.
+- Never commit secrets to source control or bake them into images.
+- Limit who can view or retrieve secrets.
+- Rotate credentials on a schedule and immediately after any suspected exposure.
+
+## Hardening Recommendations
+
+- Run machine clients with least privileges required by the runtime.
+- Isolate workloads by environment (for example separate prod/non-prod clients).
+- Restrict outbound network access to only required Pangolin endpoints.
+- Keep hosts and container images patched and up to date.
+- Centralize logs for auditability and incident response.
+
+## Secret Handling
+
+- Prefer environment variables or mounted secret files over inline command arguments.
+- Avoid exposing secrets in shell history, process lists, and CI logs.
+- Use one machine client per workload instead of sharing a single credential.
+
+## Monitoring and Review
+
+- Track online status and expected traffic behavior for each machine client.
+- Alert on unusual reconnect loops, new deployment origins, or unexpected access patterns.
+- Periodically remove unused machine clients.
+
+## If Credentials Are Exposed
+
+1. Revoke or rotate the affected machine client immediately.
+2. Review recent access and action logs.
+3. Redeploy with new credentials and verify normal behavior.
+4. Identify where the secret leaked and close that path (repo, CI logs, host file, etc.).
+
+## Related Documentation
+
+- [Create Machine Client](/manage/clients/create-machine-client)
+- [Machine Client Operations](/manage/clients/machine-client-operations)
+- [Machine Client Troubleshooting](/manage/clients/machine-client-troubleshooting)
+- [Action Logs](/manage/analytics/action)

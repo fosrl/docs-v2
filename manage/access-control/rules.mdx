@@ -1,6 +1,7 @@
 ---
 title: "Rules"
-description: "Configure rules to allow or deny access to resources without authentication"
+icon: "shield"
+description: "Configure bypass and block rules for resource access"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,27 +10,62 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-Rules allow you to either "allow" and bypass the Pangolin auth system (no pin, login, password), or "deny" and fully reject the request. After you create a resource you can select the "Rules" tab on the sidebar and enable rules.
+Each rule has two parts:
 
-<CardGroup cols={3}>
+- **Match conditions** (what requests it applies to)
+- **Action** (what happens when it matches)
+
+This page is primarily about bypass and block behavior for resource traffic.
+
+## Actions
+
+<CardGroup cols={1}>
 <Card title="Bypass Auth" icon="check">
-  Bypass authentication completely for matching requests. Users can access resources without any login or PIN.
+  Skip authentication completely for matching requests. Users can access the resource path without login or PIN.
 </Card>
 
 <Card title="Block Access" icon="x">
-  Completely reject requests that match the rule. Useful for blocking admin paths or sensitive endpoints.
+  Deny matching requests immediately. Use this for sensitive paths that should never be reachable.
 </Card>
 
-<Card title="Pass to Auth" icon="x">
-  Pass requests that match the rule to the next stage for user to authenticate with SSO, password, or pin. Useful for enforcing auth on specific paths while allowing others.
+<Card title="Pass to Auth" icon="arrow-right">
+  Send matching requests into normal authentication (SSO, password, PIN, MFA) instead of bypassing.
 </Card>
 </CardGroup>
 
-## Types of Rules
+## UI Behavior and Workflow
 
-Rules are processed from top to bottom in order of their priority. This means you can have multiple rules to bypass auth and to just flat deny users at the end.
+In the resource rules UI, rules are configured and managed as a list.
 
-Right now you can match on the following items:
+- **Enable Rules** is a global toggle for the resource. If disabled, rule evaluation is not applied.
+- Each rule has a **Priority**, and evaluation follows that order (top priority first).
+- Each rule also has its own **Enabled** toggle, so you can temporarily disable a single rule without deleting it.
+- To create a new rule, select **Action**, **Match Type**, and **Value**, then click **Add Rule**.
+- Existing rules can be edited inline, re-prioritized, disabled, or removed with **Delete**.
+- Changes are applied when you click **Save All Settings**.
+
+<Note>
+Because rules are first-match, priority and save discipline matter. Always verify final rule order before saving.
+</Note>
+
+## Evaluation Order (First Match Wins)
+
+Rules are evaluated from top to bottom.
+
+1. Pangolin checks the first rule.
+2. If it matches, Pangolin applies that rule's action and stops.
+3. If it does not match, Pangolin checks the next rule.
+4. This continues until a rule matches or the list ends.
+
+Because evaluation stops at the first match, rule order is critical.
+
+<Tip>
+Put specific rules first (for example `/admin/*`) and broader catch-all rules later (for example `/*`).
+</Tip>
+
+## Match Conditions
+
+You can match on the following conditions:
 
 ### Path
 
@@ -70,6 +106,10 @@ Country match rules allow you to specify allowed or denied countries for request
 We use a IP database to geolocate the IP address but this is not always accurate. We try to keep it updated, but there may be cases where the location is incorrect.
 
 Select the "ALL" option to match all countries for allowing or denying access.
+
+<Note>
+Country-based rules require Geo-blocking to be enabled. See [Geo-blocking](/manage/geoblocking) before using Country match rules.
+</Note>
 
 ### CIDR
 

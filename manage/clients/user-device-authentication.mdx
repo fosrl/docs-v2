@@ -1,0 +1,60 @@
+---
+title: "Authentication"
+icon: "user-lock"
+description: "How users authenticate and connect from desktop and mobile clients."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+User device authentication controls how people sign in to Pangolin clients and establish trusted sessions on desktop and mobile devices.
+
+Use this page to understand sign-in behavior, multi-factor prompts, and what to check when authentication fails.
+
+## Supported Authentication Methods
+
+- Pangolin account login
+- External identity provider login (for example OIDC/SAML setups configured by your organization)
+- Multi-factor authentication (MFA), including authenticator app and passkey/security key flows when enabled
+
+## How Authentication Works
+
+1. Install and open the Pangolin client on your device.
+2. Start the login flow from the client UI.
+3. Authenticate with your configured provider.
+4. Complete any required MFA challenge.
+5. Return to the client to finish session establishment.
+
+After successful authentication, the client establishes a session tied to your organization and device context.
+
+## Session Behavior
+
+- Sessions can expire based on your organization policies.
+- Re-authentication may be required after session expiry, policy changes, or account security events.
+- If your organization enforces stronger controls, additional prompts can appear during sign-in.
+
+For admin-side policy controls, see [Session Length](/manage/access-control/session-length).
+
+## MFA and Security Keys
+
+- If MFA is enabled for your account or organization, the client login flow requires a second factor.
+- Supported second-factor methods depend on your account setup and organization policy.
+- Security keys/passkeys are supported when configured in your account and accepted by the active identity flow.
+
+For setup and policy details, see [Multi-Factor Authentication](/manage/access-control/mfa) and [Security Keys](/manage/access-control/security-keys).
+
+## Troubleshooting
+
+For login and connection issue diagnosis, use [User Device Troubleshooting](/manage/clients/user-device-troubleshooting).
+
+## Related Documentation
+
+- [Install Client](/manage/clients/install-client)
+- [Multi-Factor Authentication](/manage/access-control/mfa)
+- [Security Keys](/manage/access-control/security-keys)
+- [Session Length](/manage/access-control/session-length)
+- [Identity Providers](/manage/identity-providers/add-an-idp)
+- [User Device Troubleshooting](/manage/clients/user-device-troubleshooting)

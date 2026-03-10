@@ -1,0 +1,112 @@
+---
+title: "Network Settings"
+icon: "network-wired"
+description: "Configure destination and port behavior for a private resource."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Use **Network Settings** to define where traffic goes and which protocols/ports are allowed.
+
+## Destination
+
+Set the internal destination address for the resource.
+
+- **Mode**: Choose how destination is interpreted.
+- **Destination**: Target hostname, IP address, or CIDR range.
+- **Alias**: Optional internal DNS alias for easier identification.
+
+Supported destination types:
+
+- **Fully Qualified Domain Name (FQDN)**, for example `host.autoco.internal`
+- **IP Address**, for example `10.1.0.35`
+- **IP CIDR Range**, for example `10.1.0.0/16`
+
+Destination resolution behavior:
+
+- FQDN destinations are resolved by the selected site on the remote network.
+- IP destinations route directly to that host.
+- CIDR destinations expose the full range to authorized clients.
+
+### Destination Notes
+
+- **Reserved IP Range**: Pangolin clients reserve `100.96.128.0/24`; destinations in this range are blocked by the client.
+- **Overlapping Networks**: Pangolin can resolve overlaps, but use overlapping resources only when necessary.
+- **Alias Recommendation**: Use aliases to provide clear host-specific addressing when overlapping ranges exist.
+
+## Aliases
+
+Aliases provide a secondary, user-friendly address for a private resource destination so users can connect with a readable name instead of a raw IP/FQDN.
+
+### CIDR vs Single Host
+
+Aliases can be created only for single-host resources (IP or FQDN).  
+Aliases are not supported for CIDR resources because a range does not map to a single host identity.
+
+### Domain Structure
+
+Aliases should be domain-style names and must include a dot.
+
+- Valid: `router.internal`, `db.corp`, `nas.home.example`
+- Invalid: `router` (single label)
+
+### Wildcards
+
+Wildcard aliases are supported in FQDN-style patterns:
+
+- `*` matches any sequence of characters
+- `?` matches exactly one character
+
+Examples:
+
+- `*.proxy.internal` matches `host.proxy.internal` and `sub.host.proxy.internal`
+- `*.host-0?.corp.internal` can match `api.host-01.corp.internal`
+
+Wildcard aliases match subdomains and do not match the bare root automatically.
+
+### DNS and Upstream Resolution
+
+Alias resolution is handled through Pangolin client DNS behavior.
+
+- The client intercepts DNS for Pangolin alias resolution.
+- Unresolved queries are forwarded to upstream DNS.
+- If your upstream DNS is only reachable through the tunnel, enable tunnel DNS behavior in client settings.
+
+If you do not want alias interception behavior, disable alias/override DNS in client settings.
+
+### ICMP Note
+
+Aliases do not currently support ICMP ping, even when the underlying destination is reachable.
+
+## Port Restrictions
+
+Restrict traffic by protocol:
+
+- **TCP**: Allow all or restrict to specific ports.
+- **UDP**: Allow all or restrict to specific ports.
+- **ICMP**: Toggle ping allowance.
+
+Port values can be entered as:
+
+- single ports (for example `80`)
+- comma-separated lists (for example `80,443,8080`)
+- ranges (for example `8000-8100`)
+
+## Protocol Notes
+
+- Pangolin supports unicast TCP/UDP traffic for private resources.
+- Multicast and broadcast traffic are not supported.
+- ICMP ping support is available for destination checks, but alias names do not support ICMP ping.
+
+## Notes
+
+- Restrict ports where possible instead of allowing all traffic.
+- CIDR resources are broader in scope than single-host resources.
+
+## Related Documentation
+
+- [Access Policy](/manage/resources/private/access-policy)
+- [SSH Access](/manage/resources/private/ssh-access)
+- [Configure Clients (DNS)](/manage/clients/configure-client)

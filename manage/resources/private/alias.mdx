@@ -1,6 +1,7 @@
 ---
-title: "Aliases"
-description: "Set a friendly alias hostname that resolves to a host"
+title: "Aliases (Moved)"
+icon: "link"
+description: "Alias configuration is now documented under Network Settings."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,34 +10,6 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-Aliases provide a secondary, user-friendly address for any of your Resources, allowing users to access the Resource using this alternate name in addition to the original address.
+Alias configuration has moved to [Network Settings](/manage/resources/private/network-settings).
 
-For instance, a router with the address `10.0.0.1` could be assigned the alias `router.internal`, and users could connect using either. Aliases are accessible to anyone who has access to the Resource, and they are exclusively accessible when connected with a Pangolin client, meaning they function without requiring any external DNS record setup. Furthermore, aliases are protocol agnostic, which means they will work with any network protocol, essentially acting as a pseudo-A record for an address that is only functional within the Pangolin environment.
-
-## CIDRs Vs. IPs
-
-A alias can only be created for a Resource that is a single host (IP or FQDN). Aliases cannot be created for Resources that are CIDR ranges because it would be ambiguous which host within the range the alias should point to.
-
-## Domain Structure
-
-Since aliases cannot be single-label domains, you must avoid using domain names that do not contain a dot (e.g., `pangolin`). A domain like `pangolin.net`, which includes a dot, is acceptable. Instead of a single-label domain, you should consider using a subdomain of a domain you control, such as `router.mywebsite.com`, or an existing private/internal domain name, like `router.internal` or `router.corp`.
-
-### Wildcards
-
-Wildcards allow you to define aliases that match multiple hostnames using special characters in the FQDN. For example, in an alias like `*.host-0?.autoco.internal`, the asterisk `*` matches any sequence of characters (including none), and the question mark `?` matches exactly one character.
-
-If you use a wildcard such as `*.proxy.internal`, it will match any hostname that ends with `.proxy.internal` and has something before the dot—such as `host.proxy.internal`, `longerhost.proxy.internal`, or even `sub.host.proxy.internal`. However, the wildcard will not match the base domain itself (`autoco.internal` without anything before the dot).
-
-## Custom Upstream DNS
-
-Aliases work by overriding the DNS of your computer running the client so that all DNS requests are sent to the Pangolin client for resolution. The dns server on your computer is typically `100.96.128.1` (the first address inside of your utility subnet on the org) when connected to the tunnel which will forward request to an upstream server. By default, we use `9.9.9.9`, but this upstream address can be configured in the CLI or in the client settings.
-
-**If you are attempting to set an upstream DNS server that is only accessible via the tunnel, ensure that you create a resource and check the tunnel DNS option in the client configuration settings or use the --tunnel-dns flag.** Otherwise, connectivity to the server may fail when connected to the tunnel. You must also be overriding the dns of the computer (as discussed above) for this to work because the client needs to intercept the DNS request to forward it to the upstream server.
-
-## Disable Aliases
-
-If you wish to disable this behavior and prevent aliases from being resolved and leave your DNS alone, you can do so by adding `--override-dns=false` to the CLI or disable override dns in the client settings.
-
-## ICMP Ping
-
-Aliases do not currently support ICMP ping requests. If you attempt to ping an alias, it will not respond, even if the underlying Resource is reachable. This is because the Pangolin client does not intercept ICMP packets for alias resolution.
+If you arrived from an old link, continue at [Network Settings](/manage/resources/private/network-settings).

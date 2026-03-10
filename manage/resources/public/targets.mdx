@@ -1,5 +1,6 @@
 ---
 title: "Targets"
+icon: "link"
 description: "Configure destination endpoints for resource routing and load balancing"
 ---
 
@@ -21,6 +22,36 @@ Targets function as destination endpoints for your resources:
 2. **Traffic Routing**: Incoming traffic is routed to the appropriate target based on your configuration
 3. **Network Access**: Newt proxy routes traffic to the local network through the tunnel
 4. **Direct Connection**: No additional routing is necessary on the remote network
+
+## Additional Proxy Settings
+
+In the public resource **Proxy** tab, Pangolin also supports per-resource proxy behavior controls beyond target routing.
+
+### TLS Server Name
+
+Sets the TLS Server Name (SNI) used when connecting to backend targets.  
+Leave empty to use the default behavior.
+
+### Enable Sticky Sessions
+
+When enabled, Pangolin keeps a client session pinned to the same backend target for the duration of that session.
+
+### Custom Host Header
+
+Overrides the `Host` header forwarded to the backend target.  
+Leave empty to forward the default host header.
+
+### Custom Headers
+
+Adds static headers to proxied requests.
+
+- Format: one header per line
+- Pattern: `Header-Name: value`
+- Example:
+  - `X-Example-Header: example-value`
+  - `X-Another-Header: another-value`
+
+Use **Save Proxy Settings** in the UI after modifying these values.
 
 ## Multi-Site Targets
 

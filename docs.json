@@ -30,7 +30,7 @@
                         ]
                     },
                     {
-                        "group": "Manage Pangolin",
+                        "group": "Network",
                         "pages": [
                             {
                                 "group": "Sites",
@@ -50,21 +50,46 @@
                                 "pages": [
                                     "manage/resources/understanding-resources",
                                     {
-                                        "group": "Public Resources",
+                                        "group": "Public",
+                                        "icon": "globe",
                                         "pages": [
+                                            {
+                                                "group": "General",
+                                                "icon": "circle-info",
+                                                "pages": [
+                                                    "manage/resources/public/general",
+                                                    "manage/resources/public/maintenance"
+                                                ]
+                                            },
+                                            {
+                                                "group": "Proxy",
+                                                "icon": "arrow-right-arrow-left",
+                                                "pages": [
+                                                    "manage/resources/public/targets",
+                                                    "manage/resources/public/raw-resources",
+                                                    "manage/resources/public/healthchecks-failover"
+                                                ]
+                                            },
                                             "manage/resources/public/authentication",
-                                            "manage/resources/public/targets",
-                                            "manage/resources/public/raw-resources",
-                                            "manage/resources/public/maintenance",
-                                            "manage/resources/public/healthchecks-failover"
+                                            {
+                                                "group": "Rules",
+                                                "icon": "gears",
+                                                "pages": [
+                                                    "manage/access-control/rules",
+                                                    "manage/geoblocking",
+                                                    "manage/asnblocking"
+                                                ]
+                                            }
                                         ]
                                     },
                                     {
-                                        "group": "Private Resources",
+                                        "group": "Private",
+                                        "icon": "lock",
                                         "pages": [
-                                            "manage/resources/private/authentication",
-                                            "manage/resources/private/destinations",
-                                            "manage/resources/private/alias"
+                                            "manage/resources/private/general",
+                                            "manage/resources/private/network-settings",
+                                            "manage/resources/private/access-policy",
+                                            "manage/resources/private/ssh-access"
                                         ]
                                     }
                                 ]
@@ -74,39 +99,63 @@
                                 "icon": "desktop",
                                 "pages": [
                                     "manage/clients/understanding-clients",
-                                    "manage/clients/install-client",
-                                    "manage/clients/configure-client",
-                                    "manage/clients/update-client",
-                                    "manage/clients/credentials",
-                                    "manage/clients/fingerprinting",
-                                    "manage/clients/archiving-blocking"
+                                    {
+                                        "group": "User Devices",
+                                        "icon": "mobile-screen",
+                                        "pages": [
+                                            "manage/clients/install-client",
+                                            "manage/clients/user-device-authentication",
+                                            "manage/clients/configure-client",
+                                            "manage/clients/update-client",
+                                            "manage/clients/credentials",
+                                            "manage/clients/fingerprinting",
+                                            "manage/clients/archiving-blocking",
+                                            "manage/clients/user-device-troubleshooting"
+                                        ]
+                                    },
+                                    {
+                                        "group": "Machines",
+                                        "icon": "server",
+                                        "pages": [
+                                            "manage/clients/manage-machine-clients",
+                                            "manage/clients/install-machine-client",
+                                            "manage/clients/create-machine-client",
+                                            "manage/clients/machine-client-operations",
+                                            "manage/clients/machine-client-security",
+                                            "manage/clients/machine-client-troubleshooting"
+                                        ]
+                                    }
                                 ]
                             },
                             "manage/domains",
                             {
-                                "group": "Organizations",
-                                "icon": "building",
+                                "group": "Remote Nodes",
+                                "icon": "circle-nodes",
                                 "pages": [
-                                    "manage/organizations/org-id"
+                                    "manage/remote-node/understanding-nodes",
+                                    "manage/remote-node/quick-install-remote",
+                                    "manage/remote-node/config-file"
                                 ]
-                            },
+                            }
+                        ]
+                    },
+                    {
+                        "group": "Access Control",
+                        "pages": [
                             {
-                                "group": "Access Control",
+                                "group": "Team",
                                 "icon": "user-group",
                                 "pages": [
                                     "manage/access-control/create-user",
-                                    "manage/access-control/approvals",
-                                    "manage/access-control/rules",
+                                    "manage/access-control/roles",
+                                    "manage/access-control/invitations",
                                     "manage/access-control/forwarded-headers",
-                                    "manage/access-control/login-page",
-                                    "manage/ssh",
-                                    "manage/geoblocking",
-                                    "manage/asnblocking",
                                     "manage/access-control/mfa",
+                                    "manage/access-control/change-password",
                                     "manage/access-control/password-rotation",
                                     "manage/access-control/session-length",
-                                    "manage/access-control/change-password",
-                                    "manage/access-control/security-keys"
+                                    "manage/access-control/security-keys",
+                                    "manage/ssh"
                                 ]
                             },
                             {
@@ -123,26 +172,54 @@
                                 ]
                             },
                             {
+                                "group": "Approval Requests",
+                                "icon": "clipboard-check",
+                                "pages": [
+                                    "manage/access-control/approvals"
+                                ]
+                            },
+                            "manage/access-control/links"
+                        ]
+                    },
+                    {
+                        "group": "Organization",
+                        "pages": [
+                            {
                                 "group": "Logs & Analytics",
                                 "icon": "chart-bar",
                                 "pages": [
+                                    "manage/analytics/overview",
                                     "manage/analytics/request",
                                     "manage/analytics/access",
                                     "manage/analytics/action"
                                 ]
                             },
-                            "manage/blueprints",
                             {
-                                "group": "Remote Nodes",
-                                "icon": "circle-nodes",
+                                "group": "Management",
+                                "icon": "building",
                                 "pages": [
-                                    "manage/remote-node/understanding-nodes",
-                                    "manage/remote-node/quick-install-remote",
-                                    "manage/remote-node/config-file"
+                                    "manage/organizations/api-keys",
+                                    "manage/blueprints"
                                 ]
                             },
-                            "manage/integration-api",
-                            "manage/branding"
+                            {
+                                "group": "Billing & Licenses",
+                                "icon": "credit-card",
+                                "pages": [
+                                    "manage/organizations/billing",
+                                    "manage/organizations/licenses"
+                                ]
+                            },
+                            {
+                                "group": "Settings",
+                                "icon": "gear",
+                                "pages": [
+                                    "manage/organizations/org-id",
+                                    "manage/organizations/settings",
+                                    "manage/access-control/login-page",
+                                    "manage/branding"
+                                ]
+                            }
                         ]
                     },
                     {
@@ -190,6 +267,7 @@
                                     "self-host/community-guides/geolite2automation"
                                 ]
                             },
+                            "self-host/purchase-license-key",
                             "self-host/enterprise-edition",
                             "self-host/supporter-program"
                         ]
@@ -199,7 +277,8 @@
                         "pages": [
                             "development/system-architecture",
                             "development/contributing",
-                            "development/feature-requests-and-bug-reports"
+                            "development/feature-requests-and-bug-reports",
+                            "manage/integration-api"
                         ]
                     }
                 ]
@@ -366,6 +445,18 @@
         {
             "source": "manage/healthchecks-failover",
             "destination": "manage/resources/public/healthchecks-failover"
+        },
+        {
+            "source": "/manage/resources/private/authentication",
+            "destination": "/manage/resources/private/access-policy"
+        },
+        {
+            "source": "/manage/resources/private/destinations",
+            "destination": "/manage/resources/private/network-settings"
+        },
+        {
+            "source": "/manage/resources/private/alias",
+            "destination": "/manage/resources/private/network-settings"
         }
     ],
     "seo": {

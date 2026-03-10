@@ -1,0 +1,69 @@
+---
+title: "Analytics"
+icon: "chart-bar"
+description: "Analytics provides visibility into traffic and usage trends across your Pangolin resources."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Analytics is the **Request Analytics** page for your organization.
+
+It provides a time-based and geo-based view of request traffic, including what Pangolin allowed versus blocked.
+
+## Filters
+
+At the top of the page, you can filter analytics by:
+
+- **Start** datetime
+- **End** datetime
+- **Filter By Resource** (single resource or all resources)
+- **Refresh**
+
+## Summary Metrics
+
+The summary cards include:
+
+- **Total Requests**
+- **Requests Blocked By Pangolin** (count and percentage)
+
+## Visualizations
+
+### Requests By Day
+
+Line chart showing daily request volume, split by:
+
+- **Allowed**
+- **Blocked**
+
+Use this chart to spot spikes and policy-impact changes across the selected time window.
+
+### Requests By Country
+
+World map showing where requests originated.
+
+### Top Countries
+
+Country breakdown table showing request totals and relative share (`%`).
+
+<Warning>
+Country analytics requires GeoIP to be configured. If GeoIP is not set up, country views may be empty or incomplete.
+For setup, see [Enable Geoblocking (GeoIP)](/self-host/advanced/enable-geoblocking) and [GeoLite2 Automation](/self-host/community-guides/geolite2automation).
+</Warning>
+
+## Typical Usage
+
+1. Set a time window and (optionally) a resource filter.
+2. Review total volume and blocked percentage.
+3. Inspect the daily trend for anomalies.
+4. Use country views to identify traffic distribution or suspicious sources.
+5. Pivot into logs for event-level investigation.
+
+## Related Documentation
+
+- [Request Logs](/manage/analytics/request)
+- [Access Logs](/manage/analytics/access)
+- [Action Logs](/manage/analytics/action)
+- [Rules](/manage/access-control/rules)

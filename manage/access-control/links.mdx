@@ -1,0 +1,89 @@
+---
+title: "Links"
+icon: "link"
+description: "Create and manage shareable links for your applications."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+Links let you generate shareable URLs for a resource, so you can grant controlled access without changing core resource configuration.
+
+## Managing Existing Links
+
+The **Manage Share Links** page is the primary place to create, review, and revoke links.
+
+Available controls in this view include:
+
+- **Create Share Link** to open link creation
+- **Refresh** to reload the table and pull links created or updated by other users in your organization
+- Search to quickly find links
+- Sortable table columns (for example **Title**, **Resource**, **Created**, **Expires**)
+- Pagination controls for navigating larger link sets
+
+Use this list to:
+
+- Review which links exist and what they are used for
+- Confirm which links are active or expired
+- Track when links were created and when they expire
+- Revoke links when access should end
+
+To revoke a link or its access token, delete the link from **Manage Share Links**.
+
+## Create a Share Link
+
+Click **Create Share Link** on the Manage Share Links page, then:
+
+1. Select the target **Resource**.
+2. Optionally set a **Title**.
+3. Set **Expire In**:
+   - Choose a time unit: Minutes, Hours, Days, Weeks, Months, or Years
+   - Enter the duration value (for example, `30`)
+4. If needed, enable **Never expire**.
+5. Click **Create Link**.
+
+Anyone with the link can access the resource, so treat share links like credentials.
+
+## After You Create a Link
+
+After creation, Pangolin shows a result screen with the generated link and token details.
+
+- The link is shown once, so copy it immediately.
+- A QR code is provided for quick sharing to mobile devices.
+- You can copy the direct share URL from the modal.
+- Token metadata (such as token ID and token value) is shown for integration use.
+
+## Access Token Usage
+
+The modal includes an **Access Token Usage** section that shows how to pass the token:
+
+- As a query parameter
+- As a request header
+
+For authenticated access, include the token on client requests using your selected method.
+
+<Warning>
+Keep access tokens private. Do not share them in public channels or embed them in client-side code.
+</Warning>
+
+## Expiration Behavior
+
+- Expiring links are valid only for the configured duration.
+- When a link expires, it is removed and users who relied on it lose access.
+- If **Never expire** is enabled, the link remains valid until you revoke it.
+
+## Recommended Practices
+
+- Default to short expirations.
+- Use clear, descriptive titles.
+- Create separate links per team or use case.
+- Revoke links you no longer need.
+- Do not share long-lived links in public channels.
+
+## Important Notes
+
+- For broader auth options, see [Resource Authentication](/manage/resources/public/authentication#shareable-links-and-access-tokens)
+- Link-based access does not provide per-user identity headers to upstream apps. See [Forwarded Headers](/manage/access-control/forwarded-headers)

@@ -1,6 +1,7 @@
 ---
-title: "Authentication"
-description: "Only allow access to Resources to specific users, roles, and machines"
+title: "Authentication (Moved)"
+icon: "shield"
+description: "This page has moved to Access Policy."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,24 +10,13 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-When a client connects into an organization they will **NOT** have access to any Resources by default. Access must be explicitly granted to users, roles, or machines for a WireGuard tunnel to be established to the site hosting the Resource. The Client will show no peers unless access is granted.
+Private resource authentication and authorization are now documented under [Access Policy](/manage/resources/private/access-policy).
 
-Access can be granted in several ways:
+Use that page for:
 
-* **Roles:** Assign access to Resources to specific roles. Any user or machine with that role will gain access to the Resource when they connect.
-* **Users:** Assign access to Resources to specific users. Only those users will gain access to the Resource when they connect.
-* **Machines:** Assign access to Resources to specific machines. Only those machines will gain access to the Resource when they connect. Note that machines can not be put into roles.
+- role/user/machine-client access assignment
+- default access behavior
+- tunnel behavior when access is removed
+- pointers to related network restrictions
 
-When removing access to a resource, the client will automatically tear down the WireGuard tunnel to that Resource if there are no other Resources accessible on that site.
-
-    <Frame>
-        <img src="/images/private_access_controls.png" centered/>
-    </Frame>
-    
-### Port Restrictions
-
-By default, when access to a Resource is granted, all ports on that Resource are accessible. However, you can restrict access to specific ports on a Resource by defining port restrictions. When port restrictions are defined, only the specified ports will be accessible to users, roles, or machines that have access to the Resource. To specify specific ports, enter either a single port (e.g., `80`), a comma-separated list of ports (e.g., `80,443,8080`), or a port range using a hyphen (e.g., `8000-8100`).
-
-### ICMP Access
-
-By default, ICMP (ping) access to Resources is enabled. To disable ICMP access, you can uncheck the "ICMP" option when configuring access to a Resource. This will prevent users, roles, or machines with access to the Resource to send ICMP echo requests (ping) to the Resource's destination. Currently you can not ping an alias.
+If you arrived here from an old link, continue at [Access Policy](/manage/resources/private/access-policy).

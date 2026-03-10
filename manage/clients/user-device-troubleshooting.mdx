@@ -1,0 +1,99 @@
+---
+title: "Troubleshooting"
+icon: "wrench"
+description: "Diagnose and resolve common user device client issues."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+Use this guide to diagnose installation, login, and tunnel issues on user devices.
+
+## First Checks
+
+- Confirm the client app/CLI is up to date.
+- Confirm the user can authenticate in the browser flow.
+- Confirm MFA and identity provider requirements are satisfied.
+- Confirm local firewall/VPN/security software is not conflicting.
+- Confirm device clock and timezone are correct.
+
+## Triage Order
+
+1. Validate login/authentication flow.
+2. Validate client tunnel/VPN permissions on the OS.
+3. Validate DNS and routing configuration in client settings.
+4. Validate network path (endpoint reachability, firewall/proxy constraints).
+5. Check for policy-side denials (roles/rules/session/mfa constraints).
+
+## Common Issues and Fixes
+
+### Login Succeeds in Browser but Client Does Not Connect
+
+- Close and reopen the client, then retry login.
+- Confirm endpoint/server URL is correct.
+- Confirm system clock/timezone is correct.
+- Confirm the client has required OS network permissions.
+
+### Repeated MFA Prompts or Session Churn
+
+- Check whether short session duration is enforced.
+- Confirm the expected MFA method is configured and available.
+- Re-authenticate from a clean login flow.
+
+### Identity Provider Error During Sign-In
+
+- Confirm user assignment in the identity provider.
+- Verify IDP configuration/callback setup.
+- Retry from a fresh client login attempt.
+
+### Connected but Resource Access Fails
+
+- Confirm user role and resource access rules.
+- Check whether forwarded header or auth policy requirements changed.
+- Check Access/Request logs for denies and policy decisions.
+
+### DNS/Alias Issues (Hosts Not Resolving)
+
+- If using aliases, confirm **Enable Aliases (Override DNS)** is enabled.
+- If using **DNS Over Tunnel**, ensure upstream DNS is set correctly.
+- For tunnel DNS, use the DNS server IP (not alias) as documented.
+
+### Intermittent Connectivity
+
+- Check for route overlap with local networks.
+- Check unstable Wi-Fi/cellular transitions.
+- Check local security tools that may intermittently block tunnels.
+
+### Mobile Background Disconnects (Android)
+
+- Disable battery optimization for Pangolin and allow unrestricted background usage.
+
+## Platform Notes
+
+- macOS/iOS may require explicit VPN/network extension approval.
+- Android may require battery optimization exceptions for stable background connectivity.
+- Linux CLI may require elevated permissions to create network interfaces.
+- On Windows, CLI VPN mode is not supported for user-device connectivity; use the GUI client for tunnel connectivity.
+
+## Evidence to Collect Before Escalation
+
+- OS + client version
+- Exact time of failure and whether issue is consistent or intermittent
+- Authentication method used (Pangolin account vs IdP, MFA method)
+- Client settings snapshot (DNS override/tunnel DNS/upstream DNS)
+- Relevant error text and recent Request/Access log entries
+
+## Related Documentation
+
+- [Install Client](/manage/clients/install-client)
+- [User Device Authentication](/manage/clients/user-device-authentication)
+- [Configure Client](/manage/clients/configure-client)
+- [Update Client](/manage/clients/update-client)
+- [Rules](/manage/access-control/rules)
+- [Session Length](/manage/access-control/session-length)
+- [Multi-Factor Authentication](/manage/access-control/mfa)
+- [Access Logs](/manage/analytics/access)
+- [Request Logs](/manage/analytics/request)
