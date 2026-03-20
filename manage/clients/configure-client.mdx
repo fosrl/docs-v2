@@ -49,7 +49,12 @@ This is a fallback DNS server that the system can use if the primary server is u
 
 ## Windows Client (Advanced)
 
-On Windows, you can centrally preconfigure the Pangolin GUI client by editing the JSON config at `%LOCALAPPDATA%\Pangolin\pangolin.json` before the user signs in (for example, `C:\Users\USER\AppData\Local\Pangolin\pangolin.json`). This is useful for system administrators who want to enforce consistent DNS behavior and login flows across many machines without relying on end users to choose the right options. In particular, `defaultServerURL` and `authPath` let you direct users straight to the correct server and, if needed, a specific organization-branded login page on every launch.
+On Windows, the Pangolin GUI reads configuration from two `pangolin.json` files:
+
+- User config: `%LOCALAPPDATA%\Pangolin\pangolin.json` (for example, `C:\Users\USER\AppData\Local\Pangolin\pangolin.json`)
+- Global config: `%ProgramData%\Pangolin\pangolin.json`
+
+All config keys in the `Config` object below can be set in either file. If the same key exists in both places, the user config value overrides the global value. This lets administrators define global defaults while still allowing per-user overrides when needed.
 
 <ResponseField name="Config" type="object">
   JSON configuration for the Windows Pangolin client stored in `pangolin.json`.
@@ -82,10 +87,14 @@ On Windows, you can centrally preconfigure the Pangolin GUI client by editing th
     <ResponseField name="userSettingsDisabled" type="boolean">
       When true, hides and disables the settings form in the GUI so users cannot change these values themselves.
     </ResponseField>
+
+    <ResponseField name="openStatusTabOnConnect" type="boolean">
+      When true, opens the Status tab immediately after clicking Connect so users can watch connection feedback while the tunnel is starting.
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
-As a system administrator, you can script placing this file into `%LOCALAPPDATA%\Pangolin\pangolin.json` to preconfigure user installations and automate rollouts.
+As a system administrator, you can script placing `pangolin.json` in `%ProgramData%\Pangolin\` to set global defaults, and/or in each user's `%LOCALAPPDATA%\Pangolin\` folder for per-user overrides and targeted rollout behavior.
 
 <Tip>
  For enterprise customers, contact us if you need a custom MSI installer with baked-in configuration; we can maintain custom installers as an add-on to your enterprise license.
@@ -93,7 +102,7 @@ As a system administrator, you can script placing this file into `%LOCALAPPDATA%
 
 ### Windows client log level
 
-To configure the log level for the Windows client system-wide, edit `%ProgramData%\Pangolin\pangolin.json`. For example:
+`logLevel` is a global-only setting. To configure it for the Windows client, edit `%ProgramData%\Pangolin\pangolin.json`. For example:
 
 ```json
 { "logLevel": "debug" }
@@ -151,7 +160,7 @@ Olm is a command-line client for connecting machine clients in Pangolin. You can
 </ResponseField>
 
 <ResponseField name="endpoint" type="string" required>
-  The endpoint where both Gerbil and Pangolin reside for websocket connections.
+  The endpoint where the Pangolin server resides for websocket connections.
 
   **Example**: `https://pangolin.example.com`
 </ResponseField>
