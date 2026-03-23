@@ -97,6 +97,7 @@
                                     "manage/access-control/create-user",
                                     "manage/access-control/approvals",
                                     "manage/access-control/rules",
+                                    "manage/access-control/links",
                                     "manage/access-control/forwarded-headers",
                                     "manage/access-control/login-page",
                                     "manage/ssh",
