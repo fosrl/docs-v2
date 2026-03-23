@@ -29,6 +29,11 @@ Anyone with the link or access token can use it. Treat both like credentials.
 
 Pangolin can accept a share-link access token in either the query string or request headers.
 
+The copied share-link URL is not the same as the access-token usage examples:
+
+- The share link shown when you create it is a Pangolin-managed link that takes the user through Pangolin's share flow and then redirects them to the resource.
+- The access-token usage examples below send the token directly to the resource URL on every request.
+
 ### Query Parameter
 
 By default, Pangolin accepts the access token in the `p_token` query parameter:
