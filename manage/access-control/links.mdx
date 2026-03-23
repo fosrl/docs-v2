@@ -1,45 +1,51 @@
 ---
-title: "Share Links"
+title: "Links"
 icon: "link"
-description: "Create share links and use access tokens for browser or programmatic access."
+description: "Create Links and use access tokens for browser or programmatic access."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-A share link is a special URL that grants access to one resource without requiring the recipient to sign in as a Pangolin user.
+<img src="/images/links-dashboard.png" alt="Links in the Pangolin dashboard" />
 
-When you create one, Pangolin gives you two ways to use it:
+Links are special URLs that grant access to one resource without requiring the recipient to sign in as a Pangolin user.
 
-- **Share Link**: Send this to a person. This is a Pangolin-hosted share URL, usually on your Pangolin domain, that validates the link and then redirects them to the resource.
+When you create a Link, Pangolin gives you two ways to use it:
+
+- **Link**: Send this to a person. This is a Pangolin-hosted URL, usually on your Pangolin domain, that validates the Link and then redirects them to the resource.
 - **Access Token Usage**: Use this only when making direct requests to the resource URL from scripts, tools, or integrations.
 
-## Create a Share Link
+## Create a Link
 
-From the resource authentication flow, create a share link by:
+From the resource authentication flow, create a Link by:
 
 1. Choosing the target resource.
 2. Adding a title if you want the link to be easy to identify later.
 3. Setting an expiration, or enabling **Never expire** if the link should stay valid until you revoke it.
 4. Copying the generated link or access-token details immediately after creation.
 
+<img src="/images/links-create-modal.png" alt="Create a Link modal" />
+
 <Warning>
-Anyone with the link or access token can use it. Treat both like credentials.
+Anyone with the Link or access token can use it. Treat both like credentials.
 </Warning>
 
 ## Use the Access Token
 
-Pangolin can accept a share-link access token in either the query string or request headers.
+Pangolin can accept a Link access token in either the query string or request headers.
 
-If you are sending access to a person, use the copied **Share Link**.
+If you are sending access to a person, use the copied **Link** shown at the top of the modal.
 
 Use **Access Token Usage** only when you are calling the resource URL directly on each request.
 
 This is why the two URLs often look different:
 
-- The **Share Link** is usually on your Pangolin domain.
+- The **Link** is usually on your Pangolin domain.
 - The **Access Token Usage** examples use the resource URL directly.
+
+<img src="/images/links-access-token-usage.png" alt="Access Token Usage examples" />
 
 ### Query Parameter
 
@@ -77,10 +83,10 @@ Some deployments may use different header names.
 
 - Expiring links stop working automatically when their lifetime ends.
 - Non-expiring links remain valid until you delete them.
-- Deleting the share link revokes both the link and its access token.
+- Deleting the Link revokes both the Link and its access token.
 
 ## Important Notes
 
-- Share links are best for targeted sharing and automation, not broad long-term access.
-- Share-link access does not carry per-user identity headers to the upstream app. For identity-aware upstream integrations, see [Forwarded Headers](/manage/access-control/forwarded-headers).
+- Links are best for targeted sharing and automation, not broad long-term access.
+- Link-based access does not carry per-user identity headers to the upstream app. For identity-aware upstream integrations, see [Forwarded Headers](/manage/access-control/forwarded-headers).
 - For the underlying auth settings on the resource itself, see [Authentication](/manage/resources/public/authentication).
