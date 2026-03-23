@@ -126,6 +126,7 @@
                                 "group": "Logs & Analytics",
                                 "icon": "chart-bar",
                                 "pages": [
+                                    "manage/analytics/overview",
                                     "manage/analytics/request",
                                     "manage/analytics/access",
                                     "manage/analytics/action"
