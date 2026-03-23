@@ -267,17 +267,11 @@ services:
       - --attach
 ```
 
-**Docker Configuration Notes:**
+#### Docker Notes
 
-- `network_mode: host` brings the Pangolin CLI network interface to the host system, allowing the WireGuard tunnel to function properly
-- `cap_add: - NET_ADMIN` is required to grant the container permission to manage network interfaces
-- `devices: - /dev/net/tun:/dev/net/tun` is required to give the container access to the TUN device for creating WireGuard interfaces
-
-#### Common Gotchas
-
-- The client needs permission to create a TUN interface.
-- Containers need `NET_ADMIN` and `/dev/net/tun`.
-- Host networking is usually required for containerized deployments.
+- `network_mode: host` brings the Pangolin CLI network interface to the host system, allowing the WireGuard tunnel to function properly.
+- `cap_add: - NET_ADMIN` is required to grant the container permission to manage network interfaces.
+- `devices: - /dev/net/tun:/dev/net/tun` is required to give the container access to the TUN device for creating WireGuard interfaces.
 - If connectivity fails, verify the `endpoint`, `id`, and `secret` first.
 
 ## Olm (Advanced)
