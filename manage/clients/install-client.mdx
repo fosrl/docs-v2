@@ -243,6 +243,30 @@ services:
       - CLIENT_SECRET=your-client-secret
 ```
 
+You can also pass the CLI args directly to the container:
+
+```yaml
+services:
+  pangolin-cli:
+    image: fosrl/pangolin-cli:latest
+    container_name: pangolin-cli
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    command:
+      - up
+      - --id
+      - "your-client-id"
+      - --secret
+      - "your-client-secret"
+      - --endpoint
+      - https://app.pangolin.net
+      - --attach
+```
+
 #### Common Gotchas
 
 - The client needs permission to create a TUN interface.
