@@ -12,8 +12,6 @@ Clients are used in two different ways:
 - **User Devices**: A person signs in with a Pangolin account or identity provider and connects from a desktop or mobile client.
 - **Automation and Machines**: A server, workload, or script connects with a client ID and secret instead of an interactive login.
 
-<span id="user-devices"></span>
-
 ## User Devices
 
 
@@ -179,8 +177,6 @@ Replace `{version}` with the desired version and `{architecture}` with your arch
    pangolin up
    ```
 
-<span id="automation-and-machines"></span>
-
 ## Automation and Machines
 
 Use this path when the client is a server, CI job, background service, or other non-human workload.
@@ -224,6 +220,10 @@ User=root
 [Install]
 WantedBy=multi-user.target
 ```
+
+<Warning>
+Make sure to move the binary to `/usr/local/bin/pangolin` before creating the service. Replace `{client_id}`, `{client_secret}`, and `{endpoint_url}` with your machine client credentials and endpoint.
+</Warning>
 
 #### Run in Docker
 
