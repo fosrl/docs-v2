@@ -1,0 +1,83 @@
+---
+title: "Get Started with Pangolin Cloud"
+icon: "globe"
+description: "Start with Pangolin Cloud and connect your first users, sites, and resources"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+This is the recommended starting path for most new Pangolin users. Begin with Pangolin Cloud if you want the fastest setup, the least operational overhead, and a clear path to publishing resources without running the full control plane yourself.
+
+<Steps>
+<Step title="Create your Cloud account">
+  Sign up for Pangolin Cloud and log in to the dashboard.
+
+  <Card title="Sign Up for Pangolin Cloud" icon="cloud" href="https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=page_cta&utm_campaign=cloud_positioning&utm_content=cloud_getting_started_signup">
+    Start for free and create your first organization from the hosted dashboard.
+  </Card>
+</Step>
+
+<Step title="Create your first organization">
+  After logging in, create an organization for the team, environment, or project you want to manage.
+
+  <Tip>
+    Organizations give you a clean boundary for users, roles, domains, sites, resources, and any higher-tier access features you add later.
+  </Tip>
+</Step>
+
+<Step title="Choose how you want to connect infrastructure">
+  Pick the setup that matches where your apps and services live:
+
+  - Use a standard site when you want to connect a remote network into Pangolin.
+  - Use a remote node when you want the Cloud control plane but want traffic and SSL termination to stay on infrastructure you control.
+
+  <CardGroup cols={2}>
+    <Card title="Install a Site" icon="plug" href="/manage/sites/install-site">
+      Connect a remote network and start exposing resources.
+    </Card>
+    <Card title="Deploy a Remote Node" icon="circle-nodes" href="/manage/remote-node/quick-install-remote">
+      Keep the data plane on your own server while Cloud handles management.
+    </Card>
+  </CardGroup>
+</Step>
+
+<Step title="Add resources">
+  Define the applications, hosts, or internal networks your users should be able to access.
+
+  <CardGroup cols={2}>
+    <Card title="Understand Resources" icon="link" href="/manage/resources/understanding-resources">
+      Learn the difference between public resources and private resources before you expose your first app.
+    </Card>
+    <Card title="Configure Sites" icon="plug" href="/manage/sites/configure-site">
+      Finish the site-side setup required for the resources you want to expose.
+    </Card>
+  </CardGroup>
+</Step>
+
+<Step title="Set up user access">
+  Invite users, install clients, and configure the access model that fits your team.
+
+  <CardGroup cols={2}>
+    <Card title="Install Clients" icon="desktop" href="/manage/clients/install-client">
+      Connect user devices and machines to private resources.
+    </Card>
+    <Card title="Access Control" icon="user-group" href="/manage/access-control/rules">
+      Define roles, policies, and other access constraints.
+    </Card>
+  </CardGroup>
+
+  <Tip>
+    Higher-tier Cloud features like organization identity providers, device approvals, and custom login flows can be layered on later when your deployment is ready for them.
+  </Tip>
+</Step>
+</Steps>
+
+## Need Help Choosing the Right Path?
+
+If you are deciding between fully managed Cloud, Cloud with Remote Nodes, or a fully self-hosted deployment, use the comparison guide first.
+
+<Card title="Choose a Deployment Model" icon="book" href="/cloud/choose-deployment">
+  Compare Cloud, Cloud with Remote Nodes, and self-hosted Pangolin before you build out your environment.
+</Card>

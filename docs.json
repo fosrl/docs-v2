@@ -24,13 +24,33 @@
                 "groups": [
                     {
                         "group": "About",
+                        "icon": "book",
                         "pages": [
                             "about/how-pangolin-works",
-                            "about/pangolin-vs-reverse-proxy-vs-vpn"
+                            "about/pangolin-vs-reverse-proxy-vs-vpn",
+                            "cloud/choose-deployment"
+                        ]
+                    },
+                    {
+                        "group": "Pangolin Cloud",
+                        "icon": "cloud",
+                        "pages": [
+                            "cloud/overview",
+                            "cloud/getting-started",
+                            {
+                                "group": "Remote Nodes",
+                                "icon": "circle-nodes",
+                                "pages": [
+                                    "manage/remote-node/understanding-nodes",
+                                    "manage/remote-node/quick-install-remote",
+                                    "manage/remote-node/config-file"
+                                ]
+                            }
                         ]
                     },
                     {
                         "group": "Manage Pangolin",
+                        "icon": "building",
                         "pages": [
                             {
                                 "group": "Sites",
@@ -132,15 +152,6 @@
                                 ]
                             },
                             "manage/blueprints",
-                            {
-                                "group": "Remote Nodes",
-                                "icon": "circle-nodes",
-                                "pages": [
-                                    "manage/remote-node/understanding-nodes",
-                                    "manage/remote-node/quick-install-remote",
-                                    "manage/remote-node/config-file"
-                                ]
-                            },
                             "manage/integration-api",
                             "manage/branding"
                         ]
@@ -248,8 +259,8 @@
         ],
         "primary": {
             "type": "button",
-            "label": "Start for free",
-            "href": "https://app.pangolin.net/auth/signup"
+            "label": "Start on Cloud",
+            "href": "https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=navbar&utm_campaign=cloud_positioning&utm_content=navbar_primary"
         }
     },
     "footer": {
@@ -269,7 +280,7 @@
                     },
                     {
                         "label": "Downloads",
-                        "href": "https://app.pangolin.net/auth/signup"
+                        "href": "https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=footer&utm_campaign=cloud_positioning&utm_content=footer_downloads"
                     },
                     {
                         "label": "Status",

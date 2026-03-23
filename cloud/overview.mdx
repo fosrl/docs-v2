@@ -1,0 +1,60 @@
+---
+title: "Pangolin Cloud Overview"
+icon: "cube"
+description: "Use Pangolin Cloud for a hosted control plane with optional self-hosted remote nodes"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Pangolin Cloud is the fastest way to start using Pangolin. It gives you a hosted control plane for identity, policy, DNS, certificates, backups, and product updates without requiring you to run the full management stack yourself.
+
+You can stay fully managed, or you can attach self-hosted remote nodes to keep tunnels, SSL termination, and traffic on infrastructure you control. That makes Cloud a strong default for teams that want simpler operations without giving up deployment flexibility.
+
+<Card title="Create a Free Cloud Account" icon="cloud" href="https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=page_cta&utm_campaign=cloud_positioning&utm_content=cloud_overview_primary">
+  Start with the hosted control plane and add resources, users, and remote nodes from the Pangolin dashboard.
+</Card>
+
+## Why Teams Start with Cloud
+
+- **Fastest time to value**: Create an account and start configuring Pangolin immediately without deploying the full control plane first.
+- **Less operational overhead**: Pangolin handles the control plane, backups, and ongoing dashboard updates for you.
+- **Stronger team onboarding**: Invite users, manage access, and expand the deployment from a shared hosted dashboard.
+- **Hybrid deployment path**: Attach remote nodes when you want traffic and SSL termination to stay on servers you control.
+
+## How Cloud Fits into Pangolin
+
+<CardGroup cols={2}>
+  <Card title="Hosted Control Plane" icon="cloud">
+    Use Cloud to manage organizations, users, access rules, domains, certificates, and feature configuration.
+  </Card>
+  <Card title="Optional Remote Nodes" icon="circle-nodes">
+    Run your own networking nodes while still letting Pangolin Cloud handle coordination, monitoring, and failover logic.
+  </Card>
+</CardGroup>
+
+## Use Cloud If You Want To
+
+- Start quickly without maintaining the full Pangolin control plane
+- Keep a path open to higher-tier Cloud features like custom auth pages, device approvals, and organization identity providers as your deployment grows
+- Let Pangolin handle DNS, certificate management, and backups
+- Keep a path open to self-hosted remote nodes later
+
+## What Cloud Does Not Replace
+
+Pangolin Cloud does not force you into a single deployment model. If your services live on your own networks, you still connect them with sites and resources. If you want more infrastructure control, you can deploy remote nodes and keep traffic on your own servers.
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Get Started with Cloud" icon="cloud" href="/cloud/getting-started">
+    Follow the recommended first setup path for new Cloud users.
+  </Card>
+  <Card title="Compare Deployment Models" icon="book" href="/cloud/choose-deployment">
+    Decide between Cloud, Cloud with Remote Nodes, and self-hosted Pangolin.
+  </Card>
+  <Card title="Understand Remote Nodes" icon="circle-nodes" href="/manage/remote-node/understanding-nodes">
+    Learn how to keep traffic on infrastructure you control while using the Cloud control plane.
+  </Card>
+</CardGroup>

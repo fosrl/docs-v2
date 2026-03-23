@@ -3,14 +3,18 @@ title: "Azure Entra ID"
 description: "Configure Azure Entra ID Single Sign-On"
 ---
 
-import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+import { PangolinCloudTocCtaCard } from "/snippets/pangolin-cloud-toc-cta.mdx";
 
-<PangolinCloudTocCta />
+<PangolinCloudTocCtaCard
+  title="Launch Azure SSO in Pangolin Cloud"
+  body="Connect Azure Entra ID and give your team seamless Microsoft-backed sign-in."
+  utmContent="azure_sso"
+/>
 
 
 
 <Note>
-Azure SSO is only available on [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition) deployments. In [Enterprise Edition](/self-host/enterprise-edition), you must set `app.identity_provider_mode: "org"` in your [private config file](/self-host/advanced/private-config-file) `privateConfig.yml`.
+Azure SSO is only available on [Pangolin Cloud](https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=availability_note&utm_campaign=cloud_positioning&utm_content=azure_sso) and [Enterprise Edition](/self-host/enterprise-edition) deployments. In [Enterprise Edition](/self-host/enterprise-edition), you must set `app.identity_provider_mode: "org"` in your [private config file](/self-host/advanced/private-config-file) `privateConfig.yml`.
 </Note>
 
 The following steps will integrate Microsoft SSO using the built in Azure Entra ID identity provider in Pangolin.

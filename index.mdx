@@ -1,5 +1,6 @@
 ---
 title: "Introduction to Pangolin"
+description: "Start with Pangolin Cloud or compare Cloud, remote node, and self-hosted deployment options"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -8,19 +9,33 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-Pangolin is an open-source, identity-based remote access platform built on WireGuard that enables secure, seamless connectivity to private and public resources.
+Pangolin is an identity-based remote access platform built on WireGuard that lets you secure private networks, self-hosted applications, and internal services without exposing entire networks.
 
 <Frame caption="Screenshot of resources page from the Pangolin Dashboard.">
   <img src="/images/hero.png" alt="Pangolin Dashboard"/>
 </Frame>
 
-Pangolin combines reverse proxy and VPN capabilities into one platform. It provides browser-based access to web applications and client-based access to private resources like databases and SSH servers, all with zero-trust security and granular access control.
+For most teams, the best place to start is **Pangolin Cloud**. It gives you a hosted control plane for identity, policy, DNS, certificates, and ongoing updates. If you want more infrastructure control later, you can attach self-hosted remote nodes and keep traffic on servers you manage.
 
-Pangolin connects remote networks using lightweight software connectors called sites. Sites create secure tunnels without requiring public IP addresses or open ports. Admins define specific resources that users can access, not entire networks. This gives users only the access they need while keeping everything else secure.
+Pangolin combines reverse proxy and VPN capabilities into one platform. It provides browser-based access to web applications and client-based access to private resources like databases and SSH servers, all with zero-trust security and granular access control.
 
 Users access public resources through any web browser with authentication. Users access private resources by connecting with a Pangolin client on their device. Both methods use the same identity-based access control, so you manage users and permissions in one place.
 
-## Keep Reading
+## Start Here
+
+<CardGroup cols={3}>
+  <Card title="Get Started with Cloud" icon="cloud" href="/cloud/getting-started">
+    Follow the recommended onboarding path for most new Pangolin users.
+  </Card>
+  <Card title="Pangolin Cloud Overview" icon="cloud" href="/cloud/overview">
+    Learn how the hosted control plane and optional remote nodes fit together.
+  </Card>
+  <Card title="Choose a Deployment Model" icon="book" href="/cloud/choose-deployment">
+    Compare Cloud, Cloud with Remote Nodes, and self-hosted Pangolin.
+  </Card>
+</CardGroup>
+
+## Core Concepts
 
 <Card title="How Pangolin Works" icon="brain" href="/about/how-pangolin-works">
   Learn about the fundamentals of Pangolin and how they work together to provide simple and secure remote access.
@@ -33,11 +48,11 @@ Users access public resources through any web browser with authentication. Users
 ## Deployment Options
 
 <Columns cols={2}>
-  <Card title="Pangolin Cloud" icon="cloud" href="https://app.pangolin.net/auth/signup">
-    Use Cloud for low-maintenance, highly available remote access. Optionally self-host a node to keep your traffic private.
+  <Card title="Pangolin Cloud (Recommended)" icon="cloud" href="/cloud/getting-started">
+    Start with the hosted control plane, then attach remote nodes later if you want traffic and SSL termination on infrastructure you control.
   </Card>
-  <Card title="Self-host Pangolin" icon="server" href="self-host/quick-install">
-    Self-host a fully isolated Pangolin server. Install the Community Edition or Enterprise Edition easily using the quick installer.
+  <Card title="Self-host Pangolin" icon="server" href="/self-host/quick-install">
+    Self-host a fully isolated Pangolin server when you know you want to manage the full control plane, upgrades, backups, and networking yourself.
   </Card>
 </Columns>
 

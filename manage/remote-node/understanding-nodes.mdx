@@ -3,17 +3,25 @@ title: "Remote Nodes"
 description: "Control your own Pangolin node with cloud management"
 ---
 
-import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+import { PangolinCloudTocCtaCard } from "/snippets/pangolin-cloud-toc-cta.mdx";
 
-<PangolinCloudTocCta />
+<PangolinCloudTocCtaCard
+  title="Start with Pangolin Cloud"
+  body="Create your Cloud account and connect remote nodes when you are ready to bring your infrastructure online."
+  utmContent="remote_nodes_overview"
+/>
 
 
 
 <Note>
-	Remote Nodes are available in [Pangolin Cloud](https://app.pangolin.net/auth/signup).
+	Remote Nodes are available in [Pangolin Cloud](https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=availability_note&utm_campaign=cloud_positioning&utm_content=remote_nodes_overview).
 </Note>
 
-Remote nodes, you run your own Pangolin node - your tunnels, SSL termination, and traffic all stay on your server and use your bandwidth. The difference is that management and monitoring are handled through our cloud. The node just handles terminating Wireguard tunnels, serving HTTP(S) traffic, and routing relayed client connections - it is essentially a remote networking hub.
+Remote nodes are the hybrid deployment model for Pangolin Cloud. You run your own Pangolin node, so your tunnels, SSL termination, and traffic all stay on your infrastructure and use your bandwidth, while management and monitoring are handled through the Cloud control plane.
+
+The node handles terminating WireGuard tunnels, serving HTTP(S) traffic, and routing relayed client connections. In practice, it acts as a remote networking hub that you control without needing to run the full Pangolin management stack yourself.
+
+If you are still deciding how much of Pangolin you want to manage yourself, compare the [deployment models](/cloud/choose-deployment) before you build out your environment.
 
 Think of different nodes as the "front doors" to your applications - users connect to the closest one, and it securely routes their requests to your backend services.
 
@@ -35,10 +43,21 @@ Think of different nodes as the "front doors" to your applications - users conne
 ## Some Benefits
 
 ### Automatic Updates and Less Maintenance
-The cloud dashboard evolves quickly, so you get new features and bug fixes without having to manually pull new containers every time. Because the remote node is just handling the networking you do not need to do database migrations, or backups.
+The cloud dashboard evolves quickly, so you get new features and bug fixes without having to manually pull new containers every time. Because the remote node is only handling the networking layer, you do not need to manage database migrations or backups for the full control plane.
 
 ### Cloud Failover
-If your nodes goes down, your tunnels can temporarily fail over to our cloud points of presence or another node until you bring it back online. This ensures continuous availability. 
+If your node goes down, your tunnels can temporarily fail over to our cloud points of presence or another node until you bring it back online. This ensures continuous availability.
 
 ### High Availability (PoPs)
 You can attach multiple nodes to your account for redundancy and better performance. For example, deploy nodes across different regions or providers for decreased latency.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Install a Remote Node" icon="circle-nodes" href="/manage/remote-node/quick-install-remote">
+    Deploy your first remote node with the guided installer.
+  </Card>
+  <Card title="Compare Deployment Models" icon="book" href="/cloud/choose-deployment">
+    Step back and decide whether Pangolin Cloud, Remote Nodes, or a more self-managed path is the right fit.
+  </Card>
+</CardGroup>
