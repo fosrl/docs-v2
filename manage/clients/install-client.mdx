@@ -170,3 +170,195 @@ Replace `{version}` with the desired version and `{architecture}` with your arch
    ```bash
    pangolin up
    ```
+
+## Olm (Advanced)
+
+<Accordion title="Olm CLI (advanced use only)">
+
+Olm CLI is the most basic form of a client. All other clients implement Olm under the hood in some form.
+
+If you're looking for a CLI interface for a client, we recommend using Pangolin CLI where possible.
+
+Olm CLI is mainly only used for machine clients. Though the Pangolin CLI can also be used for machine clients, use Pangolin CLI if you expect to log in as a user.
+
+### Binary Installation (Linux)
+
+#### Quick Install (Recommended)
+
+Use this command to automatically install Olm. It detects your system architecture automatically and always pulls the latest version, adding Olm to your PATH:
+
+```bash
+curl -fsSL https://static.pangolin.net/get-olm.sh | bash
+```
+
+#### Windows
+
+If you would like to use Olm on Windows, `wintun.dll` is required. Please use the latest installer from [GitHub releases](https://github.com/fosrl/olm/releases/latest).
+
+#### Manual Download
+
+Binaries for Linux, macOS, and Windows are available in the [GitHub releases](https://github.com/fosrl/olm/releases) for ARM and AMD64 (`x86_64`) architectures.
+
+Download and install manually:
+
+```bash
+wget -O olm "https://github.com/fosrl/olm/releases/download/{version}/olm_{architecture}" && chmod +x ./olm
+```
+
+<Note>
+Replace `{version}` with the desired version and `{architecture}` with your architecture. Check the [release notes](https://github.com/fosrl/olm/releases) for the latest information.
+</Note>
+
+### Running Olm
+
+Run Olm with the configuration from Pangolin:
+
+```bash
+olm \
+--id 31frd0uzbjvp721 \
+--secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
+--endpoint https://example.com
+```
+
+### Systemd Service
+
+Create a basic systemd service:
+
+```ini title="/etc/systemd/system/olm.service"
+[Unit]
+Description=Olm
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/olm --id 31frd0uzbjvp721 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 --endpoint https://example.com
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+<Warning>
+Make sure to move the binary to `/usr/local/bin/olm` before creating the service.
+</Warning>
+
+### Docker
+
+You can also run Olm with Docker Compose:
+
+```yaml
+services:
+    olm:
+        image: fosrl/olm
+        container_name: olm
+        restart: unless-stopped
+        network_mode: host
+        cap_add:
+            - NET_ADMIN
+        devices:
+            - /dev/net/tun:/dev/net/tun
+        environment:
+            - PANGOLIN_ENDPOINT=https://example.com
+            - OLM_ID=31frd0uzbjvp721
+            - OLM_SECRET=h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6
+```
+
+You can also pass the CLI args to the container:
+
+```yaml
+services:
+    olm:
+        image: fosrl/olm
+        container_name: olm
+        restart: unless-stopped
+        network_mode: host
+        cap_add:
+            - NET_ADMIN
+        devices:
+            - /dev/net/tun:/dev/net/tun
+        command:
+            - --id 31frd0uzbjvp721
+            - --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6
+            - --endpoint https://example.com
+```
+
+**Docker Configuration Notes:**
+
+- `network_mode: host` brings the Olm network interface to the host system, allowing the WireGuard tunnel to function properly
+- `cap_add: - NET_ADMIN` is required to grant the container permission to manage network interfaces
+- `devices: - /dev/net/tun:/dev/net/tun` is required to give the container access to the TUN device for creating WireGuard interfaces
+
+### Windows Service
+
+On Windows, Olm has to be installed and run as a Windows service. When running it with the CLI args, it will attempt to install and run the service to function like a CLI tool.
+
+Minimum Windows version: Windows 10
+
+#### Service Management Commands
+
+```text
+# Install the service
+olm.exe install
+
+# Start the service
+olm.exe start
+
+# Stop the service
+olm.exe stop
+
+# Check service status
+olm.exe status
+
+# Remove the service
+olm.exe remove
+
+# Run in debug mode (console output) with or without id & secret
+olm.exe debug
+
+# Show help
+olm.exe help
+```
+
+Note running the service requires credentials in `%PROGRAMDATA%\olm\olm-client\config.json`.
+
+#### Service Configuration
+
+When running as a service, Olm will read configuration from environment variables or you can modify the service to include command-line arguments:
+
+1. Install the service: `olm.exe install`
+2. Set the credentials in `%PROGRAMDATA%\olm\olm-client\config.json`. Hint: if you run Olm once with `--id` and `--secret` this file will be populated.
+3. Start the service: `olm.exe start`
+
+#### Service Logs
+
+When running as a service, logs are written to:
+
+- Windows Event Log (Application log, source: `OlmWireguardService`)
+- Log files in `%PROGRAMDATA%\olm\logs\olm.log`
+
+You can view the Windows Event Log using Event Viewer or PowerShell:
+
+```powershell
+Get-EventLog -LogName Application -Source "OlmWireguardService" -Newest 10
+```
+
+### Gotchas
+
+Olm creates a native TUN interface. This usually requires sudo or admin permissions.
+
+- **Windows**: Olm runs as a service.
+- **LXC containers**: Need to be configured to allow TUN access.
+- **Linux**: May require root privileges or specific capabilities to create network interfaces.
+- **macOS**: May require additional permissions for network interface creation.
+
+#### LXC Proxmox
+
+1. Create your LXC container.
+2. Go to the Resources tab of the container.
+3. Select Add, then select Device Passthrough.
+4. On the Add Device prompt, enter `dev/net/tun` in the Device Path field and select Add.
+5. If the container is running, shut it down and start it up again.
+
+Once `/dev/net/tun` is available, Olm can run within the LXC.
+
+</Accordion>
