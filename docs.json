@@ -75,6 +75,8 @@
                                 "pages": [
                                     "manage/clients/understanding-clients",
                                     "manage/clients/install-client",
+                                    "manage/clients/manage-machine-clients",
+                                    "manage/clients/install-machine-client",
                                     "manage/clients/configure-client",
                                     "manage/clients/update-client",
                                     "manage/clients/credentials",
