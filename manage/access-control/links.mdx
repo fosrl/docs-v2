@@ -12,7 +12,7 @@ A share link is a special URL that grants access to one resource without requiri
 
 When you create one, Pangolin gives you two ways to use it:
 
-- **Share Link**: Send this to a person. Pangolin validates the link, then redirects them to the resource.
+- **Share Link**: Send this to a person. This is a Pangolin-hosted share URL, usually on your Pangolin domain, that validates the link and then redirects them to the resource.
 - **Access Token Usage**: Use this only when making direct requests to the resource URL from scripts, tools, or integrations.
 
 ## Create a Share Link
@@ -35,6 +35,11 @@ Pangolin can accept a share-link access token in either the query string or requ
 If you are sending access to a person, use the copied **Share Link**.
 
 Use **Access Token Usage** only when you are calling the resource URL directly on each request.
+
+This is why the two URLs often look different:
+
+- The **Share Link** is usually on your Pangolin domain.
+- The **Access Token Usage** examples use the resource URL directly.
 
 ### Query Parameter
 
