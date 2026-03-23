@@ -8,9 +8,12 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-Share links let you grant access to a resource without provisioning a full user account or changing the resource's main authentication settings.
+A share link is a special URL that grants access to one resource without requiring the recipient to sign in as a Pangolin user.
 
-Use them when you need temporary access, simple external sharing, or token-based requests from scripts and integrations.
+When you create one, Pangolin gives you two ways to use it:
+
+- **Share Link**: Send this to a person. Pangolin validates the link, then redirects them to the resource.
+- **Access Token Usage**: Use this only when making direct requests to the resource URL from scripts, tools, or integrations.
 
 ## Create a Share Link
 
@@ -19,7 +22,7 @@ From the resource authentication flow, create a share link by:
 1. Choosing the target resource.
 2. Adding a title if you want the link to be easy to identify later.
 3. Setting an expiration, or enabling **Never expire** if the link should stay valid until you revoke it.
-4. Copying the generated link and token details immediately after creation.
+4. Copying the generated link or access-token details immediately after creation.
 
 <Warning>
 Anyone with the link or access token can use it. Treat both like credentials.
@@ -29,10 +32,9 @@ Anyone with the link or access token can use it. Treat both like credentials.
 
 Pangolin can accept a share-link access token in either the query string or request headers.
 
-The copied share-link URL is not the same as the access-token usage examples:
+If you are sending access to a person, use the copied **Share Link**.
 
-- The share link shown when you create it is a Pangolin-managed link that takes the user through Pangolin's share flow and then redirects them to the resource.
-- The access-token usage examples below send the token directly to the resource URL on every request.
+Use **Access Token Usage** only when you are calling the resource URL directly on each request.
 
 ### Query Parameter
 
@@ -44,7 +46,7 @@ curl "https://resource.example.com/?p_token=<token-id>.<access-token>"
 
 The query-string value is the token ID and token joined with a `.`.
 
-If you changed `resource_access_token_param` in the config file, use that parameter name instead.
+Some deployments may use a different query parameter name.
 
 ### Request Headers
 
@@ -62,9 +64,9 @@ curl \
   "https://resource.example.com/"
 ```
 
-This is the same token data as the query-string form, just split into two headers instead of `<token-id>.<access-token>`.
+This is the same token data as the query-string form, split into two headers instead of `<token-id>.<access-token>`.
 
-If your deployment uses custom header names, send those instead of the defaults.
+Some deployments may use different header names.
 
 ## Expiration and Revocation
 
@@ -77,4 +79,3 @@ If your deployment uses custom header names, send those instead of the defaults.
 - Share links are best for targeted sharing and automation, not broad long-term access.
 - Share-link access does not carry per-user identity headers to the upstream app. For identity-aware upstream integrations, see [Forwarded Headers](/manage/access-control/forwarded-headers).
 - For the underlying auth settings on the resource itself, see [Authentication](/manage/resources/public/authentication).
-- For the self-hosted config fields behind these defaults, see [Config File](/self-host/advanced/config-file#resource_access_token_param).
