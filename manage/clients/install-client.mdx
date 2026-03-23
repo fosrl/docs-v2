@@ -7,6 +7,14 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
+Clients are used in two different ways:
+
+- **User Devices**: A person signs in with a Pangolin account or identity provider and connects from a desktop or mobile client.
+- **Automation and Machines**: A server, workload, or script connects with a client ID and secret instead of an interactive login.
+
+<span id="user-devices"></span>
+
+## User Devices
 
 
 ## Windows
@@ -113,7 +121,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
    Tap the Connect button to establish a VPN connection. On the first connection, you may be prompted to allow the VPN connection.
 
-## Pangolin CLI (Linux, macOS, Windows)
+## Pangolin CLI for User Devices (Linux, macOS, Windows)
 
 Pangolin CLI is the recommended way to run a client using a command line interface on Mac and Linux.
 
@@ -170,6 +178,77 @@ Replace `{version}` with the desired version and `{architecture}` with your arch
    ```bash
    pangolin up
    ```
+
+<span id="automation-and-machines"></span>
+
+## Automation and Machines
+
+Use this path when the client is a server, CI job, background service, or other non-human workload.
+
+These clients do not log in with a Pangolin account. They connect with:
+
+- `endpoint`
+- `id`
+- `secret`
+
+You can run automation and machine clients with either Pangolin CLI or Olm.
+
+### Pangolin CLI for Automation and Machines
+
+Install Pangolin CLI:
+
+```bash
+curl -fsSL https://static.pangolin.net/get-cli.sh | bash
+```
+
+Start the machine client with its generated credentials:
+
+```bash
+pangolin up --id {client_id} --secret {client_secret} --endpoint {endpoint_url} --attach
+```
+
+`--attach` keeps the process in the foreground, which is useful for validation and debugging.
+
+#### Run as a Service
+
+```ini title="/etc/systemd/system/pangolin-cli.service"
+[Unit]
+Description=Pangolin machine client
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/pangolin up --id {client_id} --secret {client_secret} --endpoint {endpoint_url} --attach
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
+```
+
+#### Run in Docker
+
+```yaml
+services:
+  pangolin-cli:
+    image: fosrl/pangolin-cli:latest
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - PANGOLIN_ENDPOINT=https://app.pangolin.net
+      - CLIENT_ID=your-client-id
+      - CLIENT_SECRET=your-client-secret
+```
+
+#### Common Gotchas
+
+- The client needs permission to create a TUN interface.
+- Containers need `NET_ADMIN` and `/dev/net/tun`.
+- Host networking is usually required for containerized deployments.
+- If connectivity fails, verify the `endpoint`, `id`, and `secret` first.
 
 ## Olm (Advanced)
 
