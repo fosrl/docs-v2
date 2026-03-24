@@ -33,6 +33,26 @@ There are two types of resources: public resources and private resources.
 
 ### Public Resources
 
+<CardGroup cols={3}>
+<Card title="Newt Site" icon="plug" href="/manage/sites/understanding-sites#newt-site-recommended">
+  Supported.
+
+  Best option for most deployments.
+</Card>
+
+<Card title="Local Site" icon="server" href="/manage/sites/understanding-sites#local-site">
+  Supported.
+
+  Use when the resource runs on the same host as your Pangolin server.
+</Card>
+
+<Card title="Basic WireGuard Site" icon="shield" href="/manage/sites/understanding-sites#basic-wireguard-site">
+  Limited support.
+
+  Intended for more manual and advanced setups with feature limitations.
+</Card>
+</CardGroup>
+
 Public resources are protocol-aware and TCP/UDP proxies to services that are made available to the public internet. 
 
 #### HTTPS Resources
@@ -51,7 +71,29 @@ Since these resources are not protocol aware and are publicly proxied, they do n
 
 ### Private Resources
 
+<CardGroup cols={3}>
+<Card title="Newt Site" icon="plug" href="/manage/sites/understanding-sites#newt-site-recommended">
+  Supported.
+
+  Private resources require a Newt site.
+</Card>
+
+<Card title="Local Site" icon="server" href="/manage/sites/understanding-sites#local-site">
+  Not supported.
+
+  Local sites can only host public resources.
+</Card>
+
+<Card title="Basic WireGuard Site" icon="shield" href="/manage/sites/understanding-sites#basic-wireguard-site">
+  Not supported.
+
+  Basic WireGuard sites can only host public resources.
+</Card>
+</CardGroup>
+
 Private resources require users to be connected with Pangolin client in order for them to be accessed. Any TCP and UDP traffic can be made available.
+
+Private resources can only be created on Newt sites.
 
 **Private resources function like a zero-trust virtual private network (VPN).** Explicit access to resources must be granted for users and roles to be able to access them. For this reason, we recommend using private resources for all raw TCP/UDP traffic that doesn't need a public proxy, instead of relying on raw TCP/UDP public resources (as discussed above).
 
