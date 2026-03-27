@@ -22,6 +22,37 @@ Targets function as destination endpoints for your resources:
 3. **Network Access**: Newt proxy routes traffic to the local network through the tunnel
 4. **Direct Connection**: No additional routing is necessary on the remote network
 
+## Additional Proxy Settings
+
+In the public resource **Proxy** tab, Pangolin also provides additional proxy settings for how requests are sent to the upstream target.
+
+### Custom Host Header
+
+Use **Custom Host Header** when the upstream application expects a specific `Host` value instead of the public resource hostname.
+
+This is commonly needed for virtual-hosted backends that route traffic based on `Host`.
+
+### Custom Headers
+
+Use **Custom Headers** to add static headers to every proxied request for the resource.
+
+- Enter one header per line.
+- Use the format `Header-Name: value`.
+- Save the change with **Save Proxy Settings**.
+
+Example:
+
+```text
+X-Example-Header: example-value
+X-Environment: production
+```
+
+Typical uses include upstream shared-secret headers, feature flags, or tenant-routing headers that your application expects on every request.
+
+<Note>
+Custom headers are static resource-level headers. If you need Pangolin to pass user identity to the upstream app, use [Forwarded Headers](/manage/access-control/forwarded-headers) instead.
+</Note>
+
 ## Multi-Site Targets
 
 Targets have sites associated with them. This provides significant benefits for reliability and load distribution described below.
