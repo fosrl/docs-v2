@@ -52,7 +52,7 @@ This gives short-lived, auditable access without long-lived keys on the server.
 
 Users are provisioned **just in time** on the remote system. When you connect, Pangolin ensures an account exists for you with the right permissions before the SSH session starts. Your Pangolin identity is mapped to a local username (derived from the part before `@` in your identity; if needed, a suffix is added for uniqueness). The account is created with a home directory and can be granted sudo access as configured.
 
-## Setup: choose your SSH layout
+## Setup: choose your architecture
 
 Newt can provide SSH access for its own host, for other hosts behind it, or for both at the same time.
 
@@ -68,7 +68,7 @@ Before you begin:
 | **Mixed deployment** | Users need SSH access to the Newt host **and** to other servers behind it | `--auth-daemon --ad-pre-shared-key <pre-shared-key>` |
 
 <Note>
-You do not need to choose a single site-wide SSH mode. A single Newt instance can run its built-in auth daemon for the Newt host and also authenticate external auth daemons for other target hosts.
+You do not need to choose a single site-wide SSH mode. A single Newt instance can handle **On Site** SSH access for the Newt host and also authenticate **Remote Host** SSH access for other target hosts.
 </Note>
 
 ## Understand the model
@@ -146,7 +146,7 @@ Run the auth daemon with the same pre-shared key used on Newt:
 sudo pangolin auth-daemon --pre-shared-key <pre-shared-key>
 ```
 
-To use a non-default port, add `--port <port>`. When you create the dashboard resource later, set the same daemon port in that resource's `SSH Access` settings. If you do not set a custom port, the default is **22123**.
+To use a non-default port, add `--port <port>`. When you create the dashboard resource later, set the same daemon port in that resource's `SSH Access` tab. If you do not set a custom port, the default is **22123**.
 
 #### Run as a systemd service
 
@@ -166,7 +166,7 @@ User=root
 WantedBy=multi-user.target
 ```
 
-Replace `<pre-shared-key>` with the same value used on Newt. If you use a custom port (set in the resource's SSH settings), add `--port <port>` to `ExecStart`. Then:
+Replace `<pre-shared-key>` with the same value used on Newt. If you use a custom port (set in the resource's `SSH Access` tab), add `--port <port>` to `ExecStart`. Then:
 
 ```bash
 sudo systemctl daemon-reload
@@ -195,11 +195,11 @@ sudo systemctl restart ssh
 
 ### Step 3: Ensure network connectivity
 
-- **Newt → auth daemon:** Newt must be able to reach the auth daemon port on each target server (default **TCP 22123**; configurable in the resource's SSH settings and via the auth daemon's `--port` flag).
+- **Newt → auth daemon:** Newt must be able to reach the auth daemon port on each target server (default **TCP 22123**; configurable in the resource's `SSH Access` tab and via the auth daemon's `--port` flag).
 - **Clients → SSH:** Port **22** must be open for SSH to each target server from wherever your users connect.
 
 <Note>
-To change the auth daemon port from the default 22123, configure the same port in the resource's `SSH Access` settings in Pangolin and pass it with `--port` when starting the auth daemon.
+To change the auth daemon port from the default 22123, configure the same port in the resource's `SSH Access` tab in Pangolin and pass it with `--port` when starting the auth daemon.
 The auth-daemon port only needs to be reachable by Newt inside your network. It does not need to be exposed publicly, so restrict it with a firewall or network policy as appropriate for your environment.
 </Note>
 
@@ -209,15 +209,16 @@ After the host-side services are running, create the corresponding private resou
 
 | Resource type | Destination | Recommended alias | SSH access policy |
 |---------------|-------------|-------------------|-------------------|
-| Newt host | Usually `127.0.0.1` or `localhost` on the server running Newt | `ssh.<site>.internal`, for example `ssh.prod.internal` | The policy for the **Newt host / built-in auth daemon** |
-| Host behind Newt | The target server | `<host>.<site>.internal`, for example `db-01.prod.internal` | In `SSH Access`, choose **Remote Host** |
+| Newt host | Usually `127.0.0.1` or `localhost` on the server running Newt | `ssh.<site>.internal`, for example `ssh.prod.internal` | In `SSH Access`, set **SSH Auth Daemon Location** to **On Site** |
+| Host behind Newt | The target server | `<host>.<site>.internal`, for example `db-01.prod.internal` | In `SSH Access`, set **SSH Auth Daemon Location** to **Remote Host** |
 
 For each resource:
 
 1. Set the destination to the IP or FQDN of the correct host. For the Newt host itself, this is typically `127.0.0.1` or `localhost`.
 2. Set an [alias](/manage/resources/private/alias) using the recommended pattern above.
-3. In the resource's SSH settings, choose the SSH access policy that matches that host's backend.
-4. If the resource points to a host behind Newt, open `SSH Access`, set it to **Remote Host**, and set the daemon port to match that host's auth daemon. Use **22123** unless you changed it with `pangolin auth-daemon --port <port>`.
+3. Open the resource's `SSH Access` tab and set **SSH Auth Daemon Location** to match that host:
+   `On Site` for the Newt host, or `Remote Host` for a host behind Newt.
+4. If the resource points to a host behind Newt, set the daemon port to match that host's auth daemon. Use **22123** unless you changed it with `pangolin auth-daemon --port <port>`.
 5. Grant access to the required users or roles.
 6. In port restrictions, allow the host's SSH port: **TCP 22** by default, or a custom SSH port if your server uses one.
 
