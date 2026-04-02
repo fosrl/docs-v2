@@ -205,6 +205,16 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   Newt secret for authentication (equivalent to `--secret`)
 </ResponseField>
 
+<ResponseField name="AUTH_DAEMON_ENABLED" type="boolean">
+  Enable Newt's built-in auth daemon mode (equivalent to `--auth-daemon`).
+
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="AD_KEY" type="string">
+  Pre-shared key used to authenticate external auth daemons to Newt (equivalent to `--ad-pre-shared-key`)
+</ResponseField>
+
 <ResponseField name="PORT" type="integer">
     Port for the peers to connect to Newt on (equivalent to `--port`)
 </ResponseField>
