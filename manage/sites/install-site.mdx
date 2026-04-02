@@ -23,7 +23,11 @@ curl -fsSL https://static.pangolin.net/get-newt.sh | bash
 
 #### Windows
 
-If you would like to use Newt on Windows as a service or with clients, wintun.dll is sometimes required. Please use latest installer from [GitHub releases](https://github.com/fosrl/newt/releases/latest).
+To run Newt on Windows, use the latest installer from [GitHub releases](https://github.com/fosrl/newt/releases/latest).
+
+<Warning>
+If you are using Newt on Windows as a service or with clients, `wintun.dll` may be required.
+</Warning>
 
 ### Manual Download
 
@@ -52,25 +56,66 @@ newt \
 
 ### Systemd Service
 
-Create a basic systemd service:
+Create `/etc/newt/newt.env` with the initial values from your Pangolin site configuration:
+
+```bash title="/etc/newt/newt.env"
+NEWT_ID=31frd0uzbjvp721
+NEWT_SECRET=h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6
+PANGOLIN_ENDPOINT=https://app.pangolin.net
+```
+
+Create the directory, write the file, and restrict its permissions:
+
+```bash
+sudo install -d -m 0755 /etc/newt
+sudo editor /etc/newt/newt.env
+sudo chmod 600 /etc/newt/newt.env
+```
+
+Then create a systemd service. Newt reads those environment variables automatically, so `ExecStart` does not need to repeat them as flags:
 
 ```ini title="/etc/systemd/system/newt.service"
 [Unit]
 Description=Newt
-After=network.target
+Wants=network-online.target
+After=network-online.target
 
 [Service]
-ExecStart=/usr/local/bin/newt --id 31frd0uzbjvp721 --secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 --endpoint https://app.pangolin.net
-Restart=always
+Type=simple
 User=root
+Group=root
+EnvironmentFile=/etc/newt/newt.env
+ExecStart=/usr/local/bin/newt
+Restart=always
+RestartSec=2
+UMask=0077
+
+NoNewPrivileges=true
+PrivateTmp=true
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 <Warning>
-Make sure to move the binary to `/usr/local/bin/newt` before creating the service!
+Make sure the binary exists at `/usr/local/bin/newt` before daemon reload and starting the service:
+
+```bash
+which newt
+```
 </Warning>
+
+Reload systemd and enable the service:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now newt
+sudo systemctl status newt
+```
+
+If you later change `/etc/newt/newt.env`, restart the service so Newt picks up the new values.
+
+See [Configure Sites](/manage/sites/configure-site) for more environment variables.
 
 ## Docker Installation
 
