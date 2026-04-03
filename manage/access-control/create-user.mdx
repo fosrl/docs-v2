@@ -1,13 +1,13 @@
 ---
-title: "Create User"
-description: "Add internal or external users to your organization"
+title: "Users and Roles"
+description: "Add internal or external users to your organization and manage roles"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-
+## Users in Organizations
 
 Users can be added to organizations. When a user is added to Pangolin, there is a global user object and an organization‑specific user object that links that user to the organization. This allows a user to exist in one or more organizations.
 
@@ -28,3 +28,17 @@ An external user is an identity managed by an external identity provider. When c
 An identity provider may have auto‑provisioning enabled. This means new users who log in with the IDP are automatically created and you do not need to manually create the user. [Check out the auto‑provisioning documentation](/manage/identity-providers/auto-provisioning).
 
 Even if auto‑provisioning is enabled, you can still manually create users.
+
+## Roles
+
+Roles are how you group users in an organization. A user can belong to more than one role, for example Member, Admin, Contractor, Operations, or any custom roles you define. You use roles with RBAC on resources so access follows those groups: only Operations might reach production resources, while only Contractors might reach test environments, and so on.
+
+On each resource, you define which roles are allowed to access it. A user’s effective access is the union of all resources their roles can reach: they can use any resource that at least one of their assigned roles is permitted to access.
+
+You can create as many custom roles as you need in Pangolin. Each role has a name and a description. The name is the display label and also acts as the unique identifier, so two roles cannot share the exact same name.
+
+To change which roles a user has, open that user’s settings and select the roles they should belong to.
+
+<Note>
+	Assigning more than one role to a user is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition). In other editions, only one role per user is supported.
+</Note>
