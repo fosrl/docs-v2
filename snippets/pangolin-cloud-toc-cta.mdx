@@ -1,10 +1,32 @@
+export const PangolinCloudTocCtaCard = ({
+  title = "Get started for free on Pangolin Cloud",
+  body = "Fastest way to get started with Pangolin using the hosted control plane. No credit card required.",
+  cta = "Sign up now",
+  href,
+  utmMedium = "toc_cta",
+  utmCampaign = "cloud_positioning",
+  utmContent = "global_toc",
+}) => (
+  <div id="pangolin-toc-cta" className="pangolin-toc-cta-source">
+    <Card
+      title={title}
+      icon="cloud"
+      href={href || `https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=${utmMedium}&utm_campaign=${utmCampaign}&utm_content=${utmContent}`}
+      arrow="true"
+      cta={cta}
+    >
+      {body}
+    </Card>
+  </div>
+);
+
 <div id="pangolin-toc-cta" className="pangolin-toc-cta-source">
   <Card
-    title="Try free on Pangolin Cloud"
+    title="Get started for free on Pangolin Cloud"
     icon="cloud"
-    href="https://app.pangolin.net/auth/signup"
+    href="https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=toc_cta&utm_campaign=cloud_positioning&utm_content=global_toc"
     arrow="true"
-    cta="Sign up free"
+    cta="Sign up now"
   >
     Fastest way to get started with Pangolin using the hosted control plane. No credit card required.
   </Card>

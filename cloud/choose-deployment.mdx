@@ -1,0 +1,83 @@
+---
+title: "Choose a Deployment Model"
+description: "Compare Pangolin Cloud, Cloud with Remote Nodes, and self-hosted Pangolin"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Pangolin supports more than one deployment model. The right choice depends on how much infrastructure you want to operate yourself and where you want the data plane to live.
+
+## Where Most Users Should Start
+
+For most users, start with **Pangolin Cloud**. It is the fastest way to deploy Pangolin and the lowest-maintenance option. If you later need more control over traffic flow or infrastructure placement, add **Remote Nodes** without giving up the hosted control plane.
+
+## What Actually Changes Between Options
+
+The biggest differences are:
+
+- Where the control plane lives
+- Where traffic and SSL termination happen
+- How much day-to-day infrastructure you operate
+- How quickly you can onboard users and publish resources
+- Whether you want a managed path now with the option to add more control later
+
+## Comparison
+
+| Option | Control plane | Traffic and SSL termination | Operational overhead | Best fit |
+| --- | --- | --- | --- | --- |
+| **Pangolin Cloud** | Hosted by Pangolin | Managed through Pangolin Cloud paths | Lowest | Fastest start and least maintenance |
+| **Cloud + Remote Nodes** | Hosted by Pangolin | Runs on infrastructure you control | Medium | Hybrid control without full self-hosting |
+| **Self-hosted Community** | Runs on infrastructure you control | Runs on infrastructure you control | Highest | Open-source, fully self-managed deployments |
+| **Self-hosted Enterprise** | Runs on infrastructure you control | Runs on infrastructure you control | Highest | Fully self-managed deployments that need Enterprise capabilities |
+
+## When to Choose Each Option
+
+### Choose Pangolin Cloud
+
+- You want to start quickly
+- You do not want to operate the full control plane
+- You want a simple path to onboarding users and publishing resources
+- You want the option to add higher-tier Cloud capabilities later without changing deployment models
+
+### Choose Cloud with Remote Nodes
+
+- You want to keep tunnels and SSL termination on infrastructure you control
+- You want a hybrid deployment model with less operational overhead than full self-hosting
+- You want to add regional nodes for redundancy or lower latency
+
+### Choose Self-hosted Pangolin
+
+- You need a fully isolated deployment
+- You are comfortable managing upgrades, backups, and networking yourself
+- You specifically want Community Edition or Enterprise Edition as a self-managed stack
+
+## Questions to Ask Before You Decide
+
+Ask these in order:
+
+1. Do you want to operate the control plane yourself?
+2. Do you need traffic and SSL termination to stay on your own servers?
+3. Do you want the fastest path to onboarding users and exposing services?
+4. Will you actually maintain upgrades, backups, and operational hygiene over time?
+
+If the answer to the first question is `no`, start with **Pangolin Cloud**.
+
+If the answer to the first question is `no` and the second is `yes`, start with **Cloud + Remote Nodes**.
+
+If the answer to the first question is `yes`, decide between **Self-hosted Community** and **Self-hosted Enterprise** based on the feature set and support model you need.
+
+## Start Here
+
+<CardGroup cols={3}>
+  <Card title="Start with Cloud" icon="cloud" href="/cloud/getting-started">
+    Follow the recommended Cloud onboarding path.
+  </Card>
+  <Card title="Understand Remote Nodes" icon="circle-nodes" href="/manage/remote-node/understanding-nodes">
+    Learn how the hybrid deployment model works.
+  </Card>
+  <Card title="Self-host Quick Install" icon="server" href="/self-host/quick-install">
+    Go straight to the self-hosted installer if you already know you want full control.
+  </Card>
+</CardGroup>

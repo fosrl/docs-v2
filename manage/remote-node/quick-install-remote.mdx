@@ -3,17 +3,25 @@ title: "Quick Install Guide"
 description: "Deploy your own remote Pangolin node in under 10 minutes with our automated installer"
 ---
 
-import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+import { PangolinCloudTocCtaCard } from "/snippets/pangolin-cloud-toc-cta.mdx";
 
-<PangolinCloudTocCta />
+<PangolinCloudTocCtaCard
+  title="Create a Cloud Account"
+  body="Start with Pangolin Cloud before you deploy your first remote node."
+  utmContent="remote_node_install"
+/>
 
 
+
+This is the recommended deployment path if you want the Pangolin Cloud control plane but prefer tunnels, SSL termination, and traffic handling on infrastructure you control.
+
+Read the [Remote Nodes overview](/manage/remote-node/understanding-nodes) first if you are still deciding how much of Pangolin you want to manage yourself.
 
 ## Prerequisites
 
 Before you begin, ensure you have:
 
-- **Pangolin Cloud** account. You can [create a free account here](https://app.pangolin.net/auth/signup). No subscription required.
+- **Pangolin Cloud** account. You can [create a free account here](https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=prerequisite_link&utm_campaign=cloud_positioning&utm_content=remote_node_install_prereq). No subscription required.
 - **Linux server** with root access and public IP address.
 - **Open ports on firewall** for 80 (TCP), 443 (TCP), 51820 (UDP), and 21820 (UDP for clients).
 
@@ -54,7 +62,7 @@ Before installing Pangolin, ensure you've opened the required port on your firew
 
 <Step title="Do you already have credentials from the dashboard?">
 
-If you are on your game and have already generated credentials for this node in the dashboard enter them here.
+If you already generated credentials for this node in the dashboard, enter them here.
 
 <Tip>
 If you don't have them yet you can just select no when asked and we will create it in a later step.
@@ -67,7 +75,7 @@ If you don't have them yet you can just select no when asked and we will create 
     Enter either the public IP address of your server or a domain name that resolves to it. 
 
     <Note>
-      The installer will attempt resolve and prefill your public IP address. Verify this is correct before preceding.
+      The installer will attempt to resolve and prefill your public IP address. Verify that this is correct before proceeding.
     </Note>
 
     <Warning>
@@ -104,6 +112,20 @@ Once installation completes successfully, you'll see:
 Installation complete!
 ```
 
-Navigate to the [Pangolin dashboard](https://app.pangolin.net/) and create sites, resources, and targets for your remote node.
+Log in to the [Pangolin dashboard](https://app.pangolin.net/) and start attaching sites, resources, and targets to the node.
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Configure Sites" icon="plug" href="/manage/sites/configure-site">
+    Connect your environments and finish the site-side setup for your node.
+  </Card>
+  <Card title="Understand Resources" icon="link" href="/manage/resources/understanding-resources">
+    Decide what should be exposed through the node and how users should reach it.
+  </Card>
+  <Card title="Configure Domains" icon="globe" href="/manage/domains">
+    Add Pangolin-managed or custom domains when you are ready to publish resources.
+  </Card>
+</CardGroup>
 
 {/* ## Video Walkthrough */}

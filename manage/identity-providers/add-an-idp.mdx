@@ -3,9 +3,13 @@ title: "Add Identity Providers"
 description: "Configure external identity providers for user authentication to resources and the organization"
 ---
 
-import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+import { PangolinCloudTocCtaCard } from "/snippets/pangolin-cloud-toc-cta.mdx";
 
-<PangolinCloudTocCta />
+<PangolinCloudTocCtaCard
+  title="Set Up SSO with Pangolin Cloud"
+  body="Connect Google, Azure Entra ID, or OIDC providers and give users a smoother sign-in experience."
+  utmContent="identity_providers"
+/>
 
 
 
@@ -30,8 +34,12 @@ Here is an example using Microsoft Azure Entra ID as SSO for Pangolin:
 Organization identity providers are configured per organization and only apply to that specific organization. Each org can have its own identity providers, allowing for authentication methods based on the organization's needs.
 
 <Note>
-	Available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition). For [Enterprise Edition](/self-host/enterprise-edition), you must set `app.identity_provider_mode: "org"` in the [private config file](/self-host/advanced/private-config-file#param-identity-provider-mode) `privateConfig.yml`.
+	Available in [Pangolin Cloud](https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=availability_note&utm_campaign=cloud_positioning&utm_content=identity_providers_org) and [Enterprise Edition](/self-host/enterprise-edition). For [Enterprise Edition](/self-host/enterprise-edition), you must set `app.identity_provider_mode: "org"` in the [private config file](/self-host/advanced/private-config-file#param-identity-provider-mode) `privateConfig.yml`.
 </Note>
+
+<Tip>
+	For most teams, Pangolin Cloud is the lower-maintenance option for organization identity providers. Use Enterprise Edition here when you specifically need a fully self-hosted deployment.
+</Tip>
 
 ### Global Identity Providers
 
@@ -55,7 +63,7 @@ This can be used to connect to any external identity provider that supports the 
 ### Google
 
 <Note>
-Google IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
+Google IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=availability_note&utm_campaign=cloud_positioning&utm_content=identity_providers_google) or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
 </Note>
 
 Easily set up Google Workspace authentication for your organization. Users can sign in with their Google accounts and access Pangolin resources using their existing Google credentials. Perfect for organizations already using Google Workspace for email, calendar, and other services.
@@ -63,7 +71,7 @@ Easily set up Google Workspace authentication for your organization. Users can s
 ### Azure Entra ID
 
 <Note>
-Azure Entra ID IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
+Azure Entra ID IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup?utm_source=docs&utm_medium=availability_note&utm_campaign=cloud_positioning&utm_content=identity_providers_azure) or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
 </Note>
 
 Integrate with Microsoft's enterprise identity platform to allow users to authenticate using their Azure Active Directory accounts. Ideal for organizations using Microsoft 365 or other Azure services, providing seamless single sign-on across your Microsoft ecosystem.
