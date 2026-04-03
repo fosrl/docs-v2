@@ -1,0 +1,118 @@
+---
+title: "Site Provisioning Keys"
+description: "Use long-lived provisioning tokens to bootstrap Pangolin sites at scale without pre-creating ID-secret pairs for every host"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+## Why provisioning keys exist
+
+As described in [Site credentials](/manage/sites/credentials), each Pangolin site authenticates with an ID and secret (random strings you get when a site is first created) plus an endpoint pointing at your Pangolin server. That model is simple for a handful of sites, but it breaks down quickly when you must issue and distribute unique credentials for many machines.
+
+**IoT and edge fleets** are the classic case: hundreds or thousands of devices each need their own site identity. Before provisioning keys, you typically scripted against the API to mint an ID-secret pair per device, then pushed those secrets through your device-management or OTA layer so each unit could connect. That works, but it multiplies secret-handling paths and makes rotation and auditing harder.
+
+The same friction shows up in other scenarios:
+
+- **Golden images and OS images**: You want one trusted image (or cloud-init payload) shared across a class of machines, not a unique secret baked into every build artifact. A single provisioning key in the image, or injected at first boot, lets each instance obtain its own credentials the first time Newt starts.
+- **Scripted and CI-driven installs**: Ansible, Terraform, cloud-init, or installer scripts can drop the same provisioning key everywhere (or fetch it from a vault once) instead of coordinating “create site N, copy credentials to host N” for every node.
+- **Developer and lab environments**: Spin up VMs or containers repeatedly without clicking through the dashboard for each site; tear them down and provision again with bounded keys (usage limits and expiry; see below).
+- **MSP and multi-customer rollouts**: Standardize your onboarding bundle (endpoint + provisioning key + blueprint) while still giving each customer site isolated credentials after exchange.
+
+With **provisioning keys**, you create one long-lived token in Pangolin, embed it in your image or distribute it with a single script, and each Newt instance exchanges that token for its own [site ID and secret](/manage/sites/credentials) on first connect.
+
+## How provisioning works
+
+Put the provisioning key in a **JSON config file** with a `provisioningKey` field (the value is the key string from Pangolin, often shown with an `spk` prefix). Point Newt at that file with **`--config-file`**, for example:
+
+```bash
+newt --config-file /var/newt.json
+```
+
+A minimal file might only set **`endpoint`** and **`provisioningKey`** until the exchange completes; afterward the same file holds **`id`** and **`secret`** instead of the key. Other Newt options are documented on [Configure Sites](/manage/sites/configure-site).
+
+```json
+{
+  "endpoint": "https://app.pangolin.net",
+  "provisioningKey": "spk_..."
+}
+```
+
+When Newt contacts Pangolin and exchanges the provisioning key for a device-specific ID and secret, it updates the same config file: the provisioning key entry is removed and replaced with the new credentials. After a successful provision, the provisioning key is no longer on the host; only the normal site ID and secret remain for future connections.
+
+From there Newt authenticates over the websocket, optionally **applies declarative YAML** if you configured a blueprint, then brings the tunnel online. The high-level sequence is summarized below.
+
+<Frame>
+  <img src="/images/site-provisioning-flow.png" alt="Flow: provision with pre-shared key, exchange for ID and secret, apply YAML, pending approval, admin approves" centered />
+</Frame>
+
+<Note>
+[Pangolin Blueprints](/manage/blueprints) are not required when using provisioning keys. You can provision with the key only and manage resources in the dashboard afterward. Blueprints are optional but convenient when you want resources and settings created automatically from YAML as soon as the site connects.
+</Note>
+
+If you do use blueprints together with provisioning keys, you get a repeatable pattern for large fleets: one key (with appropriate limits), a blueprint file or embedded config, and optional environment-specific values so each host gets distinct resource names or domains without maintaining separate YAML per device.
+
+### Blueprint example and environment templating
+
+Blueprints can reference environment variables using `{{env.VARIABLE_NAME}}` syntax. At apply time, those placeholders are filled from the process environment running Newt (for example a serial number, hostname, or customer slug exported before start). That lets one blueprint drive many sites: each host sets `SERIAL_NUMBER`, `CUSTOMER_ID`, or similar, and the resolved YAML defines unique site names, domains, or role assignments.
+
+Below, `{{env.SERIAL_NUMBER}}` ties the private resource’s site field and the public resource’s hostname to the same per-device identity:
+
+```yaml
+private-resources:
+  ssh-resource:
+    name: SSH Server
+    mode: host
+    destination: localhost
+    site: "{{env.SERIAL_NUMBER}}-site"
+    tcp-ports: "22,3389"
+    udp-ports: "*"
+    disable-icmp: false
+    roles:
+      - Customer1
+      - DevOps
+    users:
+      - user@example.com
+public-resources:
+  secure-resource:
+    name: Web Resource
+    protocol: http
+    full-domain: "{{env.SERIAL_NUMBER}}.example.com"
+    auth:
+      sso-enabled: true
+      sso-roles:
+        - Member
+        - Admin
+      sso-users:
+        - user@example.com
+```
+
+Use whatever variables match your deployment (for example asset tags or cloud instance IDs). Ensure those variables are set in the environment where Newt runs before it applies the blueprint. For more on blueprint structure and applying YAML from Newt, see the [Blueprints](/manage/blueprints) documentation.
+
+### Optional site name (`--name`)
+
+You can pass `--name` to Newt when provisioning so the new site gets a specific name. If you omit it, Pangolin assigns a random animal-based name, which you can change later in the dashboard. Predictable names via `--name` help when your automation or blueprint references the site by a stable label.
+
+## Limits, expiry, and security model
+
+Provisioning keys support a maximum usage count and an expiration time. For example, to roll out 250 devices over a week, set max usage to `250` and expiry to one week. When either limit is reached, the key becomes inactive and the server rejects further exchange attempts.
+
+<Tip>
+Provisioning keys are not API keys. They cannot authorize arbitrary Pangolin API calls; they exist only to bootstrap sites through the provisioning exchange.
+</Tip>
+
+## Creating a key and pending approval
+
+In the Pangolin admin UI, create a provisioning key from the provisioning settings (including usage and expiration as needed). The flow is illustrated below.
+
+<Frame>
+  <img src="/images/create-provisioning-key.png" alt="Create a provisioning key in the Pangolin dashboard" centered />
+</Frame>
+
+Optionally, sites provisioned with a key can be placed into a pending state. They appear under the Pending Sites tab on the provisioning page so administrators can review new sites and approve them before they are treated as fully active in production.
+
+<Frame>
+  <img src="/images/pending-sites.png" alt="Pending sites listed for admin review" centered />
+</Frame>
+

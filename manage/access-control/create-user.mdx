@@ -12,10 +12,14 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 Users can be added to organizations. When a user is added to Pangolin, there is a global user object and an organization‑specific user object that links that user to the organization. This allows a user to exist in one or more organizations.
 
 <Tip>
-Because the root user exists and a per‑organization user exists, a user invited to an organization may be able to create a new organization. You can disable this functionality via a flag in the config file in self‑hosted Pangolin. [Check out the config file documentation](/self-host/advanced/config-file#feature-flags).
+Because the global user exists and a per‑organization user exists, a user invited to an organization may be able to create a new organization. You can disable this functionality via a flag in the config file in self‑hosted Pangolin. [Check out the config file documentation](/self-host/advanced/config-file#feature-flags).
 </Tip>
 
 When removing a user from an organization, their account still exists. To completely delete their account, visit the server admin panel as the server admin and delete the global user in the users table.
+
+<Frame>
+  <img src="/images/users-table.png" centered/>
+</Frame>
 
 ### Internal Users
 
