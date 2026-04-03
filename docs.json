@@ -69,6 +69,7 @@
                                     }
                                 ]
                             },
+                            "manage/access-control/links",
                             {
                                 "group": "Clients",
                                 "icon": "desktop",
