@@ -128,7 +128,8 @@
                                     "manage/analytics/request",
                                     "manage/analytics/access",
                                     "manage/analytics/connection",
-                                    "manage/analytics/action"
+                                    "manage/analytics/action",
+                                    "manage/analytics/streaming"
                                 ]
                             },
                             "manage/blueprints",
