@@ -7,8 +7,6 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-
-
 Identity providers allow your users to log into Pangolin and Pangolin resources using their existing accounts from external identity systems like Google, Microsoft Azure, or Okta. Instead of creating separate Pangolin accounts, users can authenticate with their familiar work or personal credentials.
 
 Here is an example using Microsoft Azure Entra ID as SSO for Pangolin:
@@ -18,6 +16,10 @@ Here is an example using Microsoft Azure Entra ID as SSO for Pangolin:
 - You want to centralize user management and avoid maintaining separate Pangolin accounts
 - You need to control who can access Pangolin resources through your existing user directory
 - You want users to access Pangolin using their existing credentials without creating new passwords
+
+<Note>
+	Assigning more than one role per user is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
 
 <Frame>
   <img src="/images/create-idp.png" />
@@ -29,6 +31,8 @@ Here is an example using Microsoft Azure Entra ID as SSO for Pangolin:
 
 Organization identity providers are configured per organization and only apply to that specific organization. Each org can have its own identity providers, allowing for authentication methods based on the organization's needs.
 
+Organization only identity providers appear only on the organization login page.
+
 <Note>
 	Available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition). For [Enterprise Edition](/self-host/enterprise-edition), you must set `app.identity_provider_mode: "org"` in the [private config file](/self-host/advanced/private-config-file#param-identity-provider-mode) `privateConfig.yml`.
 </Note>
@@ -36,6 +40,8 @@ Organization identity providers are configured per organization and only apply t
 ### Global Identity Providers
 
 Global identity providers are managed at the server level and not the individual organization. They can apply to all or some organizations on the server. This means you must define policies per organization to map users to specific organizations and roles within those organizations. 
+
+Global identity providers appear on the global server login page.
 
 <Tip>
 	Global identity providers are the only supported method in Pangolin Community.
@@ -55,7 +61,7 @@ This can be used to connect to any external identity provider that supports the 
 ### Google
 
 <Note>
-Google IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
+Google IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition).
 </Note>
 
 Easily set up Google Workspace authentication for your organization. Users can sign in with their Google accounts and access Pangolin resources using their existing Google credentials. Perfect for organizations already using Google Workspace for email, calendar, and other services.
@@ -63,7 +69,7 @@ Easily set up Google Workspace authentication for your organization. Users can s
 ### Azure Entra ID
 
 <Note>
-Azure Entra ID IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition) with organization identity providers. See above to enable.
+Azure Entra ID IdP is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition).
 </Note>
 
 Integrate with Microsoft's enterprise identity platform to allow users to authenticate using their Azure Active Directory accounts. Ideal for organizations using Microsoft 365 or other Azure services, providing seamless single sign-on across your Microsoft ecosystem.
@@ -90,7 +96,7 @@ When using global IDPs, identity providers are created and managed via the Serve
 <Step title="Set up Auto Provisioning (Optional)">
   Select the "Auto Provision Users" checkbox to automatically provision users and assign roles in Pangolin when they log in using an external identity provider. See [Auto Provision](/manage/identity-providers/auto-provisioning) for more information.
   
-  If this is disabled, you will need to pre-provision a user in Pangolin before they can log in using an external identity provider.
+  If this is disabled, you will need to pre-provision a user in Pangolin before they can log in using an external identity provider. Pre-provision means creating a user in Pangolin with a role and organization before they log in using an external identity provider.
 </Step>
 
 <Step title="Configure Settings">

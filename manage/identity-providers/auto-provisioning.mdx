@@ -7,9 +7,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-
-
-Auto provisioning is a feature that allows you to automatically create and manage user accounts in Pangolin when they log in using an external identity provider rather than pre-provisioning a user with a role. This is useful for organizations that want to streamline the onboarding process for new users and ensure that their user accounts are always up-to-date.
+Auto provisioning is a feature that allows you to automatically create and manage user accounts in Pangolin when they log in using an external identity provider rather than pre-provisioning (manually creating) a user with a role and organization. This is useful for organizations that want to streamline the onboarding process for new users and ensure that their user accounts are always up-to-date.
 
 You will be able to programmatically decide the roles and organizations for new users based on the information provided by the identity provider.
 
@@ -18,7 +16,7 @@ You will be able to programmatically decide the roles and organizations for new 
 Toggle the "Auth Provision Users" switch when creating or editing an identity provider.
 
 <Frame>
-  <img src="/images/auto-provision.png" />
+  <img src="/images/mapping-builder.png" />
 </Frame>
 
 ## What if Auto Provisioning is Disabled?
@@ -29,34 +27,58 @@ If auto provision is disabled, organization admins will need to manually create 
   <img src="/images/create-idp-user.png" />
 </Frame>
 
-## Configuration Options
+## Role mappings
 
-## Selecting Roles
+When you configure role mappings in auto provisioning settings, you use one of three approaches: fixed roles, mapping builder, or raw expression. These options are available for global identity providers and for organization-only identity providers.
 
-You can choose between "Select a Role" and "Expression". Selecting a role will apply that role to all auto provisioned users. The expression will be evaluated against the token response from the IdP on each login (see examples below). You can always manually change the role of the user after they're provisioned.
+<Note>
+  Auto provisioning does not create roles in Pangolin. Every role you assign whether you pick fixed roles, map IdP values in the builder, or return names from a raw expression must already exist in the target organization, and the name you use must match that role’s name exactly (character-for-character). This one-to-one name match applies to all three mapping types. If a name does not match an existing role, the user will not receive that role (and may not be added to the organization, depending on your setup).
+</Note>
 
-### Expressions
+### Fixed roles
 
-Use JMESPath to map attributes from the identity provider to roles in Pangolin. See [JMESPath](https://jmespath.org/) for more information on how to use JMESPath.
+Fixed roles is the simplest option. Every user who signs in through the identity provider receives the same set of roles. The roles you select must already exist in Pangolin, and you must choose them by their exact names in that organization. Use this when you do not need dynamic mapping and a single role assignment for everyone is enough. You can still change roles on individual users after they have been auto-provisioned. This is the easiest way to get started.
 
-The expression will be matched against each organization. Meaning:
+<Frame>
+  <img src="/images/fixed-roles.png" />
+</Frame>
 
-- The result of the expression must return the exact string of the role name as it is defined in the organization.
-- If no matching role is found, the user will not be added to the organization.
+### Mapping builder
 
-### Example: Role Selection 
+The mapping builder lets you map roles from your identity provider to Pangolin roles without writing expressions. For example, a user might sign in from Azure and belong to several groups there. Azure identifies those groups with its own internal ID strings. With the mapping builder, you translate those IDs to Pangolin role names in the UI.
+
+First, choose the claim in the OIDC token where roles or groups are provided such as `groups`. Then define a one-to-one mapping for each role: on one side, the role or group ID from the identity provider; on the other, the Pangolin role name that already exists in the organization. The Pangolin side must match that role’s name exactly (same spelling, spacing, and casing).
+
+<Frame>
+  <img src="/images/mapping-builder.png" />
+</Frame>
+
+### Raw expression
+
+Raw expression is the most flexible option and the most complex. It matches how many users previously defined mappings in Pangolin. You provide a [JMESPath](https://jmespath.org/) expression that must evaluate to a string or array of strings. Each value must be the exact name of a role that already exists in the organization. If you can express the logic in JMESPath, it will work (for example, combining conditions on name, email, and other claims).
+
+The expression is evaluated against the token from the identity provider on each login. Results are matched per organization:
+
+- Each returned string must be the exact name of a role that already exists in that organization (same rules as fixed roles and the mapping builder).
+- If no matching role is found for the resolved names, the user is not added to the organization.
+
+<Frame>
+  <img src="/images/raw-expression.png" />
+</Frame>
+
+#### Raw Expression Example: JMESPath role selection
 
 **Expression:**
 
 <Note>
-When entering in a string, JMESPatch requires it be surrounded by `'` (single quotes). See below:
+When entering a string literal in JMESPath, surround it with `'` (single quotes), as in the example below.
 </Note>
 
 ```
 contains(groups, 'admin') && 'Admin' || 'Member'
 ```
 
-**Identity Provider Data:**
+**Identity provider token (excerpt):**
 ```json
 {
    ...
@@ -75,11 +97,11 @@ contains(groups, 'admin') && 'Admin' || 'Member'
 }
 ```
 
-This example will return the string "Admin". If the user is not a member of the "admin" group, it will return "Member".
+This expression returns `"Admin"` when the user is in the `admin` group, and `"Member"` otherwise.
 
 ## Global Identity Providers
 
-After you create an IdP, on the edit page, you can manage organization policies via the "Organization Policies" tab. You can set default (fallback) policies, or define them on a per org basis.
+After you create a global IdP, on the edit page you can manage organization policies from the Auto Provisioning tab. You can set a default (fallback) role mapping and organization rules, and you can add per-organization mappings that override or extend behavior for specific organizations. The fixed roles, mapping builder, and raw expression options apply both here (default and per org) and in organization-only identity providers.
 
 ### How Organization Policies Are Evaluated
 
@@ -95,17 +117,17 @@ It is helpful to think of the auto provisioning process as follows:
 </Step>
 
 <Step title="Organization Evaluation">
-  Pangolin will loop through each organization and evaluate the JMESPath expression for the organization. If the expression does not return true or the same ID as the current organization, the user will not be added to the organization.
+  Pangolin loops through each organization and evaluates the JMESPath expression for organization membership. If the expression does not return true or the same ID as the current organization, the user will not be added to the organization.
 </Step>
 
 <Step title="Role Assignment">
-  For each organization, Pangolin will evaluate the JMESPath expression for the role. If no role is found with the exact name in that organization, the user will not be added to the organization.
+  For each organization, Pangolin applies the configured role mapping (fixed roles, mapping builder, or raw expression). Resolved names must match existing Pangolin roles exactly; otherwise those assignments do not apply, and the user may not be added to the organization.
 </Step>
 </Steps>
 
-### Selecting Roles
+### Role mappings for global IdPs
 
-See above examples.
+Use a default policy, per-organization policies, or both. Role mapping options (fixed roles, mapping builder, raw expression) work the same way as described in [Role mappings](#role-mappings).
  
 ### Selecting Organizations
 
@@ -149,7 +171,7 @@ This example will return true since the user is a member of the "home-lab" group
 ### Example 2: Fixed Organization
 
 <Note>
-When entering in a string, JMESPatch requires it be surrounded by `'` (single quotes). See below:
+When entering a string literal in JMESPath, surround it with `'` (single quotes). See below:
 </Note>
 
 **Expression:**
