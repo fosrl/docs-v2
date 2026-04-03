@@ -1,0 +1,59 @@
+---
+title: "Connection Logs"
+description: "Connection logs are a record of TCP and UDP sessions between Pangolin clients and private site resources"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Connection logs record each TCP and UDP session that traverses the tunnel between Pangolin clients and resources on your sites. They apply to private resources reached through the Pangolin client (and related tunnel traffic), not to public resources served only through the reverse proxy. You can see which clients and users opened sessions to which private resources, the source and destination addresses and protocols (TCP and UDP), the start and end times of the sessions, and more.
+
+<Note>
+Connection logs are only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+## What are Connection Logs?
+
+Connection logs capture tunnel sessions from clients to private resources. They are useful for:
+
+- Observing which clients and users opened sessions to which private resources
+- Reviewing source and destination addresses and protocols (TCP and UDP)
+- Measuring traffic volume with transmitted and received byte counts
+- Auditing session start and end times for troubleshooting and compliance
+
+
+<Tip>Make sure to enable connection logging in the org settings</Tip>
+
+## Connection Log Fields
+
+Each connection log entry contains the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | number | Unique identifier for the log row |
+| `sessionId` | string | Identifier for the tunnel session |
+| `siteResourceId` | number \| null | The private [site resource](/manage/resources/understanding-resources) associated with the session (foreign key to `siteResources`) |
+| `orgId` | string \| null | Organization ID |
+| `siteId` | number \| null | Site ID |
+| `clientId` | number \| null | Pangolin client ID |
+| `userId` | string \| null | User ID, when the session is tied to a user |
+| `sourceAddr` | string | Source address for the session (for example client-side endpoint) |
+| `destAddr` | string | Destination address for the session (for example resource-side endpoint) |
+| `protocol` | string | Transport protocol (for example `tcp` or `udp`) |
+| `startedAt` | number | Unix timestamp when the session started |
+| `endedAt` | number \| null | Unix timestamp when the session ended, if the session has closed |
+| `bytesTx` | number \| null | Bytes transmitted in the session |
+| `bytesRx` | number \| null | Bytes received in the session |
+
+## Log Retention
+
+Connection log retention is controlled by the organization setting. By default, connection logs are retained for 0 days (disabled).
+
+<Note>
+Connection logs can generate significant data volume depending on session churn and traffic. Consider your storage capacity when configuring retention periods.
+</Note>
+
+## Exporting
+
+Logs can be exported into CSV format for external analysis and archival. Logs can be exported from the table view in the Pangolin dashboard or via the Pangolin API. When exporting, you can specify date ranges and filters to narrow down the logs you need.

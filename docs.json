@@ -128,6 +128,7 @@
                                 "pages": [
                                     "manage/analytics/request",
                                     "manage/analytics/access",
+                                    "manage/analytics/connection",
                                     "manage/analytics/action"
                                 ]
                             },
