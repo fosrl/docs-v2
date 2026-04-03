@@ -20,17 +20,17 @@ The same friction shows up in other scenarios:
 - **Developer and lab environments**: Spin up VMs or containers repeatedly without clicking through the dashboard for each site; tear them down and provision again with bounded keys (usage limits and expiry; see below).
 - **MSP and multi-customer rollouts**: Standardize your onboarding bundle (endpoint + provisioning key + blueprint) while still giving each customer site isolated credentials after exchange.
 
-With **provisioning keys**, you create one long-lived token in Pangolin, embed it in your image or distribute it with a single script, and each Newt instance exchanges that token for its own [site ID and secret](/manage/sites/credentials) on first connect.
+With provisioning keys, you create one long-lived token in Pangolin, embed it in your image or distribute it with a single script, and each Newt instance exchanges that token for its own [site ID and secret](/manage/sites/credentials) on first connect.
 
 ## How provisioning works
 
-Put the provisioning key in a **JSON config file** with a `provisioningKey` field (the value is the key string from Pangolin, often shown with an `spk` prefix). Point Newt at that file with **`--config-file`**, for example:
+Put the provisioning key in a JSON config file with a `provisioningKey` field (the value is the key string from Pangolin, often shown with an `spk` prefix). Point Newt at that file with `--config-file`, for example:
 
 ```bash
 newt --config-file /var/newt.json
 ```
 
-A minimal file might only set **`endpoint`** and **`provisioningKey`** until the exchange completes; afterward the same file holds **`id`** and **`secret`** instead of the key. Other Newt options are documented on [Configure Sites](/manage/sites/configure-site).
+A minimal file might only set `endpoint` and `provisioningKey` until the exchange completes; afterward the same file holds `id` and `secret` instead of the key. Other Newt options are documented on [Configure Sites](/manage/sites/configure-site).
 
 ```json
 {
@@ -41,7 +41,7 @@ A minimal file might only set **`endpoint`** and **`provisioningKey`** until the
 
 When Newt contacts Pangolin and exchanges the provisioning key for a device-specific ID and secret, it updates the same config file: the provisioning key entry is removed and replaced with the new credentials. After a successful provision, the provisioning key is no longer on the host; only the normal site ID and secret remain for future connections.
 
-From there Newt authenticates over the websocket, optionally **applies declarative YAML** if you configured a blueprint, then brings the tunnel online. The high-level sequence is summarized below.
+From there Newt authenticates over the websocket, optionally applies declarative YAML if you configured a blueprint, then brings the tunnel online. The high-level sequence is summarized below.
 
 <Frame>
   <img src="/images/site-provisioning-flow.png" alt="Flow: provision with pre-shared key, exchange for ID and secret, apply YAML, pending approval, admin approves" centered />

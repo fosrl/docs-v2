@@ -31,18 +31,14 @@ Each connection log entry contains the following fields:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `id` | number | Unique identifier for the log row |
-| `sessionId` | string | Identifier for the tunnel session |
-| `siteResourceId` | number \| null | The private [site resource](/manage/resources/understanding-resources) associated with the session (foreign key to `siteResources`) |
-| `orgId` | string \| null | Organization ID |
-| `siteId` | number \| null | Site ID |
-| `clientId` | number \| null | Pangolin client ID |
-| `userId` | string \| null | User ID, when the session is tied to a user |
-| `sourceAddr` | string | Source address for the session (for example client-side endpoint) |
-| `destAddr` | string | Destination address for the session (for example resource-side endpoint) |
-| `protocol` | string | Transport protocol (for example `tcp` or `udp`) |
-| `startedAt` | number | Unix timestamp when the session started |
-| `endedAt` | number \| null | Unix timestamp when the session ended, if the session has closed |
+| `timestamp` | number | Unix timestamp (in seconds) when the session started |
+| `protocol` | string | Transport protocol for the session (`tcp` or `udp`) |
+| `siteResourceId` | number \| null | The ID of the [private resource](/manage/resources/understanding-resources) for the session (if applicable) |
+| `clientId` | number \| null | The Pangolin [client ID](/manage/clients/understanding-clients) for the session |
+| `userId` | string \| null | The user ID when the session is tied to an authenticated user |
+| `sourceAddr` | string | Source address for the session (typically the client-side endpoint) |
+| `destAddr` | string | Destination address for the session (typically the resource-side endpoint) |
+| `duration` | number \| null | How long the session lasted (in seconds), when the session has ended |
 | `bytesTx` | number \| null | Bytes transmitted in the session |
 | `bytesRx` | number \| null | Bytes received in the session |
 
