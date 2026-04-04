@@ -41,7 +41,8 @@
                                     "manage/sites/install-kubernetes",
                                     "manage/sites/configure-site",
                                     "manage/sites/update-site",
-                                    "manage/sites/credentials"
+                                    "manage/sites/credentials",
+                                    "manage/sites/site-provisioning"
                                 ]
                             },
                             {
@@ -117,9 +118,7 @@
                                     "manage/identity-providers/auto-provisioning",
                                     "manage/identity-providers/openid-connect",
                                     "manage/identity-providers/google",
-                                    "manage/identity-providers/azure",
-                                    "manage/identity-providers/pocket-id",
-                                    "manage/identity-providers/zitadel"
+                                    "manage/identity-providers/azure"
                                 ]
                             },
                             {
@@ -128,7 +127,9 @@
                                 "pages": [
                                     "manage/analytics/request",
                                     "manage/analytics/access",
-                                    "manage/analytics/action"
+                                    "manage/analytics/connection",
+                                    "manage/analytics/action",
+                                    "manage/analytics/streaming"
                                 ]
                             },
                             "manage/blueprints",

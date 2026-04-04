@@ -33,6 +33,30 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
   **Example**: `https://pangolin.example.com`
 </ResponseField>
 
+<ResponseField name="name" type="string">
+  Site name to use when provisioning with a provisioning key. Supports `{{env.VARIABLE_NAME}}` templating from the process environment. If omitted, Pangolin assigns a random animal-based name (changeable in the dashboard).
+
+  **Example**: `my-edge-site` or `'{{env.SERIAL_NUMBER}}-edge'`
+</ResponseField>
+
+<ResponseField name="provisioning-blueprint-file" type="string">
+  Path to a blueprint YAML file applied **once** at provisioning (imperative bootstrap). Unlike `--blueprint-file`, Newt does not keep reapplying it, so resources you edit in the dashboard are not overwritten on later runs. See [Site provisioning keys](/manage/sites/site-provisioning).
+
+  **Example**: `/path/to/bootstrap.yaml`
+</ResponseField>
+
+<ResponseField name="provisioning-key" type="string">
+  Provisioning key from Pangolin (alternative to a `provisioningKey` field inside the config file). Newt exchanges it once for site credentials, then persists `id` and `secret` to the config file and ignores the key on later runs. See [Site provisioning keys](/manage/sites/site-provisioning).
+
+  **Example**: `spk_...`
+</ResponseField>
+
+<ResponseField name="config-file" type="string">
+  Path to a JSON file where Newt reads and persists settings (`endpoint`, `id`, `secret`, optional `provisioningKey`, and other options). When you use [site provisioning](/manage/sites/site-provisioning), Newt writes `id` and `secret` into this file after a successful exchange.
+
+  **Example**: `/var/newt.json`
+</ResponseField>
+
 <ResponseField name="port" type="integer">
   Port for the peers to connect to Newt on. This can be used to keep a static port open in firewalls instead of default random ports.
 
@@ -96,7 +120,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 </ResponseField>
 
 <ResponseField name="blueprint-file" type="string">
-  Path to blueprint file to define Pangolin resources and configurations.
+  Path to a blueprint file that defines Pangolin resources and settings. This mode is declarative: Newt keeps applying the file, and it remains the source of truth (dashboard changes can be overwritten on the next apply). For a one-time bootstrap blueprint with provisioning keys, use `--provisioning-blueprint-file` instead.
 
   **Example**: `/path/to/blueprint.yaml`
 </ResponseField>
@@ -205,6 +229,24 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   Newt secret for authentication (equivalent to `--secret`)
 </ResponseField>
 
+<ResponseField name="NEWT_NAME" type="string">
+  Site name when provisioning with a provisioning key (equivalent to `--name`). Supports `{{env.VARIABLE_NAME}}` templating from the environment.
+</ResponseField>
+
+<ResponseField name="NEWT_PROVISIONING_KEY" type="string">
+  Provisioning key string (equivalent to `--provisioning-key`). See [Site provisioning keys](/manage/sites/site-provisioning).
+</ResponseField>
+
+<ResponseField name="PROVISIONING_BLUEPRINT_FILE" type="string">
+  Path to a bootstrap-only blueprint file (equivalent to `--provisioning-blueprint-file`). See [Site provisioning keys](/manage/sites/site-provisioning).
+</ResponseField>
+
+<ResponseField name="CONFIG_FILE" type="string">
+  Path to the JSON config file where Newt loads and persists settings (equivalent to `--config-file`). Use this instead of the default location under the home folder when you want a fixed path (typical for containers and provisioning).
+
+  **Example**: `/var/newt.json`
+</ResponseField>
+
 <ResponseField name="PORT" type="integer">
     Port for the peers to connect to Newt on (equivalent to `--port`)
 </ResponseField>
@@ -219,10 +261,6 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   DNS server to use for resolving the endpoint (equivalent to `--dns`)
 
   **Default**: `9.9.9.9`
-</ResponseField>
-
-<ResponseField name="CONFIG_FILE" type="string">
-  Load the config JSON from this file instead of in the home folder.
 </ResponseField>
 
 <ResponseField name="BLUEPRINT_FILE" type="string">
@@ -335,7 +373,7 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 
 ## Loading secrets from files
 
-You can use `CONFIG_FILE` to define a location of a config file to store the credentials between runs.
+You can use `--config-file` or the `CONFIG_FILE` environment variable to set the path of the config file where Newt stores credentials and other settings between runs.
 
 ```
 $ cat ~/.config/newt-client/config.json
