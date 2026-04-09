@@ -67,9 +67,17 @@ Path match rules allow URL patterns defined with plain text and wildcards (`*`) 
 
 Country match rules allow you to specify allowed or denied countries for requests based on their IP address. This is useful for geo-restrictions or compliance with regional regulations.
 
-We use a IP database to geolocate the IP address but this is not always accurate. We try to keep it updated, but there may be cases where the location is incorrect.
+We use a IP database to geolocate the IP address but this is not always accurate. Try to keep it updated, but there may be cases where the location is incorrect.
 
 Select the "ALL" option to match all countries for allowing or denying access.
+
+To enable geoblocking, follow this guide to set up the geolocation database: [Geoblocking Guide](/self-host/advanced/enable-geoblocking#enable-geo-blocking).
+
+### Region
+
+Region match rules allow you to specify allowed or denied regions for requests based on their IP address. This is useful for geo-restrictions or compliance with regional regulations. Regions are made up of a list of countries in that region (e.g. "EU" includes France, Germany, etc.) so this is a more broad match than country.
+
+To enable follow the above guide to set up the geolocation database: [Geoblocking Guide](/self-host/advanced/enable-geoblocking#enable-geo-blocking).
 
 ### CIDR
 
@@ -89,6 +97,12 @@ The prefix length (1-32 for IPv4, 1-128 for IPv6) determines how many bits from 
 ### IP
 
 Pretty simple: you can match on simply an IP address like your home IP to bypass auth. This is the same as entering a /32 CIDR.
+
+### ASN
+
+ASN (Autonomous System Number) match rules allow you to specify allowed or denied ASNs for requests based on their IP address. This is useful for blocking or allowing traffic from specific ISPs or organizations.
+
+To enable ASN blocking, follow this guide to set up the ASN database: [ASN Blocking Guide](/self-host/advanced/enable-asnblocking#enable-asn-blocking).
 
 **Examples:**
 
