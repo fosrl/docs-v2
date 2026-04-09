@@ -207,10 +207,6 @@
                 ]
             },
             {
-                "tab": "Guides",
-                "href": "https://pangolin.net/news"
-            },
-            {
                 "tab": "Downloads",
                 "href": "https://pangolin.net/downloads"
             },
@@ -219,14 +215,32 @@
                 "href": "https://pangolin.net/"
             },
             {
-                "tab": "Careers",
-                "href": "https://pangolin.net/careers"
+                "tab": "GitHub",
+                "href": "https://github.com/fosrl/pangolin"
             },
             {
                 "tab": "Trust Center",
                 "href": "https://trust.pangolin.net/"
+            },
+            {
+                "tab": "Careers",
+                "href": "https://pangolin.net/careers"
             }
-        ]
+        ],
+        "global": {
+            "anchors": [
+                {
+                    "anchor": "Slack",
+                    "href": "https://pangolin.net/slack",
+                    "icon": "slack"
+                },
+                {
+                    "anchor": "Discord",
+                    "href": "https://pangolin.net/discord",
+                    "icon": "discord"
+                }
+            ]
+        }
     },
     "interaction": {
         "drilldown": true
