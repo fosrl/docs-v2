@@ -1,0 +1,61 @@
+---
+title: "Log Streaming"
+description: "Stream Pangolin log events to external collectors and SIEM tools"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Log streaming sends your organization’s log events to third-party data collectors such as Datadog, Splunk, or Microsoft Sentinel—often used for SIEM-style monitoring and analysis. You define a destination, a delivery method (for example HTTP, S3, or a vendor-specific integration), and which Pangolin log types to forward: access logs, action logs, connection logs, or request logs. Pangolin pushes events to your external service as they are generated.
+
+<Note>
+Log streaming is only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) or self-hosted [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+## Event Streaming in the dashboard
+
+In the dashboard, this feature appears under Organization → Logs & Analytics → Streaming as Event Streaming. From there you add destinations and configure how events are delivered.
+
+## HTTP destination (example)
+
+The steps below use an HTTP webhook only as an example. Other destination types (object storage, vendor APIs, and so on) follow the same general idea—pick a destination, configure connection details, and choose log types—but the exact fields and options differ by implementation.
+
+### Choose a destination type
+
+Open Add Destination and select how events should be delivered. HTTP webhook is one option; additional destination types may appear over time.
+
+<Frame>
+  <img src="/images/streaming-add-destination.png" centered />
+</Frame>
+
+### Configure the connection
+
+On the Settings tab, set a name, the endpoint URL, and authentication (none, bearer token, basic auth, or a custom header). Requests use JSON by default unless you change it elsewhere.
+
+<Frame>
+  <img src="/images/streaming-http-settings.png" centered />
+</Frame>
+
+### Headers, body, and log types
+
+- **Headers** — Optional custom headers on every request (for example static API keys or a non-default `Content-Type`). By default, `Content-Type: application/json` is sent.
+- **Body** — Optionally use a custom JSON body template with variables; you can also choose how batched events are serialized (for example a JSON array versus newline-delimited JSON for tools that expect that format).
+
+<Frame>
+  <img src="/images/streaming-http-headers.png" centered />
+</Frame>
+
+<Frame>
+  <img src="/images/streaming-http-body.png" centered />
+</Frame>
+
+On the Logs tab, choose which log categories are forwarded to this destination. Only log types that are enabled for your organization can be streamed.
+
+<Frame>
+  <img src="/images/streaming-log-types.png" centered />
+</Frame>
+
+## Vendor-specific setups
+
+For Amazon S3, Datadog, Microsoft Sentinel, or other provider-specific implementations and guidance, contact [sales@pangolin.net](mailto:sales@pangolin.net).
