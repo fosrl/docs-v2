@@ -96,18 +96,19 @@
                                 "icon": "user-group",
                                 "pages": [
                                     "manage/access-control/create-user",
-                                    "manage/access-control/approvals",
-                                    "manage/access-control/rules",
-                                    "manage/access-control/forwarded-headers",
-                                    "manage/access-control/login-page",
+                                    "manage/access-control/mfa",
+                                    "manage/access-control/security-keys",
+                                    "manage/access-control/session-length",
+                                    "manage/access-control/password-rotation",
+                                    "manage/access-control/change-password",
                                     "manage/ssh",
+                                    "manage/access-control/rules",
                                     "manage/geoblocking",
                                     "manage/asnblocking",
-                                    "manage/access-control/mfa",
-                                    "manage/access-control/password-rotation",
-                                    "manage/access-control/session-length",
-                                    "manage/access-control/change-password",
-                                    "manage/access-control/security-keys"
+                                    "manage/access-control/links",
+                                    "manage/access-control/approvals",
+                                    "manage/access-control/forwarded-headers",
+                                    "manage/access-control/login-page"
                                 ]
                             },
                             {
