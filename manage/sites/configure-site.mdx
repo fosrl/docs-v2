@@ -229,6 +229,16 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   Newt secret for authentication (equivalent to `--secret`)
 </ResponseField>
 
+<ResponseField name="AUTH_DAEMON_ENABLED" type="boolean">
+  Enable Newt's built-in auth daemon mode (equivalent to `--auth-daemon`).
+
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="AD_KEY" type="string">
+  Pre-shared key used to authenticate external auth daemons to Newt (equivalent to `--ad-pre-shared-key`)
+</ResponseField>
+
 <ResponseField name="NEWT_NAME" type="string">
   Site name when provisioning with a provisioning key (equivalent to `--name`). Supports `{{env.VARIABLE_NAME}}` templating from the environment.
 </ResponseField>
