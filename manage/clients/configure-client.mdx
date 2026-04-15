@@ -47,6 +47,14 @@ This is the DNS server that will be used if Override DNS is enabled or DNS Over 
 
 This is a fallback DNS server that the system can use if the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution. Not used when override DNS (aliases) are disabled.
 
+#### MTU
+
+You can set the maximum transmission unit (MTU) for the client’s internal WireGuard interface. This value is client-wide: every site the client connects to must use the same MTU on the site (Newt) side, or you can see fragmentation, failed handshakes, or unstable tunnels. See the **mtu** option on [Configure Sites](/manage/sites/configure-site) and set the same value on each of those sites.
+
+<Warning>
+Changing MTU is advanced and not recommended for most users. Only change it when you have a specific, well-understood reason (for example, a constrained network path or a requirement from your infrastructure team). If you do change it, you must update every connected site to the identical value.
+</Warning>
+
 ## Windows Client (Advanced)
 
 On Windows, the Pangolin GUI reads configuration from two `pangolin.json` files:
@@ -90,6 +98,10 @@ All config keys in the `Config` object below can be set in either file. If the s
 
     <ResponseField name="openStatusTabOnConnect" type="boolean">
       When true, opens the Status tab immediately after clicking Connect so users can watch connection feedback while the tunnel is starting.
+    </ResponseField>
+
+    <ResponseField name="mtu" type="integer">
+      MTU for the internal WireGuard interface. Changing this is advanced and not recommended unless you have a clear reason; if you set a non-default value, configure the same MTU on every site this client connects to—see [Configure Sites](/manage/sites/configure-site).
     </ResponseField>
   </Expandable>
 </ResponseField>
