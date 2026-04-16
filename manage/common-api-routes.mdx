@@ -13,16 +13,40 @@ This guide is a **minimal** walkthrough for creating core Pangolin components (s
 
 This section assumes you're creating a **Newt** site. For all Site endpoints, see [Site API (Swagger)](https://api.pangolin.net/v1/docs/#/Site).
 
-<Steps>
-<Step title="Get site defaults">
-  Call the pick-site-defaults endpoint to get values you pass into the create-site endpoint, such as the Newt ID and secret.
-</Step>
-<Step title="Create the site">
-  Call the create-site endpoint with the values from the defaults response.
-</Step>
-</Steps>
+**PUT** `/org/{orgId}/site`
 
-### Get site defaults
+**Path**
+- `orgId` (string) — organization ID
+
+**Body (Newt)**
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `name` | string | Yes | Display name for the site |
+| `type` | string | Yes | Use `"newt"` |
+
+**Example Response**
+```json
+{
+  "data": {
+    "siteId": 8723,
+    "niceId": "quiet-lerista-labialis",
+    "name": "My Site",
+    "type": "newt",
+    "online": false,
+    "address": "100.90.128.0",
+    "newtId": "se897rmyjvamy5q",
+    "secret": "ystsahnvqetgx1fhn2udylq0zqgv611zbfp6ya3jvfrprn7q"
+  },
+  "success": true,
+  "error": false,
+  "message": "Site created successfully",
+  "status": 201
+}
+```
+
+### Advanced option: pick-site-defaults
+
+Use this when you want to generate some template values and control the site creation.
 
 **GET** `/org/{orgId}/pick-site-defaults`
 
@@ -72,6 +96,8 @@ Returns values you pass into the create-site endpoint.
     "type": "newt",
     "online": false,
     "address": "100.90.128.0/24"
+    "newtId": "se897rmyjvamy5q",
+    "secret": "ystsahnvqetgx1fhn2udylq0zqgv611zbfp6ya3jvfrprn7q"
   },
   "success": true,
   "error": false,
