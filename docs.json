@@ -387,7 +387,8 @@
     ],
     "seo": {
         "metatags": {
-            "canonical": "https://docs.pangolin.net"
+            "canonical": "https://docs.pangolin.net",
+            "og:image": "/images/home-social-graph.png"
         }
     }
 }
