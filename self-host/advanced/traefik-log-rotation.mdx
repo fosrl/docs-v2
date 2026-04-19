@@ -1,0 +1,123 @@
+---
+title: "Traefik Access Log Rotation"
+description: "How to manage and rotate Traefik access logs when CrowdSec is installed"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+When CrowdSec is installed, Traefik access logging is enabled automatically so CrowdSec can analyze traffic. This means `config/traefik/logs/access.log` will grow indefinitely without log rotation in place.
+
+<Note>
+  The default Pangolin install (without CrowdSec) does not enable access
+  logging, so this only applies if you have CrowdSec installed.
+</Note>
+
+## How it works
+
+The CrowdSec installer enables Traefik's `accessLog` block and mounts `./config/traefik/logs/` into the container at `/var/log/traefik/`. CrowdSec reads that log via its `acquis.d/traefik.yaml` acquisition config.
+
+Without rotation, that file grows forever. The fix is `logrotate` with `copytruncate` — it copies the log file and truncates the original in place, so Traefik never needs to be restarted or sent a signal.
+
+## Automatic setup (installer v1.x+)
+
+If you installed CrowdSec using a recent version of the Pangolin installer, logrotate is configured automatically at `/etc/logrotate.d/pangolin-traefik`. You can verify it's there:
+
+```bash
+cat /etc/logrotate.d/pangolin-traefik
+```
+
+You should see something like:
+
+```
+/opt/pangolin/config/traefik/logs/access.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+```
+
+## Manual setup
+
+If you installed CrowdSec before automatic log rotation was added, set it up manually:
+
+<Steps>
+<Step title="Create the logrotate config">
+  Replace `/opt/pangolin` with your actual Pangolin install directory if it differs.
+
+```bash
+sudo tee /etc/logrotate.d/pangolin-traefik > /dev/null <<'EOF'
+/opt/pangolin/config/traefik/logs/access.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+EOF
+```
+
+</Step>
+<Step title="Test the configuration">
+  Do a dry run to confirm logrotate picks it up without errors:
+
+```bash
+sudo logrotate --debug /etc/logrotate.d/pangolin-traefik
+```
+
+No errors means you're good. You can also force a rotation immediately to verify end-to-end:
+
+```bash
+sudo logrotate --force /etc/logrotate.d/pangolin-traefik
+```
+
+</Step>
+</Steps>
+
+## Customizing retention
+
+The defaults (daily rotation, 7 compressed copies) work for most setups. To adjust:
+
+| Option          | What it does                                                                           |
+| --------------- | -------------------------------------------------------------------------------------- |
+| `daily`         | Rotate once per day. Use `weekly` or `monthly` if preferred.                           |
+| `rotate 7`      | Keep 7 rotated files before deleting the oldest.                                       |
+| `compress`      | Gzip rotated files to save disk space.                                                 |
+| `delaycompress` | Skip compressing the most recent rotated file (useful if something still has it open). |
+
+For example, to keep 30 days of compressed weekly logs:
+
+```
+/opt/pangolin/config/traefik/logs/access.log {
+    weekly
+    rotate 30
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
+```
+
+## Verifying rotation is working
+
+Check that rotated files are appearing in the logs directory:
+
+```bash
+ls -lh /opt/pangolin/config/traefik/logs/
+```
+
+After the first rotation you should see files like `access.log.1` and `access.log.2.gz` alongside the active `access.log`.
+
+To see when logrotate last ran and whether it succeeded:
+
+```bash
+cat /var/lib/logrotate/status | grep pangolin
+```

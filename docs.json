@@ -175,6 +175,7 @@
                                     "self-host/advanced/enable-asnblocking",
                                     "self-host/advanced/metrics",
                                     "self-host/advanced/clustering",
+                                    "self-host/advanced/traefik-log-rotation",
                                     "self-host/telemetry"
                                 ]
                             },
