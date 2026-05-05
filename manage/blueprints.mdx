@@ -90,10 +90,47 @@ Use container labels when the resource definition should live inside your Compos
 </Card>
 
 <Card title="CLI">
-  If your Pangolin CLI build includes blueprint commands, you can apply a file directly:
+  Apply a blueprint directly from the Pangolin CLI when you want a one-off apply from a terminal, CI job, or local automation.
+
+  **Using your logged-in user account**
+
+  First log in and select the organization you want the blueprint applied to:
+
+  ```bash
+  pangolin login
+  pangolin select org --org <org_id>
+  ```
+
+  Then apply the file:
 
   ```bash
   pangolin apply blueprint --file /path/to/blueprint.yaml
+  ```
+
+  The CLI uses your active account and selected organization. You can optionally set the saved blueprint name:
+
+  ```bash
+  pangolin apply blueprint --file /path/to/blueprint.yaml --name production
+  ```
+
+  **Using an Integration API key**
+
+  For non-interactive automation, pass an Integration API key, API endpoint, and organization ID together:
+
+  ```bash
+  pangolin apply blueprint \
+    --file /path/to/blueprint.yaml \
+    --api-key <api_key_id.api_key_secret> \
+    --endpoint https://api.example.com \
+    --org <org_id>
+  ```
+
+  For Pangolin Cloud, use `https://api.pangolin.net` as the endpoint. For self-hosted Pangolin, use your API host, for example `https://api.your-domain.com`. See [Integration API](/manage/integration-api) for creating API keys and enabling the API on self-hosted deployments.
+
+  You can also pipe a blueprint through stdin. When using stdin, provide `--name` because there is no filename to derive it from:
+
+  ```bash
+  render-blueprint | pangolin apply blueprint --file - --name production
   ```
 </Card>
 
