@@ -657,6 +657,8 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="smtp_user" type="string">
       SMTP username.
 
+      **Environment Variable**: `EMAIL_SMTP_USER`
+
       **Example**: `no-reply@example.com`
     </ResponseField>
 
@@ -869,5 +871,9 @@ Some configuration values can be set using environment variables for enhanced se
 | Name | Variable | Config |
 |------|----------|--------|
 | Server Secret | `SERVER_SECRET` | `server.secret` |
+| Email Username | `EMAIL_SMTP_USER` | `email.smtp_user` |
 | Email Password | `EMAIL_SMTP_PASS` | `email.smtp_pass` |
 | PostgreSQL Connection String | `POSTGRES_CONNECTION_STRING` | `postgres.connection_string` |
+| PostgreSQL Replica Connection Strings | `POSTGRES_REPLICA_CONNECTION_STRINGS` | `postgres.replicas` (comma-separated list of connection strings) |
+| PostgreSQL Logs Connection String | `POSTGRES_LOGS_CONNECTION_STRING` | `postgres_logs.connection_string` |
+| Enable SQLite WAL Mode | `ENABLE_SQLITE_WAL_MODE` | *(SQLite only)* Set to `true` to enable [WAL mode](https://www.sqlite.org/wal.html) for improved SQLite concurrency |
