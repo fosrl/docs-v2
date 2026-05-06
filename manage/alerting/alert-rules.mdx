@@ -69,6 +69,8 @@ Configure what happens when the trigger runs: add one or more actions (email, we
 
 Webhook bodies are JSON. Every event includes `event`, ISO-8601 `timestamp`, and a `data` object. The event name tells you what changed; `data` always includes `orgId` and entity-specific fields.
 
+`{{data}}` is an object and must be treated as such. If you can not support a object, you can also use the flattened fields shown in the examples below. For example `{{orgId}}`, `{{siteId}}`, and `{{siteName}}` are all available on a site alert.
+
 ### Site events
 
 #### `site_online`

@@ -133,6 +133,14 @@ Generate an SSH CA public/private key pair for an organization and store them in
 docker exec -it pangolin pangctl generate-org-ca-keys --orgId "org-123"
 ```
 
+## Clear certificates
+
+Clear all certificates from the database to be reinserted by the server when syncing from acme.json files or using Pangolin DNS.
+
+```bash
+docker exec -it pangolin pangctl clear-certificates
+```
+
 ### Options
 
 - `--orgId` (required): The organization ID
