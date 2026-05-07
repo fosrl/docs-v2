@@ -1,6 +1,6 @@
 ---
-title: "Enable Geo-blocking"
-description: "Configuration requirements to enable geoblocking in Pangolin"
+title: "Enable Geo-location"
+description: "Configuration requirements to enable geolocation features in Pangolin"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,7 +9,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-To enable geoblocking in Pangolin Community you must download and place the Maxmind geoip database into the `config/` directory and update the config file. This can be done for free.
+Pangolin uses a geolocation database for several geolocation features like geoblocking and analytics. To enable geolocation features in Pangolin self-hosted, you must download and place the Maxmind geoip database into the `config/` directory and update the config file. This can be done for free.
 
 <Tip>
 Remember to keep the GeoIP database updated regularly, as IP-to-country mappings can change over time. You can just repeat the download and extraction steps periodically to ensure your database is current.
