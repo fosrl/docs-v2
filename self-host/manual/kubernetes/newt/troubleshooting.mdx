@@ -1,0 +1,752 @@
+---
+title: "Newt Troubleshooting"
+description: "Diagnose and resolve common Newt Kubernetes deployment issues."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Use this guide to troubleshoot Newt Kubernetes deployments installed with Helm, Kustomize, Argo CD, or Flux.
+
+Start with the basic checks, then move to the section that matches the symptom.
+
+## Quick checks
+
+Set the namespace and release name used by your installation:
+
+```bash
+export NEWT_NAMESPACE=pangolin
+export NEWT_RELEASE=newt
+```
+
+Check the Helm release:
+
+```bash
+helm status "$NEWT_RELEASE" --namespace "$NEWT_NAMESPACE"
+helm history "$NEWT_RELEASE" --namespace "$NEWT_NAMESPACE"
+```
+
+Check Newt pods:
+
+```bash
+kubectl get pods --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt
+```
+
+Check recent events:
+
+```bash
+kubectl get events --namespace "$NEWT_NAMESPACE" \
+  --sort-by=.lastTimestamp
+```
+
+Check logs:
+
+```bash
+kubectl logs --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt \
+  --tail=100
+```
+
+Check the applied Helm values:
+
+```bash
+helm get values "$NEWT_RELEASE" --namespace "$NEWT_NAMESPACE"
+```
+
+<Note>
+Do not assume the pod or Deployment name. Chart-generated names can change with the Helm release name, instance name, `nameOverride`, or `fullnameOverride`.
+</Note>
+
+## Get the generated resource names
+
+List Newt resources:
+
+```bash
+kubectl get deploy,sts,svc,secret,cm --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt
+```
+
+List pods with labels:
+
+```bash
+kubectl get pods --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt \
+  --show-labels
+```
+
+Store the first Newt pod name:
+
+```bash
+export NEWT_POD="$(kubectl get pod --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt \
+  -o jsonpath='{.items[0].metadata.name}')"
+```
+
+Then use:
+
+```bash
+echo "$NEWT_POD"
+```
+
+## Pod fails to start
+
+### Symptoms
+
+```text
+STATUS             RESTARTS
+CrashLoopBackOff   5
+Error              3
+CreateContainerConfigError
+ImagePullBackOff
+```
+
+### Check pod details
+
+```bash
+kubectl describe pod "$NEWT_POD" --namespace "$NEWT_NAMESPACE"
+```
+
+Check logs:
+
+```bash
+kubectl logs "$NEWT_POD" --namespace "$NEWT_NAMESPACE" --tail=100
+```
+
+If the container restarts quickly, check the previous logs:
+
+```bash
+kubectl logs "$NEWT_POD" --namespace "$NEWT_NAMESPACE" --previous --tail=100
+```
+
+### Common causes
+
+| Symptom                             | Likely cause                                           | Check                                                      |
+| ----------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------- |
+| `Secret "..." not found`            | Secret name does not match `auth.existingSecretName`   | `kubectl get secret -n "$NEWT_NAMESPACE"`                  |
+| Missing env var or empty credential | Secret exists but key names do not match `auth.keys.*` | `kubectl describe secret <secret> -n "$NEWT_NAMESPACE"`    |
+| Authentication failure              | Wrong `NEWT_ID`, `NEWT_SECRET`, or provisioning key    | Check credentials in Pangolin                              |
+| Endpoint connection errors          | `PANGOLIN_ENDPOINT` is wrong or unreachable            | Test DNS and HTTPS from the pod                            |
+| Image pull failure                  | Registry or image settings are wrong                   | `kubectl describe pod`                                     |
+| Permission error with native mode   | Native WireGuard mode requires privileged settings     | Check `global.nativeMode.enabled` and `useNativeInterface` |
+
+## Secret issues
+
+### Verify the Secret exists
+
+```bash
+kubectl get secret newt-auth --namespace "$NEWT_NAMESPACE"
+```
+
+### Check Secret keys
+
+```bash
+kubectl describe secret newt-auth --namespace "$NEWT_NAMESPACE"
+```
+
+The default keys are:
+
+```text
+PANGOLIN_ENDPOINT
+NEWT_ID
+NEWT_SECRET
+```
+
+If your Secret uses different key names, map them in values:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      existingSecretName: newt-auth
+      keys:
+        endpointKey: PANGOLIN_ENDPOINT
+        idKey: NEWT_ID
+        secretKey: NEWT_SECRET
+```
+
+<Warning>
+Do not paste decoded secrets into issue reports, logs, screenshots, or public repositories.
+</Warning>
+
+### Check which Secret the pod uses
+
+```bash
+kubectl get pod "$NEWT_POD" --namespace "$NEWT_NAMESPACE" \
+  -o jsonpath='{range .spec.containers[*].envFrom[*]}{.secretRef.name}{"\n"}{end}'
+```
+
+Also inspect explicit Secret references:
+
+```bash
+kubectl get pod "$NEWT_POD" --namespace "$NEWT_NAMESPACE" -o yaml | grep -A5 -B2 secretKeyRef
+```
+
+## Newt cannot reach Pangolin
+
+### Test DNS from the Newt pod
+
+```bash
+kubectl exec "$NEWT_POD" --namespace "$NEWT_NAMESPACE" -- \
+  nslookup pangolin.example.com
+```
+
+### Test HTTPS from the Newt pod
+
+```bash
+kubectl exec "$NEWT_POD" --namespace "$NEWT_NAMESPACE" -- \
+  wget -S -O- https://pangolin.example.com 2>&1 | head -40
+```
+
+Depending on the image, `curl`, `wget`, `nc`, or `nslookup` may not be available. If needed, run a temporary debug pod in the same namespace:
+
+```bash
+kubectl run net-debug \
+  --namespace "$NEWT_NAMESPACE" \
+  --rm -it \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  -- sh
+```
+
+Then test:
+
+```bash
+curl -vk https://pangolin.example.com
+```
+
+### Common causes
+
+| Problem                          | What to check                                             |
+| -------------------------------- | --------------------------------------------------------- |
+| DNS fails                        | CoreDNS, NetworkPolicy egress to DNS, wrong hostname      |
+| HTTPS fails                      | ingress, TLS certificate, firewall, proxy, wrong endpoint |
+| TLS verification fails           | certificate chain, hostname mismatch, private CA          |
+| Works locally but not in cluster | egress policies, proxy settings, DNS split-horizon        |
+
+## Newt pod is running but site is offline
+
+Check logs:
+
+```bash
+kubectl logs "$NEWT_POD" --namespace "$NEWT_NAMESPACE" --tail=200
+```
+
+Check the site in the Pangolin dashboard.
+
+Verify:
+
+* the site credentials belong to the same site
+* the site was not deleted or regenerated in Pangolin
+* `PANGOLIN_ENDPOINT` points to the correct Pangolin URL
+* the cluster can resolve and reach the Pangolin endpoint
+* outbound HTTPS is allowed from the Newt namespace
+* the Secret is in the same namespace as the Newt workload
+
+If you use provisioning, also verify:
+
+* `provisioningKey` is valid
+* `newtName` is set as expected
+* `configPersistence.enabled=true`
+* the configured `CONFIG_FILE` path is writable
+
+## Provisioning issues
+
+Newt 1.11+ provisioning requires writable config persistence.
+
+### Symptoms
+
+* Newt starts but does not keep generated credentials after restart.
+* Newt provisions repeatedly.
+* Logs mention config file or write errors.
+* Pod restarts cause the site to appear as a new or unconfigured instance.
+
+### Check values
+
+```bash
+helm get values "$NEWT_RELEASE" --namespace "$NEWT_NAMESPACE"
+```
+
+Provisioning example:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      pangolinEndpoint: https://pangolin.example.com
+      provisioningKey: "<provisioning-key>"
+      newtName: "my-site"
+    configPersistence:
+      enabled: true
+      type: emptyDir
+      mountPath: /var/lib/newt
+      fileName: config.json
+```
+
+For durable state, use an existing PVC:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      pangolinEndpoint: https://pangolin.example.com
+      provisioningKey: "<provisioning-key>"
+      newtName: "my-site"
+    configPersistence:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: my-newt-config
+      mountPath: /var/lib/newt
+      fileName: config.json
+```
+
+<Note>
+`emptyDir` is recreated when the pod is recreated. Use a PVC if the generated configuration must survive pod replacement.
+</Note>
+
+## Native WireGuard permission issues
+
+By default, Newt does not require native WireGuard privileges.
+
+Only check this section if you enabled native WireGuard mode:
+
+```yaml
+global:
+  nativeMode:
+    enabled: true
+
+newtInstances:
+  - name: main-tunnel
+    useNativeInterface: true
+```
+
+### Symptoms
+
+```text
+operation not permitted
+cannot create interface
+permission denied
+```
+
+### Check security context
+
+```bash
+kubectl get pod "$NEWT_POD" --namespace "$NEWT_NAMESPACE" -o yaml | grep -A30 securityContext
+```
+
+Native mode requires privileged workload settings and capabilities such as `NET_ADMIN` and `SYS_MODULE`.
+
+<Warning>
+Only enable native WireGuard mode if your cluster policy allows privileged workloads. Do not add `NET_ADMIN` to the default non-native deployment unless you know it is required.
+</Warning>
+
+### Check namespace policy
+
+```bash
+kubectl get namespace "$NEWT_NAMESPACE" --show-labels
+```
+
+A namespace with a restricted Pod Security Admission profile may block native mode.
+
+## Service not created or not reachable
+
+### Important behavior
+
+`acceptClients` does not create a Service.
+
+A Service is created through:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    service:
+      enabled: true
+```
+
+The chart also has `service.enabledWhenAcceptClients`, but runtime client behavior and Service rendering should still be verified in the rendered manifests.
+
+### Check Services
+
+```bash
+kubectl get svc --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt
+```
+
+Describe the Service:
+
+```bash
+kubectl describe svc <service-name> --namespace "$NEWT_NAMESPACE"
+```
+
+### LoadBalancer stuck in pending
+
+```text
+EXTERNAL-IP   <pending>
+```
+
+Common causes:
+
+* the cluster has no cloud load balancer integration
+* bare-metal cluster without MetalLB or equivalent
+* cloud provider quota or permission issue
+* invalid `loadBalancerClass`
+* invalid `loadBalancerSourceRanges`
+
+For bare-metal clusters, use MetalLB or another load balancer implementation, or use `NodePort` if appropriate.
+
+## Metrics scraping does not work
+
+Metrics are disabled by default.
+
+Enable metrics:
+
+```yaml
+global:
+  metrics:
+    enabled: true
+```
+
+The chart default admin address is:
+
+```yaml
+global:
+  metrics:
+    adminAddr: ":2112"
+```
+
+This listens on all interfaces and allows in-cluster scraping. Do not set it to `127.0.0.1:2112` if Prometheus scrapes from another pod.
+
+### Metrics Service
+
+Enable the metrics Service:
+
+```yaml
+global:
+  metrics:
+    enabled: true
+    service:
+      enabled: true
+      port: 2112
+```
+
+### ServiceMonitor
+
+If you use Prometheus Operator:
+
+```yaml
+global:
+  metrics:
+    enabled: true
+    service:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+```
+
+Check resources:
+
+```bash
+kubectl get svc,podmonitor,servicemonitor,prometheusrule \
+  --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt
+```
+
+<Note>
+The chart has separate metrics values for container port, admin address, and metrics Service port. Check the rendered manifest when changing these values.
+</Note>
+
+## NetworkPolicy blocks traffic
+
+If NetworkPolicy is enabled, check that the policy allows required egress.
+
+Newt usually needs egress to:
+
+* DNS
+* Pangolin endpoint over HTTPS
+* any tunnel or connectivity endpoints used by your deployment
+
+Check policies:
+
+```bash
+kubectl get networkpolicy --namespace "$NEWT_NAMESPACE"
+kubectl describe networkpolicy --namespace "$NEWT_NAMESPACE"
+```
+
+If DNS is blocked, enable or add DNS egress rules.
+
+Example:
+
+```yaml
+global:
+  networkPolicy:
+    enabled: true
+    components:
+      dns:
+        enabled: true
+```
+
+If HTTPS egress is blocked, add an appropriate custom egress rule for your environment.
+
+## Multiple Newt instances conflict
+
+### Symptoms
+
+* Multiple pods run, but only one site connects.
+* Both instances use the same credentials.
+* A site appears to flap between instances.
+* Logs show authentication or registration conflicts.
+
+### Check values
+
+```bash
+helm get values "$NEWT_RELEASE" --namespace "$NEWT_NAMESPACE"
+```
+
+Each instance should use its own credentials or provisioning identity:
+
+```yaml
+newtInstances:
+  - name: site-a
+    enabled: true
+    auth:
+      existingSecretName: newt-auth-site-a
+
+  - name: site-b
+    enabled: true
+    auth:
+      existingSecretName: newt-auth-site-b
+```
+
+Create separate Secrets:
+
+```bash
+kubectl create secret generic newt-auth-site-a \
+  --namespace "$NEWT_NAMESPACE" \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<site-a-newt-id> \
+  --from-literal=NEWT_SECRET=<site-a-newt-secret>
+
+kubectl create secret generic newt-auth-site-b \
+  --namespace "$NEWT_NAMESPACE" \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<site-b-newt-id> \
+  --from-literal=NEWT_SECRET=<site-b-newt-secret>
+```
+
+## RBAC or service account issues
+
+Chart `1.4.0` disables RBAC creation by default.
+
+Check service account and RBAC:
+
+```bash
+kubectl get serviceaccount,role,rolebinding \
+  --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt
+```
+
+If your configuration requires Kubernetes API access, enable RBAC:
+
+```yaml
+rbac:
+  create: true
+  clusterRole: false
+```
+
+For most Newt deployments, RBAC is not required.
+
+## High CPU or memory usage
+
+Check resource usage:
+
+```bash
+kubectl top pod --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt
+```
+
+Check current resource settings:
+
+```bash
+kubectl get pod "$NEWT_POD" --namespace "$NEWT_NAMESPACE" \
+  -o jsonpath='{.spec.containers[0].resources}'
+```
+
+Tune resources in values:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 1000m
+        memory: 512Mi
+```
+
+Then upgrade:
+
+```bash
+helm upgrade "$NEWT_RELEASE" fossorial/newt \
+  --namespace "$NEWT_NAMESPACE" \
+  --values values-newt.yaml
+```
+
+Common causes of high usage:
+
+* high tunnel traffic
+* too low resource limits
+* repeated reconnect loops
+* excessive debug logging
+* MTU or network path issues
+
+## MTU issues
+
+### Symptoms
+
+* Connections establish but large transfers fail.
+* Some websites or services work, others hang.
+* Logs show repeated reconnects.
+* Throughput is much lower than expected.
+
+Newt defaults to MTU `1280`.
+
+Try another MTU only after confirming basic connectivity:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    mtu: 1280
+```
+
+Upgrade after changing values:
+
+```bash
+helm upgrade "$NEWT_RELEASE" fossorial/newt \
+  --namespace "$NEWT_NAMESPACE" \
+  --values values-newt.yaml
+```
+
+## Helm debugging
+
+Preview an upgrade:
+
+```bash
+helm upgrade "$NEWT_RELEASE" fossorial/newt \
+  --namespace "$NEWT_NAMESPACE" \
+  --values values-newt.yaml \
+  --dry-run
+```
+
+Render the chart locally:
+
+```bash
+helm template "$NEWT_RELEASE" fossorial/newt \
+  --namespace "$NEWT_NAMESPACE" \
+  --values values-newt.yaml
+```
+
+Show rendered manifests from the live release:
+
+```bash
+helm get manifest "$NEWT_RELEASE" --namespace "$NEWT_NAMESPACE"
+```
+
+Show values from the live release:
+
+```bash
+helm get values "$NEWT_RELEASE" --namespace "$NEWT_NAMESPACE"
+```
+
+Rollback:
+
+```bash
+helm rollback "$NEWT_RELEASE" <revision> --namespace "$NEWT_NAMESPACE"
+```
+
+## Kustomize debugging
+
+Validate the overlay:
+
+```bash
+kustomize build overlays/site-a
+```
+
+Run a server-side dry run:
+
+```bash
+kustomize build overlays/site-a | kubectl apply -f - --dry-run=server
+```
+
+Preview live changes:
+
+```bash
+kustomize build overlays/site-a | kubectl diff -f -
+```
+
+If a patch does not apply, inspect generated resource names:
+
+```bash
+kustomize build base | grep -E "^(kind:|  name:)"
+```
+
+## Collect diagnostics
+
+Collect logs and resource information:
+
+```bash
+kubectl logs --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt \
+  --tail=200 > newt-logs.txt
+
+kubectl get pods --namespace "$NEWT_NAMESPACE" \
+  -l app.kubernetes.io/name=newt \
+  -o yaml > newt-pods.yaml
+
+kubectl get events --namespace "$NEWT_NAMESPACE" \
+  --sort-by=.lastTimestamp > newt-events.txt
+
+helm get values "$NEWT_RELEASE" \
+  --namespace "$NEWT_NAMESPACE" > newt-helm-values.yaml
+
+helm get manifest "$NEWT_RELEASE" \
+  --namespace "$NEWT_NAMESPACE" > newt-helm-manifest.yaml
+```
+
+If using Kustomize:
+
+```bash
+kustomize build overlays/site-a > newt-kustomize-output.yaml
+```
+
+Before sharing diagnostics, remove:
+
+* Newt credentials
+* provisioning keys
+* TLS private keys
+* tokens
+* passwords
+* internal hostnames if sensitive
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Configuration" href="/self-host/manual/kubernetes/newt/configuration" icon="sliders">
+		Review Newt chart options.
+	</Card>
+	<Card title="Helm Install" href="/self-host/manual/kubernetes/newt/helm" icon="box">
+		Install Newt with Helm.
+	</Card>
+	<Card title="Kustomize Install" href="/self-host/manual/kubernetes/newt/kustomize" icon="layer-group">
+		Install Newt with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="GitOps" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
+		Deploy Newt with Argo CD or Flux.
+	</Card>
+</CardGroup>

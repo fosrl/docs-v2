@@ -1,0 +1,811 @@
+---
+title: "Newt Configuration"
+description: "Configuration reference for Newt Kubernetes deployments."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+This page covers the main Newt Kubernetes configuration options for Helm and Kustomize workflows.
+
+For exhaustive option coverage, refer to the chart resources:
+
+<CardGroup cols={3}>
+  <Card title="README" href="https://github.com/fosrl/helm-charts/blob/main/charts/newt/README.md" />
+  <Card title="values.yaml" href="https://github.com/fosrl/helm-charts/blob/main/charts/newt/values.yaml" />
+  <Card title="values.schema.json" href="https://github.com/fosrl/helm-charts/blob/main/charts/newt/values.schema.json" />
+</CardGroup>
+
+## Version context
+
+This page is aligned with the Newt Helm chart `1.4.0`.
+
+| Item | Value |
+| --- | --- |
+| Chart version | `1.4.0` |
+| App version | `1.12.3` |
+| Kubernetes version | `>=1.30.14-0` |
+| Default image | `docker.io/fosrl/newt:1.12.3` |
+
+Chart `1.4.0` also publishes the Newt image metadata for Docker Hub and GHCR and includes Artifact Hub signing metadata.
+
+## Configuration sections
+
+<AccordionGroup>
+
+  <Accordion title="Image and global defaults" defaultOpen>
+
+Use `global.image` to control the Newt container image used by all instances.
+
+```yaml
+global:
+  image:
+    registry: docker.io
+    repository: fosrl/newt
+    tag: ""
+    digest: ""
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+
+  logLevel: INFO
+```
+
+Recommendations:
+
+- Leave `tag` empty to use the chart `appVersion`.
+- Use `digest` when you need immutable image pinning.
+- Use `imagePullSecrets` when pulling from a private registry.
+- Use per-instance overrides only when `allowGlobalOverride` is enabled for that instance.
+
+</Accordion>
+
+  <Accordion title="Namespace and Pod Security Admission">
+
+The chart can render Namespace resources, including Pod Security Admission labels.
+
+```yaml
+namespace:
+  create: false
+  name: ""
+  labels: {}
+  podSecurity:
+    enforce: ""
+    warn: ""
+    audit: ""
+```
+
+Recommended production pattern:
+
+1. Create the namespace manually.
+2. Apply required Pod Security Admission labels or policy labels.
+3. Install the chart into that namespace.
+
+```bash
+kubectl create namespace pangolin
+```
+
+Example namespace labels:
+
+```bash
+kubectl label namespace pangolin \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/audit=restricted \
+  pod-security.kubernetes.io/warn=restricted
+```
+
+Per-instance namespace overrides are available when `allowGlobalOverride: true` is set:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    allowGlobalOverride: true
+    namespace:
+      name: pangolin
+      create: false
+      labels: {}
+      podSecurity:
+        enforce: ""
+        warn: ""
+        audit: ""
+```
+
+<Note>
+Creating the namespace manually is recommended when your cluster uses Pod Security Admission, policy labels, admission webhooks, or namespace annotations.
+</Note>
+
+</Accordion>
+
+  <Accordion title="Credentials and authentication">
+
+For production, use an existing Kubernetes Secret.
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      existingSecretName: newt-auth
+```
+
+Create the Secret before installing the chart:
+
+```bash
+kubectl create secret generic newt-auth \
+  --namespace pangolin \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<newt-id> \
+  --from-literal=NEWT_SECRET=<newt-secret>
+```
+
+The default Secret keys are:
+
+```yaml
+PANGOLIN_ENDPOINT
+NEWT_ID
+NEWT_SECRET
+```
+
+Use `auth.keys.*` only when your Secret uses different key names:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      existingSecretName: newt-auth
+      keys:
+        endpointKey: PANGOLIN_ENDPOINT
+        idKey: NEWT_ID
+        secretKey: NEWT_SECRET
+```
+
+`auth.keys.*` are Secret key names, not credential values.
+
+Inline credentials are supported, but should only be used for local testing:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      pangolinEndpoint: "https://pangolin.example.com"
+      id: "<newt-id>"
+      secret: "<newt-secret>"
+```
+
+<Warning>
+Inline credentials can appear in rendered manifests and Helm release history. Use `auth.existingSecretName` for production.
+</Warning>
+
+<Warning>
+Do not commit plaintext credentials to Git. For GitOps workflows, use encrypted or external secret backends such as SOPS, Sealed Secrets, External Secrets Operator, Vault, or Infisical.
+</Warning>
+
+Chart `1.4.0` also includes `auth.createSecret` and `auth.envVarsDirect` modes for generated Secret and direct environment-variable workflows. Use these only when they match your operational model.
+
+</Accordion>
+
+  <Accordion title="Provisioning">
+
+Newt 1.11+ supports provisioning-based installs.
+
+Use provisioning when Newt should bootstrap credentials from a provisioning key instead of using a static `NEWT_ID` and `NEWT_SECRET`.
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      pangolinEndpoint: https://pangolin.example.com
+      provisioningKey: "<provisioning-key>"
+      newtName: "my-site"
+    configPersistence:
+      enabled: true
+      type: emptyDir
+      mountPath: /var/lib/newt
+      fileName: config.json
+```
+
+Provisioning requires writable config persistence so Newt can store the generated configuration.
+
+For durable storage, use an existing PVC:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      pangolinEndpoint: https://pangolin.example.com
+      provisioningKey: "<provisioning-key>"
+      newtName: "my-site"
+    configPersistence:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: my-newt-config
+      mountPath: /var/lib/newt
+      fileName: config.json
+```
+
+You can also provide a provisioning blueprint:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      pangolinEndpoint: https://pangolin.example.com
+      provisioningKey: "<provisioning-key>"
+      newtName: "my-site"
+    configPersistence:
+      enabled: true
+      type: emptyDir
+    provisioningBlueprintFile: /etc/newt/provisioning-blueprint.yaml
+    provisioningBlueprintData: |
+      version: 1
+      routes: []
+```
+
+</Accordion>
+
+  <Accordion title="Instance runtime settings">
+
+Each Newt instance is configured under `newtInstances[]`.
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    replicas: 1
+    logLevel: INFO
+    mtu: 1280
+    dns: ""
+    pingInterval: ""
+    pingTimeout: ""
+    acceptClients: false
+    useNativeInterface: false
+    interface: newt
+    keepInterface: false
+    noCloud: false
+    disableClients: false
+```
+
+Key settings:
+
+| Setting                        | Purpose                                                     |
+| ------------------------------ | ----------------------------------------------------------- |
+| `replicas`                     | Number of replicas for this Newt instance                   |
+| `mtu`                          | WireGuard interface MTU                                     |
+| `dns`                          | Optional DNS server address pushed to the client            |
+| `pingInterval` / `pingTimeout` | Optional Newt ping timing overrides                         |
+| `acceptClients`                | Allows client connections at runtime                        |
+| `useNativeInterface`           | Uses native WireGuard interface when native mode is enabled |
+| `noCloud`                      | Disables cloud connectivity                                 |
+| `disableClients`               | Disables client connections                                 |
+
+<Note>
+Newt 1.11 changed upstream ping defaults. Set `pingInterval` and `pingTimeout` explicitly if you need older timing behavior.
+</Note>
+
+</Accordion>
+
+  <Accordion title="Service and connectivity">
+
+Service exposure is controlled separately from `acceptClients`.
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    service:
+      enabled: false
+      type: ClusterIP
+      port: 51820
+      testerPort: ""
+      externalTrafficPolicy: ""
+      loadBalancerSourceRanges: []
+```
+
+Important behavior:
+
+- `acceptClients` does not create a Service.
+- `newtInstances[].service.enabled` controls whether a Service is created.
+- Tester port exposure is disabled by default unless enabled through test settings or explicit legacy tester-port configuration.
+
+Common Service types:
+
+| Type           | Use case                                      |
+| -------------- | --------------------------------------------- |
+| `ClusterIP`    | Internal cluster access                       |
+| `LoadBalancer` | External exposure through cloud load balancer |
+| `NodePort`     | Node-level port exposure                      |
+
+</Accordion>
+
+  <Accordion title="Configuration persistence">
+
+Use `configPersistence` when Newt needs writable configuration storage.
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    configPersistence:
+      enabled: false
+      type: emptyDir
+      mountPath: /var/lib/newt
+      fileName: config.json
+      existingClaim: ""
+```
+
+Storage types:
+
+| Type                    | Behavior                                  |
+| ----------------------- | ----------------------------------------- |
+| `emptyDir`              | Ephemeral storage, recreated with the pod |
+| `persistentVolumeClaim` | Durable storage using an existing PVC     |
+
+Provisioning-based installs should enable config persistence. For production provisioning, prefer a PVC over `emptyDir`.
+
+<Warning>
+`emptyDir` is recreated when a pod is replaced. Newt can require a reconnect and handshake after restart, which may briefly interrupt active traffic.
+</Warning>
+
+<Tip>
+For production, prefer an existing PersistentVolumeClaim to keep writable Newt configuration across restarts and rescheduling.
+</Tip>
+
+</Accordion>
+
+  <Accordion title="Blueprints, mTLS, and scripts">
+
+The chart supports blueprints, provisioning blueprints, mTLS certificate mounts, Docker socket mounts, and up/down scripts.
+
+Blueprint example:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    blueprintFile: /etc/newt/blueprint.yaml
+    blueprintData: |
+      version: 1
+      routes: []
+```
+
+Provisioning blueprint example:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    provisioningBlueprintFile: /etc/newt/provisioning-blueprint.yaml
+    provisioningBlueprintData: |
+      version: 1
+      routes: []
+```
+
+mTLS using an existing PEM Secret:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    mtls:
+      enabled: true
+      mode: pem
+      pem:
+        secretName: newt-mtls
+        clientCertPath: /certs/client.crt
+        clientKeyPath: /certs/client.key
+        caPath: /certs/ca.crt
+```
+
+Up/down scripts:
+
+```yaml
+global:
+  updownScripts:
+    route.sh: |
+      #!/bin/sh
+      echo "Newt interface changed"
+
+newtInstances:
+  - name: main-tunnel
+    updown:
+      enabled: true
+      mountPath: /opt/newt/updown
+```
+
+<Note>
+Use Secrets for certificates and sensitive script inputs. Avoid inline private keys or credentials in values files.
+</Note>
+
+</Accordion>
+
+  <Accordion title="Native WireGuard mode">
+
+By default, Newt runs without native WireGuard mode.
+
+```yaml
+global:
+  nativeMode:
+    enabled: false
+
+newtInstances:
+  - name: main-tunnel
+    useNativeInterface: false
+```
+
+Native mode requires elevated privileges.
+
+When native mode or `useNativeInterface` is enabled, Newt runs as root with privileged settings and capabilities such as `NET_ADMIN` and `SYS_MODULE`.
+
+<Warning>
+Only enable native WireGuard mode if your cluster policy allows privileged workloads and you understand the security impact.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Service accounts and RBAC">
+
+ServiceAccount creation is enabled by default.
+
+```yaml
+serviceAccount:
+  create: true
+  name: ""
+  automountServiceAccountToken: false
+```
+
+RBAC is disabled by default in chart `1.4.0`:
+
+```yaml
+rbac:
+  create: false
+  clusterRole: false
+```
+
+Enable RBAC only when your selected configuration needs Kubernetes API permissions:
+
+```yaml
+rbac:
+  create: true
+  clusterRole: false
+```
+
+Per-instance ServiceAccount overrides are available when `allowGlobalOverride: true` is set:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    allowGlobalOverride: true
+    serviceAccount:
+      create: true
+      name: newt-main-tunnel
+      automountServiceAccountToken: false
+```
+
+<Warning>
+Chart `1.4.0` changed the RBAC default to `rbac.create=false`. Existing installations that relied on auto-created RBAC must opt in explicitly during upgrade.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Resources and scheduling">
+
+Global resource requests and limits apply to Newt workloads.
+
+```yaml
+global:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+      ephemeral-storage: 256Mi
+```
+
+Scheduling defaults:
+
+```yaml
+global:
+  priorityClassName: ""
+  nodeSelector: {}
+  tolerations: []
+  affinity:
+    nodeAffinity: {}
+    podAffinity: {}
+    podAntiAffinity: {}
+  topologySpreadConstraints: []
+```
+
+Pod Disruption Budget:
+
+```yaml
+global:
+  podDisruptionBudget:
+    enabled: false
+    minAvailable: 1
+    maxUnavailable: ""
+```
+
+Recommendations:
+
+- Start with the chart defaults.
+- Increase requests and limits based on traffic volume.
+- Use node selectors, tolerations, affinity, or topology spread constraints when you need placement control.
+- Enable a PodDisruptionBudget only when your replica count and maintenance policy support it.
+
+<Warning>
+Avoid CPU limits unless you explicitly need hard caps. CPU limits can trigger throttling even when spare node CPU exists. For most deployments, use CPU requests and memory limits as the starting point.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Health probes and Helm tests">
+
+Health probes are disabled by default.
+
+```yaml
+global:
+  health:
+    enabled: false
+    path: /tmp/healthy
+    readinessFailureThreshold: 3
+```
+
+Per-instance health options:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    healthFile: /tmp/healthy
+    enforceHcCert: false
+```
+
+Helm test jobs are disabled by default:
+
+```yaml
+global:
+  tests:
+    enabled: false
+    image:
+      repository: registry.k8s.io/kubectl
+      tag: "1.30.14"
+      pullPolicy: IfNotPresent
+```
+
+Enable tests only when you want chart test jobs and tester-port related resources.
+
+</Accordion>
+
+  <Accordion title="Metrics and monitoring">
+
+Metrics are disabled by default.
+
+```yaml
+global:
+  metrics:
+    enabled: false
+    port: 9090
+    path: /metrics
+    adminAddr: ":2112"
+    asyncBytes: false
+    region: ""
+    otlpEnabled: false
+    pprofEnabled: false
+```
+
+The default `adminAddr` is `:2112`, which listens on all interfaces and allows in-cluster scraping. Use `127.0.0.1:2112` only when scraping from other pods is not required.
+
+Metrics Service:
+
+```yaml
+global:
+  metrics:
+    service:
+      enabled: false
+      type: ClusterIP
+      port: 2112
+      portName: metrics
+```
+
+Prometheus Operator resources:
+
+```yaml
+global:
+  metrics:
+    podMonitor:
+      enabled: false
+    serviceMonitor:
+      enabled: false
+    prometheusRule:
+      enabled: false
+```
+
+Example with ServiceMonitor:
+
+```yaml
+global:
+  metrics:
+    enabled: true
+    service:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+```
+
+Optional pprof endpoint:
+
+```yaml
+global:
+  metrics:
+    pprofEnabled: true
+```
+
+</Accordion>
+
+  <Accordion title="Network policy">
+
+NetworkPolicy rendering is disabled by default.
+
+```yaml
+global:
+  networkPolicy:
+    enabled: false
+    defaultMode: merge
+    components:
+      defaultApp:
+        enabled: true
+      dns:
+        enabled: false
+      kubeApi:
+        enabled: false
+      custom:
+        enabled: false
+    ruleSets: {}
+```
+
+Per-instance NetworkPolicy overrides:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    networkPolicy:
+      enabled: null
+      mode: merge
+      useGlobalComponents:
+        defaultApp: true
+        dns: false
+        kubeApi: false
+        custom: true
+      components:
+        dns:
+          enabled: false
+        custom:
+          enabled: false
+      includeRuleSets: []
+```
+
+Modes:
+
+| Mode      | Behavior                                          |
+| --------- | ------------------------------------------------- |
+| `inherit` | Use global components and rule sets only          |
+| `merge`   | Combine global and instance-level policy settings |
+| `replace` | Use only the instance-level policy settings       |
+
+Enable DNS egress rules if your default network policy blocks DNS.
+
+</Accordion>
+
+</AccordionGroup>
+
+## Configuration by install method
+
+### Helm
+
+Use a values file:
+
+```bash
+helm upgrade --install newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+Use inline values only for small tests:
+
+```bash
+helm upgrade --install newt fossorial/newt \
+  --namespace pangolin \
+  --set 'newtInstances[0].name=main-tunnel' \
+  --set 'newtInstances[0].auth.existingSecretName=newt-auth'
+```
+
+See [Newt Helm](/self-host/manual/kubernetes/newt/helm) for the installation flow.
+
+### Kustomize
+
+Render the chart with Helm, then use Kustomize overlays:
+
+```bash
+helm template newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml \
+  > base/newt.yaml
+```
+
+Then apply an overlay:
+
+```bash
+kubectl apply -k overlays/site-a
+```
+
+See [Newt Kustomize](/self-host/manual/kubernetes/newt/kustomize) for the Kustomize workflow.
+
+### GitOps
+
+Store Helm values or Kustomize overlays in Git. Argo CD or Flux reconciles the desired state.
+
+Argo CD Helm example:
+
+```yaml
+spec:
+  source:
+    helm:
+      values: |
+        newtInstances:
+          - name: main-tunnel
+            enabled: true
+            auth:
+              existingSecretName: newt-auth
+```
+
+Flux HelmRelease example:
+
+```yaml
+spec:
+  values:
+    newtInstances:
+      - name: main-tunnel
+        enabled: true
+        auth:
+          existingSecretName: newt-auth
+```
+
+See [GitOps](/self-host/manual/kubernetes/gitops/overview) for GitOps guidance.
+
+## Production checklist
+
+Before deploying Newt to production:
+
+- [ ] Create the namespace before installation and apply required labels or annotations.
+- [ ] Store credentials in Kubernetes Secrets.
+- [ ] Avoid inline plaintext credentials.
+- [ ] Use provisioning only with writable config persistence.
+- [ ] Use a PVC for durable provisioning state.
+- [ ] Keep native WireGuard mode disabled unless privileged workloads are allowed.
+- [ ] Confirm the Pangolin endpoint is reachable from the Newt pod.
+- [ ] Confirm TLS certificates are valid for the Pangolin endpoint.
+- [ ] Set resources based on expected traffic.
+- [ ] Configure NetworkPolicy rules if your cluster enforces network isolation.
+- [ ] Enable metrics only when you have a scraping path.
+- [ ] Review RBAC settings before upgrading from older chart versions.
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Helm Install" href="/self-host/manual/kubernetes/newt/helm" icon="box">
+		Install Newt with Helm.
+	</Card>
+	<Card title="Kustomize Install" href="/self-host/manual/kubernetes/newt/kustomize" icon="layer-group">
+		Install Newt with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/newt/troubleshooting" icon="circle-question">
+		Debug Newt deployment and connection issues.
+	</Card>
+	<Card title="GitOps" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
+		Deploy Newt with Argo CD or Flux.
+	</Card>
+</CardGroup>

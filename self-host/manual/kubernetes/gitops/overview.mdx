@@ -1,0 +1,351 @@
+---
+title: "GitOps Overview"
+description: "Git-driven Kubernetes deployments for Pangolin and Newt using Argo CD or Flux."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+GitOps is a declarative approach to infrastructure management where your Git repository is the single source of truth for cluster state. Changes go through Git; the GitOps tool automatically reconciles the cluster to match.
+
+## What is GitOps?
+
+GitOps reconciliation loop:
+
+<Steps>
+  <Step title="Declare desired state in Git">
+    **Git repository** contains desired state (manifests, Helm values, Kustomize overlays).
+  </Step>
+  <Step title="GitOps controller watches source">
+    **GitOps tool** (Argo CD or Flux) watches the Git repository.
+  </Step>
+  <Step title="Detect changes and drift">
+    The controller detects new commits or drift between Git and the live cluster.
+  </Step>
+  <Step title="Reconcile cluster">
+    The controller syncs cluster state to match Git state.
+  </Step>
+  <Step title="Continuous convergence">
+    **Result**: Cluster stays aligned with the declared Git configuration.
+  </Step>
+</Steps>
+
+## Benefits
+
+- **Version control**: All infrastructure changes tracked in Git
+- **Audit trail**: See who changed what and when
+- **Rollback**: Revert to previous state by reverting Git commits
+- **Automation**: No manual `kubectl apply` commands needed
+- **Drift detection**: Automatic alerts if cluster diverges from Git
+
+## GitOps tools for Kubernetes
+
+### Argo CD
+
+- **UI**: Web-based dashboard for monitoring and manual syncs
+- **Approach**: External reconciler (watches Git, applies to cluster)
+- **Supports**: Helm charts, Kustomize overlays, raw YAML
+- **Best for**: Teams who want GitOps with a UI, hybrid manual/automated workflows
+
+**Use Argo CD if**:
+- You want a visual dashboard
+- You need frequent manual sync capabilities
+- You're already using Argo CD for other workloads
+
+See: [Argo CD Install Guide](/self-host/manual/kubernetes/gitops/argocd)
+
+### Flux
+
+- **CRDs**: Kubernetes-native Custom Resources (HelmRelease, Kustomization, GitRepository)
+- **Approach**: Declarative reconciliation using Kubernetes resources
+- **Supports**: Helm charts, Kustomize overlays, raw YAML, OCI registries
+- **Best for**: Teams who want declarative Kubernetes-way GitOps, lightweight controllers
+
+**Use Flux if**:
+- You prefer Kubernetes-native CRDs
+- You want a lightweight, modern GitOps tool
+- You're already using Flux for other workloads
+
+See: [Flux Install Guide](/self-host/manual/kubernetes/gitops/flux)
+
+## Recommended repository structure
+
+For multi-environment Pangolin/Newt deployments, organize your Git repository like this:
+
+```
+my-org/infrastructure/
+├── clusters/
+│   ├── production/
+│   │   ├── pangolin/
+│   │   │   ├── values.yaml
+│   │   │   └── kustomization.yaml (if using Kustomize)
+│   │   └── newt/
+│   │       ├── values.yaml
+│   │       └── kustomization.yaml
+│   ├── staging/
+│   │   ├── pangolin/
+│   │   └── newt/
+│   └── dev/
+│       ├── pangolin/
+│       └── newt/
+├── apps/
+│   ├── pangolin/
+│   │   ├── helm/
+│   │   │   ├── values-base.yaml
+│   │   │   ├── values-prod.yaml
+│   │   │   └── values-staging.yaml
+│   │   └── kustomize/
+│   │       ├── base/
+│   │       └── overlays/
+│   └── newt/
+│       ├── helm/
+│       └── kustomize/
+└── .gitignore
+```
+
+**Pattern**:
+- `clusters/` → environment-specific configuration
+- `apps/` → shared, reusable application configuration
+- Environment overlays layer on top of app definitions
+
+## Secrets in GitOps
+
+<Warning>
+**Never commit plaintext secrets to Git.** Use secret management tools instead.
+</Warning>
+
+Options for managing secrets in GitOps:
+
+### Sealed Secrets
+
+- **Tool**: [sealed-secrets](https://github.com/bitnami-labs/sealed-secrets)
+- **How**: Encrypt secrets with cluster-specific key; safe to commit encrypted secrets
+- **Decrypt**: Only the cluster can decrypt (uses private key)
+
+```bash
+# Encrypt a secret
+echo -n mypassword | kubeseal -f - > secret.yaml
+
+# Git tracks encrypted secret.yaml
+# Cluster auto-decrypts on apply
+```
+
+### External Secrets Operator
+
+- **Tool**: [external-secrets](https://external-secrets.io/)
+- **How**: Reference secrets stored in external vault (AWS Secrets Manager, Azure Key Vault, HashiCorp Vault)
+- **Git**: Stores reference only, not secret values
+
+```yaml
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend
+spec:
+  provider:
+    vault:
+      server: "https://vault.example.com"
+```
+
+### SOPS (Secrets Operations)
+
+- **Tool**: [SOPS](https://github.com/mozilla/sops)
+- **How**: Encrypt YAML files; decrypt at deploy time
+- **Git**: Stores encrypted files
+
+```bash
+sops --encrypt secrets.yaml > secrets.enc.yaml
+# Commit secrets.enc.yaml; tool decrypts on apply
+```
+
+### Cloud Provider Secrets
+
+- **AWS**: Use AWS Secrets Manager or Parameter Store with IRSA (IAM Roles for Service Accounts)
+- **Azure**: Use Azure Key Vault with pod identity
+- **GCP**: Use Google Secret Manager with workload identity
+
+<Tip>
+Choose a secret management strategy **before** setting up GitOps. Seal secrets once; keep approach consistent.
+</Tip>
+
+## GitOps workflow example
+
+### 1. Set up Git repository
+
+```bash
+git clone https://github.com/my-org/infrastructure.git
+cd infrastructure
+mkdir -p clusters/production/pangolin
+cd clusters/production/pangolin
+```
+
+### 2. Create configuration
+
+```bash
+# values.yaml with Pangolin config
+cat > values.yaml <<EOF
+deployment:
+  type: controller
+  mode: multi
+database:
+  mode: cloudnativepg
+pangolin:
+  config:
+    app:
+      dashboard_url: https://pangolin.example.com
+    domains:
+      domain1:
+        base_domain: example.com
+    gerbil:
+      base_endpoint: vpn.example.com
+EOF
+
+git add values.yaml
+git commit -m "Add production Pangolin config"
+git push
+```
+
+### 3. Install GitOps tool
+
+```bash
+# For Argo CD
+kubectl create namespace argocd
+helm repo add argo https://argoproj.github.io/argo-helm
+helm install argocd argo/argo-cd -n argocd
+
+# For Flux
+flux bootstrap github \
+  --owner=my-org \
+  --repo=infrastructure \
+  --personal \
+  --path=clusters/production
+```
+
+### 4. Create Application/HelmRelease
+
+**With Argo CD**:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pangolin
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/my-org/infrastructure
+    targetRevision: main
+    path: clusters/production/pangolin
+    helm:
+      values: values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pangolin
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+**With Flux**:
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pangolin
+  namespace: pangolin
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: pangolin
+      sourceRef:
+        kind: HelmRepository
+        name: fossorial
+        namespace: flux-system
+  values:
+    deployment:
+      type: controller
+      mode: multi
+```
+
+### 5. Push to Git
+
+```bash
+git add pangolin-app.yaml
+git commit -m "Add Argo CD Application for Pangolin"
+git push
+```
+
+**Result**: GitOps tool automatically detects the new Application and begins reconciliation.
+
+### 6. Monitor
+
+**Argo CD**:
+
+```bash
+# Port-forward to UI
+kubectl port-forward -n argocd svc/argocd-server 8080:443
+
+# Visit https://localhost:8080
+```
+
+**Flux**:
+
+```bash
+# Check reconciliation status
+flux get all
+
+# View logs
+flux logs --all-namespaces --follow
+```
+
+## Common use cases
+
+### Multi-environment deployments
+
+Use Git branches, directories, or environments to manage dev, staging, production:
+
+```
+clusters/dev/pangolin → helm values for dev
+clusters/staging/pangolin → helm values for staging
+clusters/production/pangolin → helm values for production
+```
+
+Each environment syncs independently.
+
+### Automatic deployments on chart update
+
+Flux or Argo CD can watch a Helm repository and auto-update when a new chart version is released:
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pangolin
+spec:
+  chart:
+    spec:
+      chart: pangolin
+      version: ">=0.1.0" # auto-upgrade to latest 0.1.x
+```
+
+### Drift detection and remediation
+
+Argo CD and Flux both support continuous drift detection:
+
+- **Argo CD**: Detects drift on demand or continuously; can auto-sync on drift
+- **Flux**: Reconciles on interval; rolls back manual cluster changes
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Argo CD Install" href="/self-host/manual/kubernetes/gitops/argocd" icon="code-branch" />
+	<Card title="Flux Install" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch" />
+	<Card title="Helm Quick-Start" href="/self-host/manual/kubernetes/helm" icon="box" />
+	<Card title="Kustomize Quick-Start" href="/self-host/manual/kubernetes/kustomize" icon="layer-group" />
+</CardGroup>

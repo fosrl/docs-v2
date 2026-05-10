@@ -1,0 +1,399 @@
+---
+title: "Helm"
+description: "Kubernetes installation using Helm charts for Pangolin and Newt."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Helm is the recommended method for standard Kubernetes installations of Pangolin and Newt.
+
+Use Helm when you want a chart-based workflow for installing, upgrading, rolling back, and removing releases from your cluster.
+
+## Helm repository setup
+
+Add the Fossorial Helm chart repository:
+
+```bash
+helm repo add fossorial https://charts.fossorial.io
+helm repo update fossorial
+```
+
+Search for available charts:
+
+```bash
+helm search repo fossorial
+```
+
+The classic Helm repository flow is the default path for most installations:
+
+```bash
+helm install my-newt fossorial/newt
+helm install my-pangolin fossorial/pangolin
+```
+
+## Installation overview
+
+A typical Helm installation flow looks like this:
+
+<Steps>
+  <Step title="Create namespace and labels">
+    Create the namespace manually and apply required labels or annotations.
+  </Step>
+  <Step title="Prepare values files">
+    Create a `values.yaml` file for each release (`values-pangolin.yaml`, `values-newt.yaml`).
+  </Step>
+  <Step title="Install with Helm">
+    Install with `helm upgrade --install` to support first install and future updates with the same command.
+  </Step>
+  <Step title="Verify release and resources">
+    Confirm Helm release status and Kubernetes resources after deployment.
+  </Step>
+</Steps>
+
+<Info>
+It is recommended to create the namespace explicitly before installation. This allows you to apply Pod Security Admission labels, policy labels, annotations, or other cluster-specific metadata before the chart creates workloads.
+</Info>
+
+For detailed installation steps, see:
+
+* [Pangolin Helm Quick-Start](/self-host/manual/kubernetes/pangolin/helm) — Install Pangolin
+* [Newt Helm Quick-Start](/self-host/manual/kubernetes/newt/helm) — Install Newt
+
+## Install command patterns
+
+<CodeGroup>
+```bash Classic Helm repository
+helm upgrade --install pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+
+helm upgrade --install newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+```bash OCI (GHCR)
+helm upgrade --install pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0 \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+
+helm upgrade --install newt oci://ghcr.io/fosrl/helm-charts/newt \
+  --version 1.4.0 \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+</CodeGroup>
+
+## Namespace preparation
+
+Create the namespace before installing the chart:
+
+```bash
+kubectl create namespace pangolin
+```
+
+If your cluster uses Pod Security Admission or namespace-based policies, apply the required labels before installation.
+
+Example:
+
+```bash
+kubectl label namespace pangolin \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/audit=restricted \
+  pod-security.kubernetes.io/warn=restricted
+```
+
+<Warning>
+Pangolin deployments that include Gerbil require permissions that are not compatible with a restricted namespace profile, because Gerbil manages WireGuard and requires capabilities such as `NET_ADMIN`.
+</Warning>
+
+For more details, see [Prerequisites](/self-host/manual/kubernetes/prerequisites).
+
+## Install with a values file
+
+Both charts use values files for configuration.
+
+Pangolin example:
+
+```bash
+helm upgrade --install pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+Newt example:
+
+```bash
+helm upgrade --install newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+Using `helm upgrade --install` keeps the command usable for both the first installation and later configuration changes.
+
+<Note>
+Do not use `--create-namespace` if you need custom namespace labels or annotations. Create the namespace first and then run Helm against that namespace.
+</Note>
+
+## Values and configuration
+
+Keep reusable configuration in a values file:
+
+```bash
+helm upgrade --install pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+Use `--set` only for small tests or temporary overrides:
+
+```bash
+helm upgrade --install pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --set example.key=value
+```
+
+Common value sources:
+
+* `values-pangolin.yaml` for Pangolin.
+* `values-newt.yaml` for Newt.
+* Kubernetes Secrets for credentials.
+* Existing cluster resources such as TLS secrets, StorageClasses, or ingress controllers.
+
+Full configuration options are documented here:
+
+* [Pangolin Configuration](/self-host/manual/kubernetes/pangolin/configuration)
+* [Newt Configuration](/self-host/manual/kubernetes/newt/configuration)
+
+## Artifact Hub and chart discovery
+
+The Fossorial charts can be installed from the Fossorial Helm repository:
+
+```bash
+helm repo add fossorial https://charts.fossorial.io
+helm repo update fossorial
+helm search repo fossorial
+```
+
+Artifact Hub can also be used to discover published chart metadata, available versions, install commands, and repository information.
+
+<Note>
+Always verify the chart name, chart version, and repository URL before copying install commands into production.
+</Note>
+
+## OCI-based charts
+
+OCI is not a separate installation method. It only changes where Helm pulls the chart from.
+
+For Pangolin and Newt, OCI chart publishing is available in GHCR:
+
+* Newt: `oci://ghcr.io/fosrl/helm-charts/newt`
+* Pangolin: `oci://ghcr.io/fosrl/helm-charts/pangolin`
+
+You still use Helm in the same way: choose a chart, select a version, provide values, and install the release.
+
+### Pull OCI charts
+
+Newt example:
+
+```bash
+helm pull oci://ghcr.io/fosrl/helm-charts/newt \
+  --version 1.4.0
+```
+
+Pangolin example:
+
+```bash
+helm pull oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0
+```
+
+### Install from OCI
+
+Newt example:
+
+```bash
+helm upgrade --install newt oci://ghcr.io/fosrl/helm-charts/newt \
+  --version 1.4.0 \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+Pangolin example:
+
+```bash
+helm upgrade --install pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0 \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+<Info>
+Use the classic Helm repository when you want the normal `helm repo add` and `helm search repo` workflow. Use OCI when you want to pull charts directly from GHCR or when your deployment tooling expects OCI chart references.
+</Info>
+
+## Upgrade and maintenance
+
+### Update the classic Helm repository
+
+```bash
+helm repo update fossorial
+```
+
+This step is only needed when using the classic Helm repository. OCI installs pull the chart by OCI reference and version.
+
+### Upgrade Pangolin
+
+Classic Helm repository:
+
+```bash
+helm upgrade pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+OCI:
+
+```bash
+helm upgrade pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0 \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+### Upgrade Newt
+
+Classic Helm repository:
+
+```bash
+helm upgrade newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+OCI:
+
+```bash
+helm upgrade newt oci://ghcr.io/fosrl/helm-charts/newt \
+  --version 1.4.0 \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+### Check release status
+
+```bash
+helm status pangolin --namespace pangolin
+helm history pangolin --namespace pangolin
+```
+
+```bash
+helm status newt --namespace pangolin
+helm history newt --namespace pangolin
+```
+
+### View rendered manifests
+
+```bash
+helm get manifest pangolin --namespace pangolin
+```
+
+```bash
+helm get manifest newt --namespace pangolin
+```
+
+### View applied values
+
+```bash
+helm get values pangolin --namespace pangolin
+```
+
+```bash
+helm get values newt --namespace pangolin
+```
+
+### Roll back a release
+
+```bash
+helm rollback pangolin <revision> --namespace pangolin
+```
+
+```bash
+helm rollback newt <revision> --namespace pangolin
+```
+
+### Uninstall a release
+
+```bash
+helm uninstall pangolin --namespace pangolin
+```
+
+```bash
+helm uninstall newt --namespace pangolin
+```
+
+<Warning>
+Uninstalling a Helm release does not always remove persistent volumes, externally managed secrets, DNS records, certificates, or cloud load balancers. Review the namespace and related cluster resources before deleting data.
+</Warning>
+
+## Using Helm with GitOps
+
+Helm charts can also be installed and reconciled through GitOps tools.
+
+* [Argo CD](/self-host/manual/kubernetes/gitops/argocd) can deploy Helm charts from a Helm repository, Git repository, or OCI source.
+* [Flux](/self-host/manual/kubernetes/gitops/flux) can reconcile Helm charts through `HelmRepository`, `OCIRepository`, and `HelmRelease`.
+
+In these workflows, Helm is the chart format. The GitOps controller manages reconciliation.
+
+## Troubleshooting
+
+For component-specific troubleshooting, see:
+
+* [Pangolin Troubleshooting](/self-host/manual/kubernetes/pangolin/troubleshooting)
+* [Newt Troubleshooting](/self-host/manual/kubernetes/newt/troubleshooting)
+
+Useful Helm commands:
+
+```bash
+helm list --all-namespaces
+helm status <release-name> --namespace <namespace>
+helm history <release-name> --namespace <namespace>
+helm get values <release-name> --namespace <namespace>
+helm get manifest <release-name> --namespace <namespace>
+```
+
+Useful Kubernetes commands:
+
+```bash
+kubectl get pods -n pangolin
+kubectl get events -n pangolin --sort-by=.lastTimestamp
+kubectl describe pod <pod-name> -n pangolin
+kubectl logs <pod-name> -n pangolin
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Pangolin Helm Install" href="/self-host/manual/kubernetes/pangolin/helm" icon="server">
+		Install Pangolin with the Helm chart.
+	</Card>
+	<Card title="Newt Helm Install" href="/self-host/manual/kubernetes/newt/helm" icon="globe">
+		Install Newt with the Helm chart.
+	</Card>
+	<Card title="Pangolin Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders">
+		Configure Pangolin chart values for your cluster.
+	</Card>
+	<Card title="Newt Configuration" href="/self-host/manual/kubernetes/newt/configuration" icon="sliders">
+		Configure Newt chart values and credentials.
+	</Card>
+	<Card title="Argo CD" href="/self-host/manual/kubernetes/gitops/argocd" icon="code-branch">
+		Deploy the charts with Argo CD.
+	</Card>
+	<Card title="Flux" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch">
+		Deploy the charts with Flux.
+	</Card>
+</CardGroup>

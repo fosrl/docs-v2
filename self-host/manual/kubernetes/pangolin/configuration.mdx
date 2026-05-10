@@ -1,0 +1,1016 @@
+---
+title: "Pangolin Configuration"
+description: "Configuration reference for Pangolin Kubernetes deployments."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+This page covers the main Pangolin Kubernetes configuration options for Helm and Kustomize workflows.
+
+For exhaustive option coverage, refer to the chart resources:
+
+<CardGroup cols={3}>
+  <Card title="README" href="https://github.com/fosrl/helm-charts/blob/main/charts/pangolin/README.md" />
+  <Card title="values.yaml" href="https://github.com/fosrl/helm-charts/blob/main/charts/pangolin/values.yaml" />
+  <Card title="values.schema.json" href="https://github.com/fosrl/helm-charts/blob/main/charts/pangolin/values.schema.json" />
+</CardGroup>
+
+## Version context
+
+This page is aligned with the Pangolin Helm chart `0.1.0-alpha.0`.
+
+| Item | Value |
+| --- | --- |
+| Chart version | `0.1.0-alpha.0` |
+| Pangolin app version | `1.18.2` |
+| Kubernetes version | `>=1.30.14-0` |
+| Gerbil image tag | `1.3.1` |
+| pangolin-kube-controller image tag | `0.1.0-alpha.1` |
+| Traefik image tag | `v3.6.15` |
+
+## Configuration sections
+
+<AccordionGroup>
+  <Accordion title="Deployment topology" defaultOpen>
+
+Control how Pangolin components are deployed and integrated with Kubernetes.
+
+```yaml
+deployment:
+  type: controller
+  mode: multi
+  installTraefikController: false
+  traefikNamespace: ""
+```
+
+Recommended production topology:
+
+```yaml
+deployment:
+  type: controller
+  mode: multi
+```
+
+| Setting                                    | Description                                                                                                     |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `deployment.type=controller`               | Uses `pangolin-kube-controller` and Traefik CRDs. Recommended for Kubernetes deployments.                       |
+| `deployment.type=standalone`               | Runs an internal Traefik workload managed by this chart. Mainly useful for labs and self-contained deployments. |
+| `deployment.mode=multi`                    | Runs Pangolin, Gerbil, and controller/Traefik components as separate workloads. Recommended for production.     |
+| `deployment.mode=single`                   | Runs multiple components in one shared Pod. Useful only when you explicitly need a compact topology.            |
+| `deployment.installTraefikController=true` | Installs the bundled Traefik dependency in controller mode.                                                     |
+| `deployment.traefikNamespace`              | Namespace where Traefik controller resources live. Defaults to the release namespace when empty.                |
+
+<Note>
+In controller mode, Traefik CRDs and a Traefik controller must be available. You can install Traefik separately or enable the bundled Traefik dependency with `deployment.installTraefikController=true`.
+</Note>
+
+If you enable the bundled Traefik dependency, put Traefik chart overrides under the `traefikController` key.
+
+</Accordion>
+
+  <Accordion title="Namespace and Pod Security Admission">
+
+Namespace creation is controlled by the `namespace` block.
+
+```yaml
+namespace:
+  create: false
+  name: ""
+  labels: {}
+  podSecurity:
+    enforce: ""
+    warn: ""
+    audit: ""
+```
+
+Recommended pattern:
+
+1. Create the namespace manually.
+2. Apply the required labels and annotations.
+3. Install the chart into that namespace.
+
+```bash
+kubectl create namespace pangolin
+```
+
+Gerbil requires `NET_ADMIN` for WireGuard interface management. If your cluster enforces Pod Security Admission, the namespace must allow that capability.
+
+Example:
+
+```bash
+kubectl label namespace pangolin \
+  pod-security.kubernetes.io/enforce=privileged \
+  --overwrite
+```
+
+If you let the chart create the namespace, configure the Pod Security labels through values:
+
+```yaml
+namespace:
+  create: true
+  name: pangolin
+  podSecurity:
+    enforce: privileged
+    warn: baseline
+    audit: restricted
+```
+
+<Warning>
+Do not apply a restricted Pod Security profile to a namespace running Gerbil unless you have validated WireGuard functionality. Gerbil requires `NET_ADMIN`; removing it breaks tunnel management.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Database modes">
+
+Choose the database backend for Pangolin.
+
+```yaml
+database:
+  mode: cloudnativepg
+  name: pangolin
+  username: pangolin
+```
+
+Supported modes:
+
+| Mode            | Use case                                                              |
+| --------------- | --------------------------------------------------------------------- |
+| `cloudnativepg` | Recommended production mode using CloudNativePG. This is the default. |
+| `external`      | Production mode with an externally managed PostgreSQL database.       |
+| `embedded`      | Chart-managed PostgreSQL for labs and test environments.              |
+| `sqlite`        | Development or CI only. Not recommended for production.               |
+
+### CloudNativePG
+
+The default database mode is `cloudnativepg`.
+
+```yaml
+database:
+  mode: cloudnativepg
+  cloudnativepg:
+    cluster:
+      name: pangolin-db
+    connection:
+      database: pangolin
+      username: pangolin
+      sslMode: disable
+
+cnpg-operator:
+  enabled: false
+
+cnpg-cluster:
+  enabled: false
+  fullnameOverride: pangolin-db
+```
+
+CloudNativePG can be used in four common ways:
+
+| Mode                                   | Values                                                      |
+| -------------------------------------- | ----------------------------------------------------------- |
+| Existing operator and existing cluster | `cnpg-operator.enabled=false`, `cnpg-cluster.enabled=false` |
+| Chart installs operator only           | `cnpg-operator.enabled=true`, `cnpg-cluster.enabled=false`  |
+| Chart installs cluster only            | `cnpg-operator.enabled=false`, `cnpg-cluster.enabled=true`  |
+| Chart installs operator and cluster    | `cnpg-operator.enabled=true`, `cnpg-cluster.enabled=true`   |
+
+When `cnpg-cluster.enabled=true`, keep the CNPG cluster name consistent:
+
+```yaml
+database:
+  cloudnativepg:
+    cluster:
+      name: pangolin-db
+
+cnpg-cluster:
+  enabled: true
+  fullnameOverride: pangolin-db
+```
+
+For the default CNPG cluster name `pangolin-db`, CloudNativePG creates an application Secret named `pangolin-db-app` with the key `uri`. The chart can automatically use this default Secret when no explicit `database.connection.existingSecretName` is set.
+
+Explicit Secret reference:
+
+```yaml
+database:
+  connection:
+    existingSecretName: pangolin-db-app
+    existingSecretKey: uri
+```
+
+### External PostgreSQL
+
+For an external PostgreSQL database, prefer a Kubernetes Secret containing the final connection string.
+
+```yaml
+database:
+  mode: external
+  connection:
+    existingSecretName: pangolin-db-connection
+    existingSecretKey: connectionString
+```
+
+The Secret should contain a PostgreSQL connection string:
+
+```bash
+kubectl create secret generic pangolin-db-connection \
+  --namespace pangolin \
+  --from-literal=connectionString='postgresql://pangolin:password@postgres.example.com:5432/pangolin?sslmode=require'
+```
+
+You can also let the chart create a connection Secret from values:
+
+```yaml
+database:
+  mode: external
+  external:
+    generatedSecret:
+      create: true
+      host: postgres.example.com
+      port: 5432
+      database: pangolin
+      username: pangolin
+      password: "<password>"
+      sslMode: require
+```
+
+<Warning>
+Avoid storing database passwords directly in values files for production. Use an existing Secret or your normal secret-management workflow.
+</Warning>
+
+### Embedded PostgreSQL
+
+Embedded PostgreSQL is intended for labs and tests.
+
+```yaml
+database:
+  mode: embedded
+  embedded:
+    persistence:
+      enabled: true
+      size: 8Gi
+```
+
+### SQLite
+
+SQLite is only suitable for development, CI, or very small test deployments.
+
+```yaml
+database:
+  mode: sqlite
+  sqlite:
+    persistence:
+      enabled: true
+      size: 1Gi
+```
+
+</Accordion>
+
+  <Accordion title="Pangolin application config">
+
+The `pangolin.config` block renders `/app/config/config.yml`.
+
+```yaml
+pangolin:
+  config:
+    app:
+      dashboard_url: "https://pangolin.example.com"
+      log_level: info
+    domains:
+      domain1:
+        base_domain: "example.com"
+        cert_resolver: "letsencrypt"
+    gerbil:
+      start_port: 51820
+      clients_start_port: 21820
+      base_endpoint: "pangolin.example.com"
+      use_subdomain: false
+    traefik:
+      enabled: true
+      http_entrypoint: web
+      https_entrypoint: websecure
+      cert_resolver: letsencrypt
+```
+
+Important settings:
+
+| Setting                                     | Description                                                                                 |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `pangolin.config.app.dashboard_url`         | Public dashboard URL. Set this to the real user-facing URL.                                 |
+| `pangolin.config.domains`                   | Domain map used by Pangolin. Replace the default `example.com` entry before production use. |
+| `pangolin.config.gerbil.base_endpoint`      | Public hostname or IP where Gerbil is reachable.                                            |
+| `pangolin.config.gerbil.start_port`         | First WireGuard site port. Keep this aligned with `gerbil.ports.wg1`.                       |
+| `pangolin.config.gerbil.clients_start_port` | Client WireGuard port. Keep this aligned with `gerbil.ports.wg2`.                           |
+| `pangolin.config.traefik.enabled`           | Includes Pangolin's Traefik config section. This does not install Traefik.                  |
+| `pangolin.config.traefik.cert_resolver`     | ACME resolver name used in Pangolin-generated Traefik configuration.                        |
+
+<Note>
+`pangolin.config.traefik` controls the Traefik configuration generated by Pangolin. Traefik installation is controlled separately through controller mode, the bundled Traefik dependency, or standalone Traefik mode.
+</Note>
+
+### Pangolin app secret
+
+Pangolin requires `SERVER_SECRET`.
+
+Use an existing Secret for production:
+
+```yaml
+pangolin:
+  secret:
+    existingSecretName: pangolin-app-secret
+    existingSecretKey: SERVER_SECRET
+```
+
+Create the Secret:
+
+```bash
+kubectl create secret generic pangolin-app-secret \
+  --namespace pangolin \
+  --from-literal=SERVER_SECRET='<strong-random-secret>'
+```
+
+If no existing Secret is provided, the chart can generate one:
+
+```yaml
+pangolin:
+  secret:
+    generated:
+      create: true
+      key: SERVER_SECRET
+      length: 64
+```
+
+<Warning>
+Do not commit plaintext secrets to Git. For GitOps workflows, use SOPS, Sealed Secrets, External Secrets Operator, Vault, Infisical, or a cloud secret manager.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Dashboard IngressRoute">
+
+In controller mode, the chart can render a Traefik `IngressRoute` for the Pangolin dashboard and API.
+
+```yaml
+pangolin:
+  ingressRoute:
+    dashboard:
+      enabled: true
+      host: ""
+      ingressClassName: ""
+      traefikSelectorLabels: {}
+      entryPoints:
+        - websecure
+      routes:
+        api:
+          enabled: true
+          pathPrefix: /api/v1
+          priority: 100
+        dashboard:
+          enabled: true
+          priority: 10
+      tls:
+        enabled: true
+        certResolver: ""
+        secretName: ""
+```
+
+Default routing behavior:
+
+| Route     | Match                              | Backend port                                      |
+| --------- | ---------------------------------- | ------------------------------------------------- |
+| API       | `Host(...) && PathPrefix(/api/v1)` | `pangolin.service.ports.external`, default `3000` |
+| Dashboard | `Host(...)`                        | `pangolin.service.ports.next`, default `3002`     |
+
+The host defaults to the hostname from `pangolin.config.app.dashboard_url`. You can override it with:
+
+```yaml
+pangolin:
+  ingressRoute:
+    dashboard:
+      host: pangolin.example.com
+```
+
+### TLS with certResolver
+
+```yaml
+pangolin:
+  config:
+    traefik:
+      cert_resolver: letsencrypt
+  ingressRoute:
+    dashboard:
+      tls:
+        enabled: true
+        certResolver: letsencrypt
+        secretName: ""
+```
+
+### TLS with existing Secret
+
+```yaml
+pangolin:
+  ingressRoute:
+    dashboard:
+      tls:
+        enabled: true
+        certResolver: ""
+        secretName: pangolin-dashboard-tls
+```
+
+<Warning>
+`tls.certResolver` and `tls.secretName` are mutually exclusive. Use one or the other.
+</Warning>
+
+### Multi-Traefik setups
+
+Use labels to target a specific Traefik CRD provider when multiple Traefik instances watch different label selectors:
+
+```yaml
+pangolin:
+  ingressRoute:
+    dashboard:
+      traefikSelectorLabels:
+        traefik-instance: public
+```
+
+You can also set an ingress class annotation:
+
+```yaml
+pangolin:
+  ingressRoute:
+    dashboard:
+      ingressClassName: traefik-public
+```
+
+</Accordion>
+
+  <Accordion title="Gerbil">
+
+Gerbil manages WireGuard tunnel connectivity for Pangolin.
+
+```yaml
+gerbil:
+  enabled: true
+  startupMode: normal
+  ports:
+    wg1: 51820
+    wg2: 21820
+    internalApi: 3004
+  service:
+    enabled: true
+    type: ClusterIP
+  persistence:
+    enabled: true
+    size: 1Gi
+```
+
+Important settings:
+
+| Setting                      | Description                                                                               |
+| ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `gerbil.enabled`             | Enables the Gerbil component.                                                             |
+| `gerbil.startupMode`         | Controls first-run and normal startup behavior.                                           |
+| `gerbil.ports.wg1`           | First WireGuard UDP port. Keep aligned with `pangolin.config.gerbil.start_port`.          |
+| `gerbil.ports.wg2`           | Second WireGuard UDP port. Keep aligned with `pangolin.config.gerbil.clients_start_port`. |
+| `gerbil.ports.internalApi`   | Internal Gerbil API/listener port.                                                        |
+| `gerbil.service.enabled`     | Creates a Service for Gerbil UDP traffic.                                                 |
+| `gerbil.persistence.enabled` | Persists Gerbil key/config data. Recommended for production.                              |
+
+### Startup mode
+
+```yaml
+gerbil:
+  startupMode: delayed
+```
+
+| Mode                 | Behavior                                                                                                                     |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `normal`             | Starts Gerbil immediately. Use after Pangolin setup is complete.                                                             |
+| `delayed`            | Renders Gerbil resources but keeps the Deployment at `replicas: 0` in multi mode. Useful for first installs and smoke tests. |
+| `disabledUntilSetup` | Does not render Gerbil resources until switched back to `normal` or `delayed`.                                               |
+
+For first installs, `delayed` can help when Gerbil would otherwise fail before the initial Pangolin setup is complete.
+
+Switch back after setup:
+
+```bash
+helm upgrade pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --reuse-values \
+  --set gerbil.startupMode=normal
+```
+
+### Security
+
+Gerbil requires `NET_ADMIN`.
+
+```yaml
+gerbil:
+  securityContext:
+    runAsNonRoot: false
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false
+    capabilities:
+      add:
+        - NET_ADMIN
+      drop:
+        - ALL
+```
+
+<Warning>
+Do not remove `NET_ADMIN` from Gerbil. Without it, Gerbil cannot create or manage WireGuard interfaces. `SYS_MODULE` is not added by default and should only be added when your node kernel requires module loading from inside the container.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="NetworkPolicy">
+
+NetworkPolicy rendering is enabled by default.
+
+<Note>
+The chart-managed NetworkPolicies are intended to allow required Pangolin, Gerbil, database, DNS, and controller traffic for standard deployments.
+</Note>
+
+```yaml
+networkPolicy:
+  enabled: true
+  allowExternalIngress: true
+  allowExternalEgressHttps: false
+  dns:
+    enabled: true
+  database:
+    enabled: true
+    port: 5432
+  controller:
+    egress:
+      enabled: true
+      kubernetesApi:
+        enabled: true
+        cidr: ""
+        port: 443
+    metrics:
+      enabled: false
+  gerbil:
+    allowWireguardUdpEgress: true
+    wireguardUdpCIDRs:
+      - 0.0.0.0/0
+```
+
+Important defaults:
+
+| Setting                                                 | Default | Notes                                                                            |
+| ------------------------------------------------------- | ------- | -------------------------------------------------------------------------------- |
+| `networkPolicy.enabled`                                 | `true`  | Renders NetworkPolicy resources.                                                 |
+| `networkPolicy.allowExternalIngress`                    | `true`  | Allows public ingress to exposed services controlled by the chart.               |
+| `networkPolicy.allowExternalEgressHttps`                | `false` | Broad HTTPS egress is not allowed by default. Prefer scoped `extraEgress` rules. |
+| `networkPolicy.dns.enabled`                             | `true`  | Allows DNS egress.                                                               |
+| `networkPolicy.database.enabled`                        | `true`  | Adds database egress rules for Pangolin.                                         |
+| `networkPolicy.controller.egress.kubernetesApi.enabled` | `true`  | Allows controller API-server access when configured.                             |
+| `networkPolicy.gerbil.allowWireguardUdpEgress`          | `true`  | Allows Gerbil UDP egress for WireGuard peer traffic.                             |
+
+When tightening policies, verify these paths:
+
+* DNS egress
+* Pangolin to database
+* controller to Kubernetes API
+* ingress controller to Pangolin service
+* Gerbil UDP traffic
+* outbound access for SMTP, OIDC, webhooks, or other external integrations
+
+Use component-scoped rules where possible:
+
+```yaml
+networkPolicy:
+  pangolin:
+    extraEgress: []
+  controller:
+    extraEgress: []
+  gerbil:
+    extraEgress: []
+```
+
+<Warning>
+If you disable or replace chart-managed NetworkPolicies, ensure your custom policies still allow all required traffic paths.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Monitoring">
+
+The chart has chart-level monitoring settings for Pangolin and controller-specific monitoring settings for `pangolin-kube-controller`.
+
+### Pangolin monitoring
+
+```yaml
+monitoring:
+  enabled: false
+  service:
+    enabled: false
+    type: ClusterIP
+    port: 9090
+    portName: metrics
+  metrics:
+    targetPortName: metrics
+    targetPort: 9090
+    path: /metrics
+```
+
+### Controller monitoring
+
+```yaml
+controller:
+  service:
+    enabled: true
+    port: 9090
+    portName: metrics
+  monitoring:
+    serviceMonitor:
+      enabled: false
+    podMonitor:
+      enabled: false
+    prometheusRule:
+      enabled: false
+```
+
+Enable controller ServiceMonitor when Prometheus Operator is available:
+
+```yaml
+controller:
+  monitoring:
+    serviceMonitor:
+      enabled: true
+```
+
+Enable chart-level metrics Service when the Pangolin app exposes metrics in your selected configuration:
+
+```yaml
+monitoring:
+  enabled: true
+  service:
+    enabled: true
+```
+
+<Note>
+Only enable ServiceMonitor, PodMonitor, or PrometheusRule resources when the matching CRDs are installed in the cluster.
+</Note>
+
+</Accordion>
+
+  <Accordion title="ServiceAccount and RBAC">
+
+The chart uses separate ServiceAccounts for Pangolin, Gerbil, and the controller in multi mode.
+
+```yaml
+serviceAccount:
+  pangolin:
+    create: true
+    automountServiceAccountToken: false
+  gerbil:
+    create: true
+    automountServiceAccountToken: false
+  controller:
+    create: true
+    automountServiceAccountToken: true
+
+rbac:
+  create: true
+```
+
+Default behavior:
+
+| Component  | API token mounted by default | Reason                                                                  |
+| ---------- | ---------------------------- | ----------------------------------------------------------------------- |
+| Pangolin   | No                           | The app does not need Kubernetes API access.                            |
+| Gerbil     | No                           | Gerbil manages WireGuard and does not need Kubernetes API access.       |
+| Controller | Yes                          | The controller reconciles Traefik CRDs and needs Kubernetes API access. |
+
+<Note>
+In `deployment.mode=single` with `deployment.type=controller`, Kubernetes ServiceAccount selection is Pod-level. The shared Pod uses the controller ServiceAccount and token.
+</Note>
+
+</Accordion>
+
+  <Accordion title="Resources, scheduling, and images">
+
+Global scheduling defaults:
+
+```yaml
+global:
+  storageClass: ""
+  image:
+    registry: docker.io
+    imagePullPolicy: IfNotPresent
+    imagePullSecrets: []
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+  priorityClassName: ""
+```
+
+Resource rendering policy:
+
+```yaml
+resourcesPolicy:
+  cpuLimits:
+    enabled: true
+  ephemeralStorage:
+    enabled: false
+```
+
+<Warning>
+CPU limits can cause throttling even when spare CPU exists on the node. For most deployments, start with CPU requests and memory limits, then add CPU limits only when explicitly required.
+</Warning>
+
+Pangolin resources:
+
+```yaml
+pangolin:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+      ephemeral-storage: 32Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+      ephemeral-storage: 256Mi
+```
+
+Gerbil resources:
+
+```yaml
+gerbil:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 16Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+      ephemeral-storage: 128Mi
+```
+
+Controller resources:
+
+```yaml
+controller:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+      ephemeral-storage: 16Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+      ephemeral-storage: 128Mi
+```
+
+Image configuration:
+
+```yaml
+images:
+  pangolin:
+    registry: docker.io
+    repository: fosrl/pangolin
+    tag: ""
+    digest: ""
+  pangolinPostgresql:
+    registry: docker.io
+    repository: fosrl/pangolin
+    tag: ""
+    digest: ""
+  gerbil:
+    registry: docker.io
+    repository: fosrl/gerbil
+    tag: "1.3.1"
+    digest: ""
+  controller:
+    registry: ghcr.io
+    repository: fosrl/pangolin-kube-controller
+    tag: "0.1.0-alpha.1"
+    digest: ""
+  traefik:
+    registry: docker.io
+    repository: traefik
+    tag: v3.6.15
+    digest: ""
+```
+
+The chart automatically selects the PostgreSQL-capable Pangolin image variant for non-SQLite database modes unless you override the Pangolin tag or digest.
+
+<Note>
+Ephemeral-storage requests and limits are only rendered when `resourcesPolicy.ephemeralStorage.enabled=true`.
+</Note>
+
+</Accordion>
+
+  <Accordion title="Standalone Traefik">
+
+Standalone Traefik is used mainly when `deployment.type=standalone`.
+
+```yaml
+traefik:
+  enabled: false
+  service:
+    enabled: true
+    type: LoadBalancer
+  config:
+    dashboard: false
+    httpEntrypoint: web
+    httpsEntrypoint: websecure
+    certResolver: letsencrypt
+    letsencryptEmail: ""
+  persistence:
+    enabled: false
+```
+
+Important notes:
+
+- `traefik.enabled=true` runs an internal Traefik workload managed by this chart.
+- `traefik.config.letsencryptEmail` is required when standalone Traefik is enabled.
+- If you enable the Traefik dashboard, enable `traefik.persistence.enabled` so ACME state survives restarts.
+- In controller mode, prefer using an existing or bundled Traefik controller instead of standalone Traefik.
+
+</Accordion>
+
+  <Accordion title="Blueprint storage">
+
+The chart can store Pangolin Blueprint YAML files as Kubernetes ConfigMaps and Secrets.
+
+```yaml
+pangolin:
+  blueprints:
+    enabled: false
+    configMap:
+      create: true
+    files: {}
+    environmentSecret:
+      create: true
+    existingConfigMap: ""
+    existingEnvironmentSecret: ""
+```
+
+Example:
+
+```yaml
+pangolin:
+  blueprints:
+    enabled: true
+    configMap:
+      create: true
+    files:
+      site-blueprint.yaml: |
+        sites:
+          my-site:
+            name: My Site
+        public-resources:
+          web-app:
+            name: Web Application
+            protocol: http
+            full-domain: "app.example.com"
+            targets:
+              - site: my-site
+                hostname: app
+                port: 8080
+                method: http
+```
+
+Sensitive blueprint environment values should come from a Secret:
+
+```yaml
+pangolin:
+  blueprints:
+    enabled: true
+    existingConfigMap: my-blueprint-configmap
+    existingEnvironmentSecret: my-blueprint-env
+```
+
+<Warning>
+The Pangolin server does not apply Blueprint files directly. Blueprints are applied by Newt through the Pangolin API using `--blueprint-file` or `--provisioning-blueprint-file`.
+</Warning>
+
+</Accordion>
+
+</AccordionGroup>
+
+## Configuration by install method
+
+### Helm
+
+Use a values file:
+
+```bash
+helm upgrade --install pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+Use inline values only for small tests:
+
+```bash
+helm upgrade --install pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --set deployment.type=controller \
+  --set deployment.mode=multi \
+  --set database.mode=cloudnativepg \
+  --set pangolin.config.app.dashboard_url=https://pangolin.example.com
+```
+
+See [Pangolin Helm](/self-host/manual/kubernetes/pangolin/helm) for the installation flow.
+
+### Kustomize
+
+Render the chart with Helm, then apply Kustomize overlays:
+
+```bash
+helm template pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml \
+  > base/pangolin.yaml
+```
+
+Apply the overlay:
+
+```bash
+kubectl apply -k overlays/prod
+```
+
+See [Pangolin Kustomize](/self-host/manual/kubernetes/pangolin/kustomize) for the Kustomize workflow.
+
+### GitOps
+
+Store Helm values or Kustomize overlays in Git. Argo CD or Flux reconciles the desired state.
+
+Argo CD Helm example:
+
+```yaml
+spec:
+  source:
+    helm:
+      values: |
+        deployment:
+          type: controller
+          mode: multi
+        database:
+          mode: cloudnativepg
+```
+
+Flux HelmRelease example:
+
+```yaml
+spec:
+  values:
+    deployment:
+      type: controller
+      mode: multi
+    database:
+      mode: cloudnativepg
+```
+
+See [GitOps](/self-host/manual/kubernetes/gitops/overview) for GitOps guidance.
+
+## Production checklist
+
+Before deploying to production:
+
+* [ ] Use `deployment.type=controller`, unless you have a specific reason to use standalone mode.
+* [ ] Use `deployment.mode=multi`.
+* [ ] Use `database.mode=cloudnativepg` or `database.mode=external`.
+* [ ] Avoid SQLite for production.
+* [ ] Configure a real `pangolin.config.app.dashboard_url`.
+* [ ] Replace the default `example.com` domain entry.
+* [ ] Configure `pangolin.config.gerbil.base_endpoint`.
+* [ ] Keep `pangolin.config.gerbil.start_port` aligned with `gerbil.ports.wg1`.
+* [ ] Keep `pangolin.config.gerbil.clients_start_port` aligned with `gerbil.ports.wg2`.
+* [ ] Configure TLS with either a Traefik cert resolver or an existing TLS Secret.
+* [ ] Create or label the namespace so Gerbil can use `NET_ADMIN`.
+* [ ] Keep Gerbil persistence enabled.
+* [ ] Store the Pangolin app secret in a Kubernetes Secret.
+* [ ] Use an existing database connection Secret for external PostgreSQL.
+* [ ] Review NetworkPolicy egress requirements.
+* [ ] Avoid broad `0.0.0.0/0` egress unless required.
+* [ ] Enable monitoring resources only when the required CRDs exist.
+* [ ] Set resource requests and limits based on expected traffic.
+* [ ] Define a database backup strategy.
+* [ ] Test upgrades in a staging environment before production.
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Helm Install" href="/self-host/manual/kubernetes/pangolin/helm" icon="box">
+		Install Pangolin with Helm.
+	</Card>
+	<Card title="Kustomize Install" href="/self-host/manual/kubernetes/pangolin/kustomize" icon="layer-group">
+		Install Pangolin with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/pangolin/troubleshooting" icon="circle-question">
+		Debug Pangolin deployments on Kubernetes.
+	</Card>
+	<Card title="GitOps" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
+		Deploy Pangolin with Argo CD or Flux.
+	</Card>
+</CardGroup>

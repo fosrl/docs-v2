@@ -1,0 +1,559 @@
+---
+title: "Flux"
+description: "Deploy Pangolin and Newt using Flux for Git-driven GitOps reconciliation."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Flux is a declarative GitOps tool that uses Kubernetes-native Custom Resources to manage deployments. This guide covers installing Pangolin and Newt using Flux.
+
+## Flux overview
+
+Flux watches your Git repository and continuous reconciles cluster state using Kubernetes CRDs:
+
+- **HelmRepository**: Defines a Helm chart repository
+- **HelmRelease**: Declaratively manages a Helm chart deployment
+- **GitRepository**: References a Git repository
+- **Kustomization**: Reconciles Kustomize overlays
+- **OCIRepository**: References an OCI-based container registry (for Helm charts)
+
+**Key benefits**:
+
+- Native Kubernetes reconciliation (no separate UI needed, though one exists)
+- Lightweight footprint
+- Excellent for multi-cluster deployments
+- Declarative everything: sources, releases, dependencies
+
+## Flux prerequisites
+
+- Kubernetes 1.25+
+- `flux` CLI installed: [Flux install guide](https://fluxcd.io/flux/installation/)
+- Git repository for configuration (optional, can use built-in sources)
+- GitHub, GitLab, or other Git provider account (optional)
+
+Install Flux CLI:
+
+```bash
+# macOS/Linux with brew
+brew install flux
+
+# or curl
+curl -s https://fluxcd.io/install.sh | sudo bash
+
+# Verify
+flux --version
+```
+
+## Install Flux on your cluster
+
+### Option 1: Bootstrap Flux from GitHub
+
+Flux `bootstrap` automatically installs Flux and configures Git sync:
+
+```bash
+flux bootstrap github \
+  --owner=my-org \
+  --repo=infrastructure \
+  --personal \
+  --path=clusters/production
+```
+
+This creates the Git repository structure and installs Flux components.
+
+### Option 2: Manual Flux installation
+
+```bash
+# Create flux-system namespace and install Flux
+flux install --namespace=flux-system --network-policy=true
+```
+
+## Install Pangolin with Flux using HelmRelease
+
+### Step 1: Create HelmRepository
+
+Define the Fossorial Helm chart repository:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: HelmRepository
+metadata:
+  name: fossorial
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: https://charts.fossorial.io
+```
+
+Apply:
+
+```bash
+kubectl apply -f helmrepo.yaml
+
+# Verify
+kubectl get helmrepo -n flux-system
+```
+
+### Step 2: Create Pangolin HelmRelease
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pangolin
+  namespace: pangolin
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: pangolin
+      version: 0.1.0-alpha.0  # or use ~0.1.0 for auto-upgrades
+      sourceRef:
+        kind: HelmRepository
+        name: fossorial
+        namespace: flux-system
+  
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
+  
+  values:
+    deployment:
+      type: controller
+      mode: multi
+
+    database:
+      mode: cloudnativepg
+
+    pangolin:
+      config:
+        app:
+          dashboard_url: https://pangolin.example.com
+        domains:
+          domain1:
+            base_domain: example.com
+        gerbil:
+          base_endpoint: vpn.example.com
+
+    ingress:
+      enabled: true
+      className: traefik
+      hosts:
+        - host: pangolin.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: pangolin-tls
+          hosts:
+            - pangolin.example.com
+```
+
+Create namespace:
+
+```bash
+kubectl create namespace pangolin
+```
+
+Apply:
+
+```bash
+kubectl apply -f pangolin-helmrelease.yaml
+```
+
+### Step 3: Monitor reconciliation
+
+```bash
+# Check HelmRelease status
+kubectl get helmrelease -n pangolin
+
+# Watch live
+kubectl get helmrelease -n pangolin -w
+
+# Describe for details
+kubectl describe helmrelease pangolin -n pangolin
+
+# Check Flux logs
+flux logs --all-namespaces --follow
+```
+
+## Install Newt with Flux using HelmRelease
+
+### Step 1: Create Newt auth secret
+
+```bash
+kubectl create secret generic newt-auth \
+  -n pangolin \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<your-newt-id> \
+  --from-literal=NEWT_SECRET=<your-newt-secret>
+```
+
+### Step 2: Create Newt HelmRelease
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: newt
+  namespace: pangolin
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: newt
+      version: 1.4.0
+      sourceRef:
+        kind: HelmRepository
+        name: fossorial
+        namespace: flux-system
+  
+  values:
+    newtInstances:
+      - name: main-tunnel
+        enabled: true
+        auth:
+          existingSecretName: newt-auth
+```
+
+Apply:
+
+```bash
+kubectl apply -f newt-helmrelease.yaml
+```
+
+### Step 3: Verify
+
+```bash
+kubectl get helmrelease -n pangolin
+kubectl describe helmrelease newt -n pangolin
+```
+
+## Using Flux with Git repository (GitOps)
+
+Store Flux configuration in Git and have Flux automatically reconcile changes:
+
+### Repository structure
+
+```
+infrastructure/
+├── clusters/
+│   └── production/
+│       ├── flux-system/
+│       │   └── gotk-components.yaml (auto-generated)
+│       ├── pangolin/
+│       │   ├── helmrepo.yaml
+│       │   ├── pangolin-helmrelease.yaml
+│       │   └── newt-helmrelease.yaml
+│       └── kustomization.yaml
+└── apps/
+    ├── pangolin/
+    │   └── values.yaml
+    └── newt/
+        └── values.yaml
+```
+
+### GitRepository for configuration
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: GitRepository
+metadata:
+  name: infrastructure
+  namespace: flux-system
+spec:
+  interval: 1m
+  url: https://github.com/my-org/infrastructure
+  ref:
+    branch: main
+```
+
+### Kustomization for syncing
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: production
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: infrastructure
+  path: ./clusters/production
+  prune: true
+  wait: true
+```
+
+Flux watches `clusters/production` in Git and auto-applies all resources.
+
+## Using Flux with Kustomize overlays
+
+Manage environment-specific overlays with Flux:
+
+### Repository structure
+
+```
+overlays/
+├── dev/
+│   ├── kustomization.yaml
+│   └── pangolin-patch.yaml
+├── staging/
+│   └── kustomization.yaml
+└── prod/
+    ├── kustomization.yaml
+    └── pangolin-patch.yaml
+```
+
+### Kustomization resource
+
+```yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: pangolin-prod
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: infrastructure
+  path: ./overlays/prod
+  prune: true
+  wait: true
+```
+
+Flux builds and applies the Kustomize overlay automatically.
+
+## Using Flux with OCI Helm charts
+
+If Helm charts are available in an OCI registry:
+
+```yaml
+apiVersion: source.toolkit.fluxcd.io/v1beta2
+kind: OCIRepository
+metadata:
+  name: fossorial-oci
+  namespace: flux-system
+spec:
+  interval: 5m
+  url: oci://registry.example.com/fossorial
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pangolin
+  namespace: pangolin
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: pangolin
+      version: 0.1.0-alpha.0
+      sourceRef:
+        kind: OCIRepository
+        name: fossorial-oci
+        namespace: flux-system
+  values:
+    # ... values ...
+```
+
+## Advanced: Dependency ordering
+
+Order HelmReleases to install dependencies first:
+
+```yaml
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: cert-manager
+      # ...
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pangolin
+  namespace: pangolin
+spec:
+  interval: 10m
+  dependsOn:
+    - name: cert-manager
+      namespace: cert-manager
+  chart:
+    spec:
+      chart: pangolin
+      # ...
+```
+
+Flux ensures `cert-manager` reconciles before `pangolin`.
+
+## Advanced: valuesFrom ConfigMap/Secret
+
+Store values in ConfigMaps or Secrets, referenced from HelmRelease:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pangolin-values
+  namespace: pangolin
+data:
+  values.yaml: |
+    deployment:
+      type: controller
+      mode: multi
+
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pangolin
+  namespace: pangolin
+spec:
+  interval: 10m
+  chart:
+    spec:
+      chart: pangolin
+      # ...
+  valuesFrom:
+    - kind: ConfigMap
+      name: pangolin-values
+```
+
+Flux extracts values from the ConfigMap and applies them to the HelmRelease.
+
+## Troubleshooting Flux
+
+### Check Flux components
+
+```bash
+kubectl get deployments -n flux-system
+flux check --all-namespaces
+```
+
+### Check HelmRelease status
+
+```bash
+kubectl get helmrelease -n pangolin
+kubectl describe helmrelease pangolin -n pangolin
+kubectl get helmrelease pangolin -n pangolin -o yaml
+```
+
+### View reconciliation logs
+
+```bash
+flux logs --all-namespaces --follow
+
+# Specific resource
+kubectl logs -n pangolin deployment/helm-operator -f
+```
+
+### Manual reconciliation
+
+```bash
+flux reconcile helmrelease pangolin -n pangolin
+flux reconcile kustomization production -n flux-system
+```
+
+### Suspend reconciliation
+
+```bash
+flux suspend helmrelease pangolin -n pangolin
+```
+
+### Resume reconciliation
+
+```bash
+flux resume helmrelease pangolin -n pangolin
+```
+
+## Multi-environment example
+
+### Bootstrap multiple clusters
+
+```bash
+# Production cluster
+flux bootstrap github \
+  --owner=my-org \
+  --repo=infrastructure \
+  --personal \
+  --path=clusters/production
+
+# Staging cluster (from different checkout)
+flux bootstrap github \
+  --owner=my-org \
+  --repo=infrastructure \
+  --personal \
+  --path=clusters/staging
+```
+
+Each cluster reconciles its own `clusters/*/` directory.
+
+### Repository structure
+
+```
+clusters/
+├── production/
+│   ├── kustomization.yaml
+│   └── pangolin/
+│       ├── helmrepo.yaml
+│       └── helmrelease.yaml (prod values)
+├── staging/
+│   ├── kustomization.yaml
+│   └── pangolin/
+│       ├── helmrepo.yaml
+│       └── helmrelease.yaml (staging values)
+└── dev/
+    ├── kustomization.yaml
+    └── pangolin/
+        └── helmrelease.yaml (dev values)
+```
+
+Each environment's HelmRelease uses environment-specific values.
+
+## Important notes
+
+### CRD management
+
+When using Flux with Helm charts that include CRDs:
+
+```yaml
+spec:
+  install:
+    crds: Create      # Create CRDs on first install
+  upgrade:
+    crds: CreateReplace  # Update CRDs on upgrade
+```
+
+### Namespace creation
+
+Flux automatically creates namespaces if they don't exist. Ensure appropriate RBAC.
+
+### GitOps best practices
+
+- Use branches for different environments
+- Protect production branches with review requirements
+- Store secrets using sealed-secrets or external-secrets
+- Track all changes in Git
+- Use consistent naming conventions
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="GitOps Overview" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch" />
+	<Card title="Argo CD" href="/self-host/manual/kubernetes/gitops/argocd" icon="code-branch" />
+	<Card title="Pangolin Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders" />
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/pangolin/troubleshooting" icon="circle-question" />
+</CardGroup>

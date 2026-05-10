@@ -1,0 +1,708 @@
+---
+title: "Pangolin Kustomize"
+description: "Deploy Pangolin on Kubernetes using Helm-rendered manifests and Kustomize overlays."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Use Kustomize when you want to manage Pangolin with rendered manifests, environment-specific overlays, and explicit patches in Git.
+
+For Pangolin, the supported Kustomize workflow is:
+
+1. Render the Pangolin Helm chart to manifests.
+2. Use the rendered output as the Kustomize base.
+3. Create overlays per environment.
+4. Apply the overlay with `kubectl apply -k` or reconcile it with Argo CD or Flux.
+
+## When to use Kustomize for Pangolin
+
+Use Kustomize if you:
+
+- want environment-specific overlays for dev, staging, or production
+- need explicit patches committed to Git
+- prefer reviewing rendered Kubernetes manifests before applying them
+- use Argo CD or Flux with Kustomize sources
+- want to customize Helm-rendered output without forking the chart
+
+For a simpler single-environment setup, use [Pangolin Helm](/self-host/manual/kubernetes/pangolin/helm).
+
+## Version context
+
+This page is aligned with the Pangolin Helm chart `0.1.0-alpha.0`.
+
+| Item | Value |
+| --- | --- |
+| Chart version | `0.1.0-alpha.0` |
+| Pangolin app version | `1.18.2` |
+| Kubernetes version | `>=1.30.14-0` |
+| Gerbil image tag | `1.3.1` |
+| pangolin-kube-controller image tag | `0.1.0-alpha.1` |
+| Traefik image tag | `v3.6.15` |
+
+## Supported approach
+
+The Pangolin chart does not provide native Kustomize bases. Render the Helm chart first, then use Kustomize on the rendered manifests.
+
+<Warning>
+Do not manage the same Pangolin resources with both a live Helm release and Kustomize. Pick one ownership model per environment.
+</Warning>
+
+Recommended ownership model:
+
+- Use Helm only to render the Pangolin chart.
+- Use Kustomize, Argo CD, or Flux to apply and reconcile the rendered manifests.
+- Re-render the base when upgrading the chart or changing Helm values.
+
+## Example directory structure
+
+```text
+pangolin-deployment/
+├── base/
+│   ├── kustomization.yaml
+│   └── pangolin.yaml
+├── overlays/
+│   ├── dev/
+│   │   ├── kustomization.yaml
+│   │   └── patches/
+│   │       └── pangolin-resources.patch.yaml
+│   ├── staging/
+│   │   ├── kustomization.yaml
+│   │   └── patches/
+│   │       └── pangolin-resources.patch.yaml
+│   └── prod/
+│       ├── kustomization.yaml
+│       └── patches/
+│           ├── pangolin-resources.patch.yaml
+│           └── ingressroute-host.patch.yaml
+└── values/
+    ├── values-base.yaml
+    ├── values-dev.yaml
+    ├── values-staging.yaml
+    └── values-prod.yaml
+```
+
+## Step 1: Create the namespace
+
+Create the namespace before applying rendered manifests:
+
+```bash
+kubectl create namespace pangolin
+```
+
+Gerbil requires `NET_ADMIN` for WireGuard interface management. If your cluster enforces Pod Security Admission, label the namespace before creating workloads:
+
+```bash
+kubectl label namespace pangolin \
+  pod-security.kubernetes.io/enforce=privileged \
+  pod-security.kubernetes.io/warn=baseline \
+  pod-security.kubernetes.io/audit=restricted \
+  --overwrite
+```
+
+<Warning>
+Do not use a restricted Pod Security profile for a namespace running Gerbil unless you have validated the selected chart mode. Gerbil requires `NET_ADMIN`.
+</Warning>
+
+## Step 2: Create the Pangolin app Secret
+
+Create a Secret for `SERVER_SECRET`:
+
+```bash
+kubectl create secret generic pangolin-app-secret \
+  --namespace pangolin \
+  --from-literal=SERVER_SECRET='<strong-random-secret>'
+```
+
+Do not commit this Secret to Git.
+
+## Step 3: Create base values
+
+Create `values/values-base.yaml`:
+
+```yaml
+deployment:
+  type: controller
+  mode: multi
+  installTraefikController: false
+
+database:
+  mode: cloudnativepg
+  cloudnativepg:
+    cluster:
+      name: pangolin-db
+
+cnpg-operator:
+  enabled: true
+
+cnpg-cluster:
+  enabled: true
+  fullnameOverride: pangolin-db
+  cluster:
+    instances: 1
+    storage:
+      size: 8Gi
+
+pangolin:
+  secret:
+    existingSecretName: pangolin-app-secret
+    existingSecretKey: SERVER_SECRET
+
+  config:
+    app:
+      dashboard_url: https://pangolin.example.com
+    domains:
+      domain1:
+        base_domain: example.com
+        cert_resolver: letsencrypt
+    gerbil:
+      base_endpoint: vpn.example.com
+      start_port: 51820
+      clients_start_port: 21820
+    traefik:
+      enabled: true
+      http_entrypoint: web
+      https_entrypoint: websecure
+      cert_resolver: letsencrypt
+
+  ingressRoute:
+    dashboard:
+      enabled: true
+      host: pangolin.example.com
+      entryPoints:
+        - websecure
+      tls:
+        enabled: true
+        certResolver: letsencrypt
+        secretName: ""
+
+gerbil:
+  enabled: true
+  startupMode: delayed
+  persistence:
+    enabled: true
+    size: 1Gi
+```
+
+Replace:
+
+* `pangolin.example.com`
+* `example.com`
+* `vpn.example.com`
+* TLS resolver names
+* storage settings
+
+<Note>
+Use `gerbil.startupMode=delayed` for the first install if Gerbil should not start before the initial Pangolin setup is complete. Switch it to `normal` after setup.
+</Note>
+
+## Step 4: Render Pangolin to the base
+
+Add and update the Helm repository:
+
+```bash
+helm repo add fossorial https://charts.fossorial.io
+helm repo update fossorial
+```
+
+Create directories:
+
+```bash
+mkdir -p base overlays/dev/patches overlays/staging/patches overlays/prod/patches values
+```
+
+Render the Pangolin chart:
+
+```bash
+helm template pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values/values-base.yaml \
+  > base/pangolin.yaml
+```
+
+You can also render from the GHCR OCI chart:
+
+```bash
+helm template pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0 \
+  --namespace pangolin \
+  --values values/values-base.yaml \
+  > base/pangolin.yaml
+```
+
+## Step 5: Create the base kustomization
+
+```yaml
+# base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - pangolin.yaml
+```
+
+<Note>
+The namespace is already rendered by Helm through `--namespace pangolin`. You can also set `namespace: pangolin` in Kustomize, but avoid changing namespaces in overlays unless you have verified all rendered resources and references.
+</Note>
+
+## Step 6: Inspect rendered resource names
+
+Before writing patches, inspect the generated resource names:
+
+```bash
+kustomize build base | grep -E "^(kind:|  name:)"
+```
+
+Or list the main resource names with `yq`:
+
+```bash
+kustomize build base | yq '. | select(.kind == "Deployment" or .kind == "StatefulSet" or .kind == "IngressRoute" or .kind == "Service") | .kind + " " + .metadata.name'
+```
+
+<Warning>
+Do not assume generated resource names. Helm names can change with the release name, chart name, `nameOverride`, or `fullnameOverride`.
+</Warning>
+
+Use the actual rendered names in your patch targets.
+
+## Step 7: Create a production overlay
+
+Example `overlays/prod/kustomization.yaml`:
+
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+labels:
+  - pairs:
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kustomize
+
+patches:
+  - path: patches/pangolin-resources.patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: pangolin
+
+  - path: patches/ingressroute-host.patch.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: pangolin-dashboard
+```
+
+<Note>
+Replace `pangolin` and `pangolin-dashboard` with the actual names from your rendered manifests.
+</Note>
+
+## Step 8: Add patches
+
+### Patch Pangolin resources
+
+```yaml
+# overlays/prod/patches/pangolin-resources.patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pangolin
+spec:
+  template:
+    spec:
+      containers:
+        - name: pangolin
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              memory: 1Gi
+```
+
+<Note>
+CPU limits are rendered by default through the chart's `resourcesPolicy.cpuLimits.enabled=true`. If you disable CPU limits in chart values, keep your Kustomize patches consistent with that policy.
+</Note>
+
+### Patch dashboard IngressRoute host
+
+The Pangolin chart uses Traefik `IngressRoute` for the dashboard and API in controller mode, not a standard Kubernetes `Ingress`.
+
+```yaml
+# overlays/prod/patches/ingressroute-host.patch.yaml
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: pangolin-dashboard
+spec:
+  routes:
+    - kind: Rule
+      match: Host(`pangolin-prod.example.com`) && PathPrefix(`/api/v1`)
+    - kind: Rule
+      match: Host(`pangolin-prod.example.com`)
+```
+
+<Warning>
+Patch the rendered `IngressRoute` only after checking the route order and match rules. The API route and dashboard route target different service ports.
+</Warning>
+
+### Patch node affinity
+
+```yaml
+# overlays/prod/patches/pangolin-node-affinity.patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pangolin
+spec:
+  template:
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node-type
+                    operator: In
+                    values:
+                      - production
+```
+
+Reference it in `overlays/prod/kustomization.yaml`:
+
+```yaml
+patches:
+  - path: patches/pangolin-node-affinity.patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: pangolin
+```
+
+### Patch Gerbil startup mode
+
+For first install, this should usually be handled in Helm values before rendering. If you still need to patch rendered manifests, inspect the generated Deployment first.
+
+To switch Gerbil from delayed to normal mode, prefer updating values and re-rendering:
+
+```yaml
+gerbil:
+  startupMode: normal
+```
+
+Then re-render:
+
+```bash
+helm template pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values/values-base.yaml \
+  > base/pangolin.yaml
+```
+
+## Do not rename rendered Helm resources by default
+
+Avoid Kustomize options such as `namePrefix` and `nameSuffix` for Helm-rendered bases unless you have verified every generated reference.
+
+Renaming rendered resources can break:
+
+* Service selectors
+* Secret references
+* ConfigMap references
+* ServiceAccount references
+* NetworkPolicy selectors
+* Traefik `IngressRoute` service references
+* Prometheus monitor selectors
+* CloudNativePG references
+
+If you need different resource names, prefer changing the Helm release name or chart naming values before rendering.
+
+## Apply the overlay
+
+Preview the rendered output:
+
+```bash
+kustomize build overlays/prod
+```
+
+Compare with the live cluster:
+
+```bash
+kustomize build overlays/prod | kubectl diff -f -
+```
+
+Apply the overlay:
+
+```bash
+kubectl apply -k overlays/prod
+```
+
+Verify workloads:
+
+```bash
+kubectl get pods --namespace pangolin
+kubectl get deploy,statefulset --namespace pangolin
+kubectl get svc --namespace pangolin
+```
+
+Verify Traefik resources:
+
+```bash
+kubectl get ingressroute --namespace pangolin
+```
+
+Check events:
+
+```bash
+kubectl get events --namespace pangolin --sort-by=.lastTimestamp
+```
+
+## Updating the rendered base
+
+When upgrading the Pangolin chart or changing Helm values, re-render the base and review the changes.
+
+Update the Helm repository:
+
+```bash
+helm repo update fossorial
+```
+
+Render the updated chart output:
+
+```bash
+helm template pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values/values-base.yaml \
+  > base/pangolin.yaml
+```
+
+Or with OCI:
+
+```bash
+helm template pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0 \
+  --namespace pangolin \
+  --values values/values-base.yaml \
+  > base/pangolin.yaml
+```
+
+Validate the overlay:
+
+```bash
+kustomize build overlays/prod
+```
+
+Review the diff:
+
+```bash
+git diff
+kustomize build overlays/prod | kubectl diff -f -
+```
+
+Commit the updated base and overlays:
+
+```bash
+git add base/ overlays/ values/
+git commit -m "Update Pangolin rendered manifests"
+```
+
+Apply after review:
+
+```bash
+kubectl apply -k overlays/prod
+```
+
+## Ownership model
+
+Do not run `helm upgrade` against a release that is managed by Kustomize.
+
+Avoid this pattern:
+
+```bash
+helm upgrade pangolin fossorial/pangolin --namespace pangolin
+kubectl apply -k overlays/prod
+```
+
+Use one of these models instead:
+
+| Model             | Description                                                                                |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| Helm-managed      | Helm installs and upgrades the live release. Kustomize is not used for the same resources. |
+| Kustomize-managed | Helm renders manifests only. Kustomize applies and owns the live resources.                |
+| GitOps-managed    | Argo CD or Flux applies the Kustomize overlay and owns reconciliation.                     |
+
+## Common Kustomize patches for Pangolin
+
+### Patch resource requests and limits
+
+```yaml
+patches:
+  - path: patches/pangolin-resources.patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: pangolin
+```
+
+### Patch IngressRoute host
+
+```yaml
+patches:
+  - path: patches/ingressroute-host.patch.yaml
+    target:
+      group: traefik.io
+      version: v1alpha1
+      kind: IngressRoute
+      name: pangolin-dashboard
+```
+
+### Add annotations
+
+```yaml
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: pangolin
+    patch: |-
+      - op: add
+        path: /metadata/annotations
+        value:
+          example.com/owner: platform
+```
+
+### Patch Gerbil Service type
+
+Patch the Gerbil Service only after checking the rendered Service name.
+
+```yaml
+patches:
+  - target:
+      version: v1
+      kind: Service
+      name: pangolin-gerbil
+    patch: |-
+      - op: replace
+        path: /spec/type
+        value: LoadBalancer
+```
+
+<Note>
+For important topology settings such as database mode, Gerbil ports, `startupMode`, Traefik mode, and CloudNativePG settings, prefer changing Helm values and re-rendering instead of patching rendered YAML.
+</Note>
+
+## Validation
+
+Validate Kustomize output:
+
+```bash
+kustomize build overlays/prod
+```
+
+Run a server-side dry run:
+
+```bash
+kustomize build overlays/prod | kubectl apply -f - --dry-run=server
+```
+
+Preview live changes:
+
+```bash
+kustomize build overlays/prod | kubectl diff -f -
+```
+
+If a patch does not apply, inspect generated resource names:
+
+```bash
+kustomize build base | grep -E "^(kind:|  name:)"
+```
+
+## Kustomize with GitOps
+
+Kustomize overlays work well with GitOps tools.
+
+* [Argo CD](/self-host/manual/kubernetes/gitops/argocd) can reconcile a Kustomize overlay path directly.
+* [Flux](/self-host/manual/kubernetes/gitops/flux) can reconcile a Kustomize overlay with a `Kustomization` resource.
+
+In GitOps workflows, the controller owns the apply operation. Do not also apply the same overlay manually unless you are debugging.
+
+## Troubleshooting
+
+### The patch does not apply
+
+Check the rendered resource name and kind:
+
+```bash
+kustomize build base | grep -E "^(kind:|  name:)"
+```
+
+Then verify the patch target in your overlay.
+
+### The pod does not start
+
+Check pod status and events:
+
+```bash
+kubectl get pods --namespace pangolin
+kubectl describe pod <pod-name> --namespace pangolin
+kubectl get events --namespace pangolin --sort-by=.lastTimestamp
+```
+
+### Dashboard routing does not work
+
+Check the rendered and applied `IngressRoute`:
+
+```bash
+kubectl get ingressroute --namespace pangolin
+kubectl describe ingressroute <name> --namespace pangolin
+```
+
+Verify:
+
+* Traefik CRDs are installed.
+* A Traefik controller is watching the namespace and labels.
+* `pangolin.ingressRoute.dashboard.host` or the patched host matches DNS.
+* The API route still contains `PathPrefix(/api/v1)`.
+* TLS settings match your Traefik setup.
+
+### Gerbil does not start
+
+Check Gerbil resources:
+
+```bash
+kubectl get pods,svc,pvc --namespace pangolin \
+  -l app.kubernetes.io/name=gerbil
+```
+
+Verify:
+
+* namespace allows `NET_ADMIN`
+* `gerbil.startupMode` is set correctly
+* Gerbil persistence is enabled or intentionally disabled
+* `pangolin.config.gerbil.start_port` matches `gerbil.ports.wg1`
+* `pangolin.config.gerbil.clients_start_port` matches `gerbil.ports.wg2`
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Helm Install" href="/self-host/manual/kubernetes/pangolin/helm" icon="box">
+		Install Pangolin with Helm.
+	</Card>
+	<Card title="Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders">
+		Review Pangolin chart options.
+	</Card>
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/pangolin/troubleshooting" icon="circle-question">
+		Debug Pangolin deployment and routing issues.
+	</Card>
+	<Card title="GitOps" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
+		Deploy Pangolin with Argo CD or Flux.
+	</Card>
+</CardGroup>

@@ -175,7 +175,44 @@
                                 "group": "Manual Installation",
                                 "pages": [
                                     "self-host/manual/docker-compose",
-                                    "self-host/manual/unraid"
+                                    "self-host/manual/unraid",
+                                    {
+                                        "group": "Kubernetes",
+                                        "pages": [
+                                            "self-host/manual/kubernetes/overview",
+                                            "self-host/manual/kubernetes/choose-method",
+                                            "self-host/manual/kubernetes/prerequisites",
+                                            "self-host/manual/kubernetes/helm",
+                                            "self-host/manual/kubernetes/kustomize",
+                                            "self-host/manual/kubernetes/helmfile",
+                                            {
+                                                "group": "GitOps",
+                                                "pages": [
+                                                    "self-host/manual/kubernetes/gitops/overview",
+                                                    "self-host/manual/kubernetes/gitops/argocd",
+                                                    "self-host/manual/kubernetes/gitops/flux"
+                                                ]
+                                            },
+                                            {
+                                                "group": "Newt",
+                                                "pages": [
+                                                    "self-host/manual/kubernetes/newt/helm",
+                                                    "self-host/manual/kubernetes/newt/kustomize",
+                                                    "self-host/manual/kubernetes/newt/configuration",
+                                                    "self-host/manual/kubernetes/newt/troubleshooting"
+                                                ]
+                                            },
+                                            {
+                                                "group": "Pangolin",
+                                                "pages": [
+                                                    "self-host/manual/kubernetes/pangolin/helm",
+                                                    "self-host/manual/kubernetes/pangolin/kustomize",
+                                                    "self-host/manual/kubernetes/pangolin/configuration",
+                                                    "self-host/manual/kubernetes/pangolin/troubleshooting"
+                                                ]
+                                            }
+                                        ]
+                                    }
                                 ]
                             },
                             "self-host/dns-and-networking",

@@ -1,0 +1,386 @@
+---
+title: "Helmfile"
+description: "Advanced Kubernetes installation using Helmfile for multi-release orchestration."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Helmfile is a declarative way to manage multiple Helm releases in a single workflow. Use Helmfile when you need to install Pangolin and/or Newt alongside other Kubernetes components or manage multiple releases together.
+
+## When to use Helmfile
+
+Use Helmfile if you want to:
+
+- **Orchestrate multiple Helm releases** in a single file (Pangolin + Newt + dependencies).
+- **Manage dependencies** between releases (e.g., install cert-manager before Pangolin).
+- **Keep release definitions** in version control and synchronized.
+- **Avoid repeated `helm install` commands** for complex multi-release setups.
+
+**Not using Helmfile?** If you're installing only Pangolin or only Newt without additional services, [Helm quick-start](/self-host/manual/kubernetes/helm) is simpler.
+
+## Helm vs. Helmfile
+
+| Aspect | Helm | Helmfile |
+| --- | --- | --- |
+| **Purpose** | Install/manage a single Helm chart release | Orchestrate multiple Helm chart releases |
+| **Command** | `helm install`, `helm upgrade` | `helmfile sync`, `helmfile apply` |
+| **Use case** | Quick install, single app | Multi-release, dependencies, fleet management |
+| **Complexity** | Low | Medium |
+
+## Helmfile prerequisites
+
+- Helm 3.10+
+- `helmfile` CLI installed: [Helmfile GitHub](https://github.com/roboll/helmfile)
+- Basic knowledge of Helm values and YAML
+
+Install helmfile:
+
+```bash
+# macOS/Linux with brew
+brew install helmfile
+
+# or download from releases
+wget https://github.com/roboll/helmfile/releases/download/v<version>/helmfile_<os>_<arch>
+chmod +x helmfile
+sudo mv helmfile /usr/local/bin/
+```
+
+Verify:
+
+```bash
+helmfile --version
+```
+
+## Basic Helmfile structure
+
+A Helmfile is a YAML file (typically named `helmfile.yaml`) that declares multiple releases:
+
+```yaml
+# helmfile.yaml
+releases:
+  - name: cert-manager
+    namespace: cert-manager
+    createNamespace: true
+    chart: jetstack/cert-manager
+    version: v1.14.0
+    
+  - name: pangolin
+    namespace: pangolin
+    createNamespace: true
+    chart: fossorial/pangolin
+    version: 0.1.0-alpha.0
+    values:
+      - pangolin-values.yaml
+    
+  - name: newt
+    namespace: pangolin
+    chart: fossorial/newt
+    version: 1.4.0
+    values:
+      - newt-values.yaml
+    dependsOn:
+      - pangolin
+```
+
+## Helmfile with Pangolin and Newt
+
+### 1. Add Helm repositories
+
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo add fossorial https://charts.fossorial.io
+helm repo update
+```
+
+### 2. Create Helmfile
+
+Create `helmfile.yaml`:
+
+```yaml
+helmDefaults:
+  atomic: true
+  cleanupOnFail: true
+  wait: true
+  timeout: 600
+  recreatePods: true
+  force: false
+
+repositories:
+  - name: jetstack
+    url: https://charts.jetstack.io
+  - name: fossorial
+    url: https://charts.fossorial.io
+
+releases:
+  - name: cert-manager
+    namespace: cert-manager
+    createNamespace: true
+    chart: jetstack/cert-manager
+    version: v1.14.0
+    set:
+      installCRDs: true
+    
+  - name: pangolin
+    namespace: pangolin
+    createNamespace: true
+    chart: fossorial/pangolin
+    version: 0.1.0-alpha.0
+    values:
+      - ./values/pangolin.yaml
+    dependsOn:
+      - cert-manager
+    
+  - name: newt
+    namespace: pangolin
+    chart: fossorial/newt
+    version: 1.4.0
+    values:
+      - ./values/newt.yaml
+    dependsOn:
+      - pangolin
+```
+
+### 3. Create values files
+
+Create `values/pangolin.yaml`:
+
+```yaml
+deployment:
+  type: controller
+  mode: multi
+
+database:
+  mode: cloudnativepg
+
+pangolin:
+  config:
+    app:
+      dashboard_url: https://pangolin.example.com
+    domains:
+      domain1:
+        base_domain: example.com
+    gerbil:
+      base_endpoint: vpn.example.com
+
+ingress:
+  enabled: true
+  className: traefik
+  hosts:
+    - host: pangolin.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: pangolin-tls
+      hosts:
+        - pangolin.example.com
+```
+
+Create `values/newt.yaml`:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      existingSecretName: newt-auth
+```
+
+### 4. Create Newt auth secret
+
+Before applying Helmfile:
+
+```bash
+kubectl create namespace pangolin
+kubectl create secret generic newt-auth \
+  -n pangolin \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<your-newt-id> \
+  --from-literal=NEWT_SECRET=<your-newt-secret>
+```
+
+### 5. Deploy with Helmfile
+
+```bash
+# Preview changes
+helmfile diff
+
+# Apply releases
+helmfile sync
+
+# or
+helmfile apply
+```
+
+### 6. Verify deployment
+
+```bash
+helmfile status
+
+# Check individual releases
+helm status cert-manager -n cert-manager
+helm status pangolin -n pangolin
+helm status newt -n pangolin
+
+# Check pods
+kubectl get pods -n pangolin
+kubectl get pods -n cert-manager
+```
+
+## Advanced: Helmfile with environments
+
+For multi-environment setups (dev, staging, prod), use Helmfile environments:
+
+```yaml
+environments:
+  dev:
+    values:
+      environment: dev
+      domain: dev.example.com
+      replicaCount: 1
+  prod:
+    values:
+      environment: prod
+      domain: pangolin.example.com
+      replicaCount: 3
+
+helmDefaults:
+  atomic: true
+  wait: true
+
+repositories:
+  - name: fossorial
+    url: https://charts.fossorial.io
+
+releases:
+  - name: pangolin
+    namespace: pangolin
+    createNamespace: true
+    chart: fossorial/pangolin
+    version: 0.1.0-alpha.0
+    values:
+      - ./values/pangolin-{{ .Environment.Values.environment }}.yaml
+```
+
+Deploy to specific environment:
+
+```bash
+helmfile -e dev sync
+helmfile -e prod sync
+```
+
+## Helmfile with GitOps
+
+### Using Helmfile with FluxCD
+
+FluxCD can reconcile Helmfile declarations using the `helmfile-controller`. This allows Git-driven Helmfile updates:
+
+1. Commit Helmfile and values to Git
+2. Create HelmRelease for each release in your Helmfile
+3. Flux reconciles and applies changes
+
+See [Flux Guide](/self-host/manual/kubernetes/gitops/flux) for details.
+
+### Using Helmfile with Argo CD
+
+While Argo CD has native Helm and Kustomize support, you can:
+
+1. Use Helmfile to render manifests: `helmfile template > manifests.yaml`
+2. Commit manifests to Git
+3. Have Argo CD manage the raw YAML
+
+Alternatively, use Helm source in Argo CD (simpler than Helmfile for single releases).
+
+## Troubleshooting Helmfile
+
+### Check syntax
+
+```bash
+helmfile lint
+```
+
+### Debug release dependencies
+
+```bash
+helmfile template
+```
+
+### See what will be deployed
+
+```bash
+helmfile diff
+```
+
+### Remove releases
+
+```bash
+helmfile destroy
+```
+
+<Warning>
+`helmfile destroy` uninstalls all releases and may delete data (e.g., databases). Use with caution in production.
+</Warning>
+
+## Common patterns
+
+### Helmfile with local chart overrides
+
+```yaml
+releases:
+  - name: pangolin
+    namespace: pangolin
+    chart: ./charts/pangolin  # local path
+    values:
+      - values.yaml
+```
+
+### Helmfile with inline values
+
+```yaml
+releases:
+  - name: pangolin
+    namespace: pangolin
+    chart: fossorial/pangolin
+    set:
+      deployment.type: controller
+      deployment.mode: multi
+```
+
+### Helmfile with conditional releases
+
+```yaml
+releases:
+  - name: cert-manager
+    namespace: cert-manager
+    createNamespace: true
+    chart: jetstack/cert-manager
+    installed: {{ .Environment.Values.installCertManager | default true }}
+```
+
+## Important notes
+
+### Official support
+
+Helmfile for Pangolin/Newt Kubernetes deployments is **advanced/community-supported**. The primary supported methods are:
+
+- Helm directly
+- Kustomize overlays
+- GitOps tools (Argo CD, Flux)
+
+If you encounter Helmfile-specific issues, refer to the [Helmfile documentation](https://github.com/roboll/helmfile) and community.
+
+### Helm chart dependencies
+
+The Pangolin Helm chart includes optional sub-chart dependencies (e.g., CloudNativePG operator). Helmfile does not manage these—they're handled by Helm. Ensure chart dependencies are available when installing.
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Helm Quick-Start" href="/self-host/manual/kubernetes/helm" icon="box" />
+	<Card title="Pangolin Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders" />
+	<Card title="GitOps with Flux" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch" />
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/pangolin/troubleshooting" icon="circle-question" />
+</CardGroup>
