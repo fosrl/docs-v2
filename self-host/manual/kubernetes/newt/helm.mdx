@@ -10,7 +10,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 Newt is the site connector used to expose private resources through Pangolin. It runs close to the resources you want to publish and connects back to Pangolin.
 
-Newt is a user-space WireGuard tunnel client and TCP/UDP proxy. It does not require users to manage WireGuard tunnels or NAT rules manually. :contentReference[oaicite:1]{index=1}
+Newt is a user-space WireGuard tunnel client and TCP/UDP proxy. It does not require users to manage WireGuard tunnels or NAT rules manually.
 
 ## Version matrix
 
@@ -21,7 +21,7 @@ Newt is a user-space WireGuard tunnel client and TCP/UDP proxy. It does not requ
 | Kubernetes version | `>=1.30.14-0` |
 | Default image tag | `1.12.3` |
 
-Newt chart `1.4.0` includes Newt `1.12.3` and supports Kubernetes `>=1.30.14-0`. :contentReference[oaicite:2]{index=2}
+Newt chart `1.4.0` includes Newt `1.12.3` and supports Kubernetes `>=1.30.14-0`.
 
 ## What the chart supports
 
@@ -38,7 +38,7 @@ Newt chart `1.4.0` includes support for:
 - optional native WireGuard mode
 - multi-instance deployments with per-instance overrides
 
-The chart README lists these features for version `1.4.0`. :contentReference[oaicite:3]{index=3}
+The chart README lists these features for version `1.4.0`.
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ Before installing Newt, you need:
   - Newt credentials from Pangolin: `NEWT_ID` and `NEWT_SECRET`
   - or a provisioning key for Newt 1.11+ provisioning
 
-The chart quickstart lists Kubernetes `>=1.30.14`, Helm 3.x, configured `kubectl`, and Newt credentials from Pangolin as prerequisites. :contentReference[oaicite:4]{index=4}
+The chart quickstart lists Kubernetes `>=1.30.14`, Helm 3.x, configured `kubectl`, and Newt credentials from Pangolin as prerequisites.
 
 See [Prerequisites](/self-host/manual/kubernetes/prerequisites) for cluster, namespace, storage, networking, and security planning.
 
@@ -66,7 +66,7 @@ Newt chart `1.4.0` supports three credential patterns:
 | Provisioning key | Newt 1.11+ provisioning | Requires writable config persistence |
 | Inline values | Local testing only | Credentials may be stored in Helm release history |
 
-For production, use `auth.existingSecretName` or a GitOps-safe secret workflow. The chart values explicitly warn that inline credentials can be stored in Helm release history and recommend existing Secrets for production. :contentReference[oaicite:5]{index=5}
+For production, use `auth.existingSecretName` or a GitOps-safe secret workflow. The chart values explicitly warn that inline credentials can be stored in Helm release history and recommend existing Secrets for production.
 
 ## Quick install with existing Secret
 
