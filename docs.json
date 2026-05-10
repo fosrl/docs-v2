@@ -38,7 +38,6 @@
                                 "pages": [
                                     "manage/sites/understanding-sites",
                                     "manage/sites/install-site",
-                                    "manage/sites/install-kubernetes",
                                     "manage/sites/configure-site",
                                     "manage/sites/update-site",
                                     "manage/sites/credentials",
