@@ -1,6 +1,6 @@
 ---
-title: "Metrics"
-description: "Enable and consume OpenTelemetry & vendor specific metrics"
+title: "Metrics and Observability"
+description: "Understand metrics, traces, logs, and profiling support across Pangolin components"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,244 +9,635 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-We provide metrics in the **OpenTelemetry** (OTel) format and additionally support the following vendor backends:
+Pangolin currently does not expose one uniform observability surface across all components. Newt currently has the most complete native implementation, including Prometheus metrics, OTLP metrics, OTLP traces, health checks, and optional pprof. Gerbil supports metrics through either a Prometheus or OTLP backend. The Pangolin Kubernetes Controller exposes a Prometheus-compatible scrape endpoint and additional OTel-backed metric instruments on that scrape endpoint.
 
-* **Prometheus** (native scrape and via OTel Collector)
-
-## Why Metrics & OTel
-
-Observability enables:
-
-1. **Incident detection** (latency spikes, reconnect storms)
-2. **Capacity planning** (bytes, active sessions)
-3. **User‑experience SLAs** (p95 tunnel latency, auth latency)
-4. **Faster RCA** (dimensions like `error_type`, `result`)
-
-OpenTelemetry provides a **vendor‑neutral** pipeline so you can change backends without retouching instrumented code.
-
-## Availability
-
-Newt exposes metrics starting from specific releases, but metrics are disabled in their default configuration.
-
-- Newt: metrics implemented since Newt 1.6.0 (disabled by default)
-
-## Open Telemetry
-
-Push metrics and traces to an **OTel Collector** or any backend that accepts OTLP.
-
-<Tip>
-If you only enable Prometheus scrape, leave `*_METRICS_OTLP_ENABLED=false` and omit OTLP vars.
-</Tip>
+Other components currently rely primarily on logs, application analytics, reverse proxy telemetry, or platform-specific client logs.
 
 <Note>
-The OTel Collector commonly uses port <code>4317</code> for gRPC and <code>4318</code> for HTTP. Set <code>OTEL_EXPORTER_OTLP_PROTOCOL</code> to <code>http/protobuf</code> for HTTP or <code>grpc</code> for gRPC, and point <code>OTEL_EXPORTER_OTLP_ENDPOINT</code> accordingly.
-For further customization, see the [OTel Collector documentation](https://opentelemetry.io/docs/collector/).
+This page covers Pangolin-native observability for metrics, traces, logs, and profiling. For a community walkthrough that collects Traefik and CrowdSec metrics with Prometheus and Grafana, see the [community metrics guide](/self-host/community-guides/metrics).
+</Note>
+
+<Warning>
+Do not assume every Pangolin component exposes Prometheus metrics, OTLP metrics, or traces. Pyroscope is not natively supported by Pangolin components today, and only verified components should be wired into Tempo or other trace backends.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Capability Matrix" icon="chart-line" href="#observability-capability-matrix">
+    See which components expose metrics, traces, logs, or profiling endpoints.
+  </Card>
+  <Card title="Newt" icon="route" href="#newt">
+    The most complete observability implementation: Prometheus, OTLP metrics, OTLP traces, and optional pprof.
+  </Card>
+  <Card title="Gerbil" icon="network-wired" href="#gerbil">
+    Metrics-only observability with a mutually exclusive Prometheus or OTLP backend.
+  </Card>
+  <Card title="Kubernetes Controller" icon="cubes" href="#pangolin-kubernetes-controller">
+    Prometheus scraping, health probes, ServiceMonitor patterns, and optional pprof.
+  </Card>
+</CardGroup>
+
+## Observability Capability Matrix
+
+| Component | Metrics | Traces | Logs | Profiling | Status |
+| --- | --- | --- | --- | --- | --- |
+| `newt` | Prometheus, OTLP | OTLP | stdout | pprof optional | Most complete |
+| `gerbil` | Prometheus or OTLP | No | stdout | No | Metrics-only |
+| `pangolin-kube-controller` | Prometheus scrape | Not verified | stdout | pprof optional | Kubernetes monitoring |
+| `pangolin` | No native metrics | No | Winston/stdout | No | Log-based |
+| `pangolin-node` | No native metrics | No | Winston/stdout | No | Log-based |
+| `badger` | No native metrics | No | middleware logs | No | Use Traefik/logs |
+| `windows` | No native metrics | No | local logs | No | Client logs |
+| `apple` | No native metrics | No | `os.log` / app logs | No | Client logs |
+| `android` | No native metrics | No | app logs | No | Client logs |
+
+<Tip>
+If you need a single rule of thumb: Newt is the only verified Pangolin component today with native Prometheus metrics, OTLP metrics, and OTLP traces in the same implementation.
+</Tip>
+
+## Supported Signals
+
+| Signal | What it means | Verified Pangolin support |
+| --- | --- | --- |
+| Prometheus scrape metrics | Pull-based metrics served over HTTP, usually on `/metrics` | Newt, Gerbil, `pangolin-kube-controller` |
+| OTLP metrics | Push-based OpenTelemetry metrics to an OTel Collector or compatible backend | Newt, Gerbil; controller has OTel instruments exported via Prometheus scrape |
+| OTLP traces | Distributed traces sent to an OTel Collector or trace backend | Newt only |
+| Application logs | stdout, file logs, audit logs, or platform logging | All components, with different quality and structure |
+| Profiling | Debug endpoints such as `pprof` | Newt and `pangolin-kube-controller` |
+| Client telemetry / RUM | Privacy-safe crash and lifecycle telemetry from desktop/mobile apps | Not built in today; should be implemented separately from backend scraping |
+
+Pangolin components do not all expose the same observability signals. Newt currently has the most complete observability support. Gerbil and the Kubernetes controller expose metrics, while several other components currently only provide logs or app-specific telemetry. Profiling exists only where explicitly documented, and Pyroscope is not currently implemented.
+
+## Grafana Stack Mapping
+
+| Signal | Pangolin source | Grafana backend |
+| --- | --- | --- |
+| Prometheus scrape metrics | Newt, Gerbil, controller | Prometheus or Mimir |
+| OTLP metrics | Newt, Gerbil | OTel Collector to Mimir |
+| OTel-backed scrape metrics | Controller | Prometheus scrape to Mimir |
+| OTLP traces | Newt | OTel Collector to Tempo |
+| Logs | Containers and apps | Loki or SIEM |
+| Profiling | pprof endpoints | Manual pprof; not Pyroscope-native |
+
+## Collection Patterns
+
+<Tabs>
+  <Tab title="Prometheus scrape mode">
+
+```yaml title="prometheus.yml (fragment)"
+scrape_configs:
+  - job_name: newt
+    static_configs:
+      - targets: ["newt:2112"]
+
+  - job_name: gerbil
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["gerbil:3003"]
+
+  - job_name: pangolin-kube-controller
+    static_configs:
+      - targets: ["pangolin-kube-controller:9090"]
+```
+
+<Note>
+`newt` only exposes `/metrics` when Prometheus metrics are enabled. `gerbil` only exposes `/metrics` when `METRICS_BACKEND=prometheus`. The controller always exposes a Prometheus-compatible scrape endpoint on `METRICS_ADDR`.
+</Note>
+
+  </Tab>
+  <Tab title="OTel Collector">
+
+```yaml title="otel-collector.yaml"
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: pangolin-kube-controller
+          static_configs:
+            - targets: ["pangolin-kube-controller:9090"]
+
+processors:
+  batch: {}
+
+exporters:
+  prometheusremotewrite:
+    endpoint: https://mimir.example.com/api/v1/push
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch]
+      exporters: [prometheusremotewrite]
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo]
+```
+
+<Tip>
+Today the traces pipeline is relevant only for `newt`. `pangolin-kube-controller` exposes additional OTel instruments, but they are exported on the same Prometheus scrape endpoint rather than pushed through OTLP.
+</Tip>
+
+  </Tab>
+  <Tab title="Kubernetes ServiceMonitor">
+
+```yaml title="servicemonitor.yaml"
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pangolin-kube-controller
+spec:
+  selector:
+    matchLabels:
+      app: pangolin-kube-controller
+  endpoints:
+    - port: http-metrics
+      path: /metrics
+      interval: 30s
+```
+
+```yaml title="helm-values.yaml"
+global:
+  metrics:
+    enabled: true
+    service:
+      enabled: true
+    serviceMonitor:
+      enabled: true
+
+controller:
+  monitoring:
+    serviceMonitor:
+      enabled: true
+```
+
+<Note>
+The Newt Helm values above are documented in [the Kubernetes Newt configuration page](/self-host/manual/kubernetes/newt/configuration). The controller ServiceMonitor values are documented in [the Kubernetes Pangolin configuration page](/self-host/manual/kubernetes/pangolin/configuration). Do not invent additional chart values unless they exist in the chart.
+</Note>
+
+  </Tab>
+  <Tab title="Logs to Loki">
+
+```yaml title="promtail.yaml"
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: pangolin
+    static_configs:
+      - targets: [localhost]
+        labels:
+          job: pangolin
+          __path__: /var/log/containers/*pangolin*.log
+```
+
+Use Grafana Alloy, Promtail, Fluent Bit, or your preferred SIEM forwarder to collect container and application logs from components that do not expose native metrics.
+
+  </Tab>
+</Tabs>
+
+## Newt
+
+<Tip>
+Newt is the recommended starting point for Pangolin observability. It is the only verified component today with Prometheus metrics, OTLP metrics, OTLP traces, a health endpoint, and optional `pprof` on the same admin surface.
+</Tip>
+
+Newt metrics are not typically enabled in default deployments. Turn them on explicitly and expose the admin address only where you intend to scrape or profile.
+
+<AccordionGroup>
+<Accordion title="Configuration">
+<Tabs>
+  <Tab title="Environment Variables">
+    ```text
+    NEWT_METRICS_PROMETHEUS_ENABLED=true
+    NEWT_METRICS_OTLP_ENABLED=true
+    NEWT_ADMIN_ADDR=:2112
+    OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
+    OTEL_EXPORTER_OTLP_INSECURE=true
+    OTEL_METRIC_EXPORT_INTERVAL=15s
+    NEWT_PPROF_ENABLED=false
+    ```
+  </Tab>
+  <Tab title="CLI Args">
+    ```text
+    newt \
+      --metrics=true \
+      --otlp=true \
+      --metrics-admin-addr=:2112 \
+      --pprof=false \
+      --endpoint=https://pangolin.example.com \
+      --id=saz281jfa8z37zg \
+      --secret=your-secret
+    ```
+  </Tab>
+  <Tab title="Helm Values">
+    ```yaml
+    global:
+      metrics:
+        enabled: true
+        adminAddr: ":2112"
+        service:
+          enabled: true
+        serviceMonitor:
+          enabled: true
+        pprofEnabled: false
+    ```
+  </Tab>
+</Tabs>
+</Accordion>
+
+<Accordion title="Signals and endpoints">
+
+- Prometheus scrape endpoint: `/metrics` on `NEWT_ADMIN_ADDR`
+- Health endpoint: `/healthz` on the same admin server
+- OTLP metrics: enabled with `NEWT_METRICS_OTLP_ENABLED=true` or `--otlp=true`
+- OTLP traces: initialized when OTLP export is enabled
+- Profiling: `/debug/pprof/*` when `NEWT_PPROF_ENABLED=true`
+
+<Note>
+The Newt OTLP switch enables the OTLP telemetry pipeline. The current environment variable name contains `METRICS`, but the implementation also initializes OTLP tracing when OTLP is enabled.
+</Note>
+
+<Warning>
+Newt's admin server defaults to a loopback bind address. In containers or Kubernetes, set `NEWT_ADMIN_ADDR=:2112` or another non-loopback address only when you intentionally want Prometheus, pprof, or health checks to reach it.
+</Warning>
+
+Representative metrics include `newt_connection_attempts_total`, `newt_tunnel_latency_seconds`, `newt_tunnel_reconnects_total`, `newt_websocket_connected`, and `newt_proxy_connection_duration_seconds`.
+
+</Accordion>
+
+<Accordion title="Examples">
+<Tabs>
+  <Tab title="Direct Prometheus">
+    ```yaml title="prometheus.yml (fragment)"
+    scrape_configs:
+      - job_name: newt
+        static_configs:
+          - targets: ["newt:2112"]
+    ```
+  </Tab>
+  <Tab title="OTLP metrics and traces">
+    ```yaml title="otel-collector.yaml"
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+
+    processors:
+      batch: {}
+
+    exporters:
+      prometheusremotewrite:
+        endpoint: https://mimir.example.com/api/v1/push
+      otlp/tempo:
+        endpoint: tempo:4317
+        tls:
+          insecure: true
+
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheusremotewrite]
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp/tempo]
+    ```
+  </Tab>
+</Tabs>
+</Accordion>
+</AccordionGroup>
+
+## Gerbil
+
+Gerbil currently supports **metrics only**. Choose either a native Prometheus backend or an OTLP metrics backend at runtime. Those backends are mutually exclusive.
+
+<Note>
+Gerbil does not currently emit OTel traces. Gerbil does not currently support `pprof` or Pyroscope profiling.
 </Note>
 
 <AccordionGroup>
-<Accordion title="Newt Configuration">
+<Accordion title="Configuration">
 <Tabs>
-	<Tab title="Environment Variables">
-		```text
-		NEWT_METRICS_OTLP_ENABLED=true         # enable OTLP exporter
-		OTEL_EXPORTER_OTLP_ENDPOINT=otel-collector:4317
-		OTEL_EXPORTER_OTLP_INSECURE=true       # or false + TLS vars
-		OTEL_METRIC_EXPORT_INTERVAL=15s
-		# Optional auth / TLS
-		OTEL_EXPORTER_OTLP_HEADERS=authorization=Bearer%20XYZ
-		OTEL_EXPORTER_OTLP_CERTIFICATE=/etc/otel/ca.pem
-		```
-	</Tab>
-  	<Tab title="CLI Args">
-		```text
-		newt \
-			--metrics-otlp-enabled=true \ # alias for otel
-			--otel=true \
-			--otel-exporter-otlp-endpoint=otel-collector:4317 \
-			--otel-exporter-otlp-insecure=true \
-			--otel-metric-export-interval=15s \
-			--otel-exporter-otlp-headers=authorization=Bearer%20XYZ \
-			--otel-exporter-otlp-certificate=/etc/otel/ca.pem
-		```
-	 See the [CLI reference](../../manage/sites/configure-site) for all available flags.
-	</Tab>
+  <Tab title="Environment Variables">
+    ```text
+    METRICS_ENABLED=true
+    METRICS_BACKEND=prometheus
+    METRICS_PATH=/metrics
+    LISTEN=:3003
+
+    # OTel mode
+    OTEL_METRICS_PROTOCOL=grpc
+    OTEL_METRICS_ENDPOINT=otel-collector:4317
+    OTEL_METRICS_INSECURE=true
+    OTEL_METRICS_EXPORT_INTERVAL=60s
+    OTEL_METRICS_TIMEOUT=10s
+    ```
+  </Tab>
+  <Tab title="CLI Args">
+    ```text
+    ./gerbil \
+      --metrics-enabled \
+      --metrics-backend=prometheus \
+      --metrics-path=/metrics \
+      --config=/etc/gerbil/config.json
+
+    ./gerbil \
+      --metrics-enabled \
+      --metrics-backend=otel \
+      --otel-metrics-protocol=grpc \
+      --otel-metrics-endpoint=otel-collector:4317 \
+      --otel-metrics-insecure \
+      --otel-metrics-export-interval=10s \
+      --otel-metrics-timeout=10s \
+      --config=/etc/gerbil/config.json
+    ```
+  </Tab>
 </Tabs>
 </Accordion>
 
-<Accordion title="Newt Configuration Examples">
+<Accordion title="Signals and endpoints">
+
+- Prometheus metrics endpoint: `METRICS_PATH`, default `/metrics`
+- Metrics are served on Gerbil's configured HTTP listen address
+- The Docker Compose metrics example commonly scrapes `gerbil:3003`
+- Health endpoint: `/healthz`
+- OTLP metrics: enabled when `METRICS_BACKEND=otel`
+- Traces: not supported
+- Profiling: not supported
+
+| Metric | Type | Labels | Purpose |
+| --- | --- | --- | --- |
+| `gerbil_wg_interface_up` | Gauge | `ifname`, `instance` | Interface health |
+| `gerbil_wg_peer_connected` | Gauge | `ifname`, `peer` | Peer connectivity |
+| `gerbil_wg_bytes_received_total` | Counter | `ifname`, `peer` | Per-peer ingress bytes |
+| `gerbil_wg_handshake_latency_seconds` | Histogram | `ifname`, `peer` | Handshake latency |
+
+</Accordion>
+
+<Accordion title="Examples">
 <Tabs>
-  <Tab title="CLI (gRPC)">
+  <Tab title="Prometheus scrape">
+    ```yaml title="prometheus.yml (fragment)"
+    scrape_configs:
+      - job_name: gerbil
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["gerbil:3003"]
+    ```
 
-		```bash
-		# Enable OTLP exporters and point to your Collector's gRPC receiver.
-		export OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4317"
-		export OTEL_EXPORTER_OTLP_PROTOCOL="grpc"
-
-		newt \
-		--otlp=true
-		--id saz281jfa8z37zg
-		--secret ssfdfsder33rrerrwe
-		--endpoint http://pangolin.example.com
-		```
-
+    <Note>
+    Replace `gerbil:3003` with the actual Gerbil HTTP listen address in your deployment.
+    </Note>
   </Tab>
-  <Tab title="Docker Compose">
+  <Tab title="OTLP metrics">
+    ```yaml title="otel-collector.yaml"
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
 
-		```yaml title="docker-compose.metrics.yaml"
-		services:
-			otel-collector:
-				image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:latest # DO NOT use 'latest' in production
-				command: ["--config=/etc/otel/config.yaml"]
-				volumes:
-					- ./otel-config.yaml:/etc/otel/config.yaml:ro
-				ports:
-				- "4317:4317"   # gRPC
-				- "4318:4318"   # HTTP
-				- "8888:8888"   # Prometheus exporter (from the Collector) - Optional
+    processors:
+      batch: {}
 
-			newt:
-				image: fosrl/newt:latest # DO NOT use 'latest' in production
-				environment:
-					NEWT_METRICS_OTLP_ENABLED: "true"
-					OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
-					OTEL_EXPORTER_OTLP_INSECURE: "true"
-					PANGOLIN_ENDPOINT: https://example.com
-					NEWT_ID: heresmynewtid
-					NEWT_SECRET: yoursupersecretkeyhere
-		```
+    exporters:
+      prometheusremotewrite:
+        endpoint: https://mimir.example.com/api/v1/push
 
-		```yaml title="otel-config.yaml"
-		receivers:
-		otlp:
-			protocols:
-			grpc:
-				endpoint: 0.0.0.0:4317
-			http:
-				endpoint: 0.0.0.0:4318
-
-		processors: {}
-
-		# Example exporters:
-		exporters:
-			otlp:
-				endpoint: otel-collector:4317
-				insecure: true
-			prometheus:
-				endpoint: "0.0.0.0:8889"
-
-		service:
-		pipelines:
-			metrics:
-			receivers: [otlp]
-			processors: []
-			exporters: [prometheus]
-		```
-
-		Forward to Remote Write Backend
-
-		```yaml title="otel-config-remote.yaml"
-		exporters:
-			prometheusremotewrite:
-				endpoint: https://prom-remote.example.com/api/v1/write
-				headers:
-					X-Scope-OrgID: tenant-a
-				tls:
-					insecure_skip_verify: false
-		service:
-			pipelines:
-				metrics/remote:
-					receivers: [otlp]
-					processors: [batch]
-					exporters: [prometheusremotewrite]
-		```
-		<Note>
-		Combine exporters (e.g. local Prometheus + remote write) to retain fast local dashboards and ship long‑term retention externally.
-		</Note>
-
-	</Tab>
+    service:
+      pipelines:
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheusremotewrite]
+    ```
+  </Tab>
 </Tabs>
 </Accordion>
 </AccordionGroup>
 
+## Pangolin Kubernetes Controller
 
-## Prometheus (without OTel Collector)
+The controller exposes a Prometheus-compatible `/metrics` endpoint and standard health probes. It also registers additional OpenTelemetry metric instruments, but those instruments are exported on the same scrape endpoint rather than pushed through OTLP.
+
+<Note>
+Tracing support for `pangolin-kube-controller` is reserved for future use and should not be advertised as available. `pprof` is available only when explicitly enabled.
+</Note>
 
 <AccordionGroup>
-<Accordion title="Newt Configuration">
-
-Each service listens on an admin HTTP address (example Newt default `:2112`).
-
+<Accordion title="Configuration">
 <Tabs>
-	<Tab title="Environment Variables">
-		```text
-		NEWT_METRICS_PROMETHEUS_ENABLED=true   # /metrics endpoint
-		NEWT_ADMIN_ADDR=:2112                  # admin HTTP address
-		```
-	</Tab>
-  	<Tab title="CLI Args">
-		```text
-		newt \
-			--metrics-prometheus-enabled=true \ # alias for metrics
-			--metrics=true
-			--admin-addr=:2112 \
-		```
-	 See the [CLI reference](../../manage/sites/configure-site) for all available flags.
-	</Tab>
+  <Tab title="Environment Variables">
+    ```text
+    METRICS_ADDR=:9090
+    DISABLE_LIVEZ=false
+    ENABLE_PPROF=false
+    ```
+  </Tab>
+  <Tab title="Helm Values">
+    ```yaml
+    controller:
+      service:
+        enabled: true
+        port: 9090
+        portName: metrics
+      monitoring:
+        serviceMonitor:
+          enabled: true
+        podMonitor:
+          enabled: false
+        prometheusRule:
+          enabled: false
+    ```
+  </Tab>
 </Tabs>
+
+<Warning>
+Expose the controller metrics endpoint only inside trusted networks or through Kubernetes-native monitoring resources. If TLS or auth is required, terminate it with a Service mesh, Ingress, sidecar, or platform-specific monitoring gateway unless native TLS support is verified.
+</Warning>
 </Accordion>
 
-<Accordion title="Newt Configuration Examples">
-<Tabs>
-	<Tab title="CLI">
-		```bash
-		newt \
-			--metrics-prometheus-enabled=true \
-			--admin-addr=:2112 \
-			--id saz281jfa8z37zg \
-			--secret ssfdfsder33rrerrwe \
-			--endpoint https://pangolin.example.com
-		```
-	</Tab>
-	<Tab title="Docker Compose">
-  		```yaml title="docker-compose.metrics.yaml"
-		services:
-			newt:
-				image: fosrl/newt:latest # DO NOT use 'latest' in production
-				environment:
-					NEWT_METRICS_OTLP_ENABLED: "true"
-					OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
-					OTEL_EXPORTER_OTLP_INSECURE: "true"
-					PANGOLIN_ENDPOINT: https://example.com
-					NEWT_ID: saz281jfa8z37zg
-					NEWT_SECRET: ssfdfsder33rrerrwe
-		```
-	</Tab>
-	<Tab title="Prometheus Scrape Config">
-		```yaml title="prometheus.yml (fragment)"
-		scrape_configs:
-			- job_name: pangolin
-				static_configs: [{ targets: ["pangolin:2112"] }]
-		```
-	</Tab>
-</Tabs>
+<Accordion title="Endpoints">
+
+- `/metrics` on `METRICS_ADDR`
+- `/healthz` and `/readyz` for readiness
+- `/livez` and `/health/live` for liveness unless `DISABLE_LIVEZ=true`
+- `/debug/pprof/*` when `ENABLE_PPROF=true`
+
+</Accordion>
+
+<Accordion title="Representative metrics and Kubernetes examples">
+
+| Metric | Type | Labels | Purpose |
+| --- | --- | --- | --- |
+| `pangolin_kube_controller_reconcile_seconds` | Histogram | none | Full reconcile loop duration |
+| `pangolin_kube_controller_reconcile_errors_total` | Counter | none | Reconcile error count |
+| `pangolin_kube_controller_ready` | Gauge | none | Readiness state |
+| `pangolin_controller_fetch_duration_seconds` | Histogram | `status_code`, `status_class` | Remote fetch latency |
+| `pangolin_controller_active_reconcile_routines` | UpDownCounter | `phase` | Parallel reconcile activity |
+
+```yaml title="service-and-servicemonitor.yaml"
+apiVersion: v1
+kind: Service
+metadata:
+  name: pangolin-kube-controller
+  labels:
+    app: pangolin-kube-controller
+spec:
+  selector:
+    app: pangolin-kube-controller
+  ports:
+    - name: http-metrics
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pangolin-kube-controller
+spec:
+  selector:
+    matchLabels:
+      app: pangolin-kube-controller
+  endpoints:
+    - port: http-metrics
+      path: /metrics
+      interval: 30s
+```
+
 </Accordion>
 </AccordionGroup>
+
+## Components Without Native Metrics
+
+The following components do not currently expose verified native Prometheus metrics, OTLP metrics, or OTLP traces:
+
+- `pangolin`
+- `pangolin-node`
+- `badger`
+
+For these components, operators should currently rely on container logs, application logs, reverse proxy logs, audit streams, and external log collection.
+
+| Component | What exists today | Recommended collection path |
+| --- | --- | --- |
+| `pangolin` | Winston-style logging, analytics/event features, alerting integrations | Loki, Grafana Alloy, Promtail, Fluent Bit, or SIEM forwarders |
+| `pangolin-node` | Logging and audit-style request logging | Loki, Promtail, Fluent Bit, or SIEM forwarders |
+| `badger` | Minimal middleware / container logs | Traefik metrics plus container log collection |
+
+<Warning>
+Do not advertise these components as Prometheus- or OTel-native until the code actually exposes those signals.
+</Warning>
+
+## Alerting Examples
+
+<Tabs>
+  <Tab title="Newt">
+
+```promql
+increase(newt_connection_errors_total[5m]) > 10
+```
+
+```promql
+histogram_quantile(
+  0.95,
+  sum(rate(newt_tunnel_latency_seconds_bucket[5m])) by (le)
+) > 1
+```
+
+```promql
+increase(newt_tunnel_reconnects_total[10m]) > 20
+```
+
+  </Tab>
+  <Tab title="Gerbil">
+
+```promql
+max_over_time(gerbil_wg_interface_up[5m]) by (ifname) < 1
+```
+
+```promql
+sum(gerbil_wg_peers_total) > 0
+and
+sum(gerbil_wg_peer_connected) == 0
+```
+
+  </Tab>
+  <Tab title="Controller">
+
+```promql
+min_over_time(pangolin_kube_controller_ready[5m]) == 0
+```
+
+```promql
+increase(pangolin_kube_controller_reconcile_errors_total[10m]) > 5
+```
+
+  </Tab>
+</Tabs>
+
+## Dashboard Guidance
+
+Recommended dashboard groupings for operators:
+
+- Newt tunnel overview: active sessions, bytes, reconnects, tunnel latency
+- Newt connection health: connection attempts, connection errors, WebSocket connected state
+- Gerbil WireGuard health: interface state, peer connectivity, handshake latency, per-peer throughput
+- Controller reconciliation health: reconcile duration, reconcile errors, readiness, fetch latency
+- Logs overview: Pangolin, pangolin-node, Badger, and client log streams in Loki
+- End-to-end service health: combine Newt, Gerbil, controller, and reverse proxy signals in one operational view
+
+<CardGroup cols={2}>
+  <Card title="Community Metrics Guide" icon="chart-simple" href="/self-host/community-guides/metrics">
+    Traefik and CrowdSec metrics collection with Prometheus and Grafana.
+  </Card>
+  <Card title="Newt Kubernetes Monitoring" icon="cubes" href="/self-host/manual/kubernetes/newt/configuration">
+    Verified Newt chart values for metrics, Services, and ServiceMonitor resources.
+  </Card>
+  <Card title="Controller Monitoring Values" icon="cubes" href="/self-host/manual/kubernetes/pangolin/configuration">
+    Verified chart values for controller Services, ServiceMonitor, PodMonitor, and PrometheusRule resources.
+  </Card>
+</CardGroup>
+
+## Version and verification
+
+<Info>
+This reference documents the metrics verified from the public Pangolin component repositories and current public documentation. Metric names, labels, and defaults can change between component releases.
+</Info>
+
+| Component | Reference status |
+| --- | --- |
+| Newt | Verified |
+| Gerbil | Verified |
+| Controller | Verified |
+| Pangolin | No native metrics found |
+| Pangolin Node | No native metrics found |
+| Badger | No native metrics found |
 
 ## Full Metric Reference
 
-**Version 1.0.0 from 2025-10-28**
+The full reference below is grouped by component.
 
-Below are currently implemented metrics for **Newt**.
-
-* **Metric**: exact metric name
-* **Instrument & unit**: OTel instrument type and canonical unit
-* **Purpose**: what the metric conveys / recommended use
-* **Emission path**: subsystem responsible (for troubleshooting missing data)
-* **Example series**: representative sample including labels
-
-<Warning>
-Names/labels can change between major versions. Avoid hard‑coding full label sets in alerts; prefer existence checks and aggregate functions.
-</Warning>
+- Newt: Prometheus metrics, OTLP metrics, OTLP traces
+- Gerbil: Prometheus or OTLP metrics
+- Pangolin Kubernetes Controller: Prometheus-native metrics and additional OTel-backed scrape metrics
 
 ### Newt metrics
 
@@ -781,6 +1172,1448 @@ Names/labels can change between major versions. Avoid hard‑coding full label s
           <Expandable title="Details">
             **Labels:** `tunnel_id`, `protocol`, `result` • **Unit:** seconds • **Path:** `telemetry.ObserveProxyConnectionDuration(...)`  
             **Example:** `newt_proxy_connection_duration_seconds_bucket{protocol="tcp",result="success",le="1"} 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Tab>
+</Tabs>
+
+### Gerbil metrics
+
+<Tabs>
+  <Tab title="OpenTelemetry (OTel)">
+    <ResponseField name="gerbil">
+      OpenTelemetry metric instruments exposed by Gerbil. Gerbil supports exactly one metrics backend at runtime: `prometheus`, `otel`, or `none`.
+
+      <Note>
+        In `otel` mode, Gerbil pushes metrics to an OTLP collector. The `/metrics` endpoint is not exposed in this mode.
+        OTel tracing and OTel logging are not currently implemented for Gerbil.
+      </Note>
+
+      <Expandable title="WireGuard">
+        <ResponseField name="gerbil_wg_interface_up" type="Int64Gauge">
+          Operational state of a WireGuard interface.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `instance`  
+            **Emission path:** `metrics.RecordInterfaceUp`  
+            **Example:** `gerbil_wg_interface_up{ifname="wg0",instance="gerbil-1"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_peers_total" type="UpDownCounter">
+          Number of configured peers per interface.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`  
+            **Emission path:** `metrics.RecordPeersTotal`  
+            **Example:** `gerbil_wg_peers_total{ifname="wg0"} 5`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_peer_connected" type="Int64Gauge">
+          Current peer connection state.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `peer`  
+            **Emission path:** `metrics.RecordPeerConnected`  
+            **Example:** `gerbil_wg_peer_connected{ifname="wg0",peer="abc"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_allowed_ips_count" type="UpDownCounter">
+          Number of allowed IPs configured per peer.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `peer`  
+            **Emission path:** `metrics.RecordAllowedIPsCount`  
+            **Example:** `gerbil_allowed_ips_count{ifname="wg0",peer="abc"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_key_rotation_total" type="Counter">
+          Key rotation events.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `reason`  
+            **Emission path:** `metrics.RecordKeyRotation`  
+            **Example:** `gerbil_key_rotation_total{ifname="wg0",reason="scheduled"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_handshakes_total" type="Counter">
+          WireGuard handshake attempts keyed by result.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `peer`, `result`  
+            **Emission path:** `metrics.RecordHandshake`  
+            **Example:** `gerbil_wg_handshakes_total{ifname="wg0",peer="abc",result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_handshake_latency_seconds" type="Histogram (s)">
+          Distribution of WireGuard handshake latencies.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `ifname`, `peer`  
+            **Emission path:** `metrics.RecordHandshakeLatency`  
+            **Example:** `gerbil_wg_handshake_latency_seconds_bucket{ifname="wg0",peer="abc",le="0.1"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_peer_rtt_seconds" type="Histogram (s)">
+          Observed peer round-trip time.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `ifname`, `peer`  
+            **Emission path:** `metrics.RecordPeerRTT`  
+            **Example:** `gerbil_wg_peer_rtt_seconds_bucket{ifname="wg0",peer="abc",le="0.05"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_bytes_received_total" type="Counter (bytes)">
+          Bytes received from a WireGuard peer.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `ifname`, `peer`  
+            **Emission path:** `metrics.RecordBytesReceived`  
+            **Example:** `gerbil_wg_bytes_received_total{ifname="wg0",peer="abc"} 8192`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_bytes_transmitted_total" type="Counter (bytes)">
+          Bytes transmitted to a WireGuard peer.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `ifname`, `peer`  
+            **Emission path:** `metrics.RecordBytesTransmitted`  
+            **Example:** `gerbil_wg_bytes_transmitted_total{ifname="wg0",peer="abc"} 16384`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Relay">
+        <ResponseField name="gerbil_active_sessions" type="UpDownCounter">
+          Number of active UDP relay sessions.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`  
+            **Emission path:** `metrics.RecordActiveSession` / `metrics.RecordSession`  
+            **Example:** `gerbil_active_sessions{ifname="wg0"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_udp_packets_total" type="Counter">
+          UDP packets processed by relay workers.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `type`, `direction`  
+            **Emission path:** `metrics.RecordUDPPacket`  
+            **Example:** `gerbil_udp_packets_total{ifname="wg0",type="data",direction="rx"} 42`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_udp_packet_size_bytes" type="Histogram (bytes)">
+          Size distribution of packets forwarded through the relay.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `ifname`, `type`  
+            **Emission path:** `metrics.RecordUDPPacketSize`  
+            **Example:** `gerbil_udp_packet_size_bytes_bucket{ifname="wg0",type="data",le="1024"} 7`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_hole_punch_events_total" type="Counter">
+          Hole punch messages processed by result.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `result`  
+            **Emission path:** `metrics.RecordHolePunchEvent`  
+            **Example:** `gerbil_hole_punch_events_total{ifname="wg0",result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_mapping_active" type="UpDownCounter">
+          Active proxy mappings.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`  
+            **Emission path:** `metrics.RecordProxyMapping`  
+            **Example:** `gerbil_proxy_mapping_active{ifname="wg0"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_session_rebuilt_total" type="Counter">
+          Sessions rebuilt from communication patterns.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`  
+            **Emission path:** `metrics.RecordSessionRebuilt`  
+            **Example:** `gerbil_session_rebuilt_total{ifname="wg0"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_comm_pattern_active" type="UpDownCounter">
+          Active communication patterns.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`  
+            **Emission path:** `metrics.RecordCommPattern`  
+            **Example:** `gerbil_comm_pattern_active{ifname="wg0"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_cleanup_removed_total" type="Counter">
+          Items removed by cleanup routines.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `component`  
+            **Emission path:** `metrics.RecordProxyCleanupRemoved`  
+            **Example:** `gerbil_proxy_cleanup_removed_total{ifname="wg0",component="sessions"} 5`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_connection_errors_total" type="Counter">
+          Proxy connection errors.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `error_type`  
+            **Emission path:** `metrics.RecordProxyConnectionError`  
+            **Example:** `gerbil_proxy_connection_errors_total{ifname="wg0",error_type="timeout"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_initial_mappings" type="Int64Gauge">
+          Initial proxy mappings loaded.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`  
+            **Emission path:** `metrics.RecordProxyInitialMappings`  
+            **Example:** `gerbil_proxy_initial_mappings{ifname="wg0"} 8`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_mapping_updates_total" type="Counter">
+          Proxy mapping updates.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`  
+            **Emission path:** `metrics.RecordProxyMappingUpdate`  
+            **Example:** `gerbil_proxy_mapping_updates_total{ifname="wg0"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_idle_cleanup_duration_seconds" type="Histogram (s)">
+          Duration of idle cleanup cycles.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `ifname`, `component`  
+            **Emission path:** `metrics.RecordProxyIdleCleanupDuration`  
+            **Example:** `gerbil_proxy_idle_cleanup_duration_seconds_bucket{ifname="wg0",component="sessions",le="0.1"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="SNI Proxy">
+        <ResponseField name="gerbil_active_proxy_connections" type="UpDownCounter">
+          Active SNI proxy connections.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordActiveProxyConnection`  
+            **Example:** `gerbil_active_proxy_connections 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_route_lookups_total" type="Counter">
+          Route lookups keyed by result.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordProxyRouteLookup`  
+            **Example:** `gerbil_proxy_route_lookups_total{result="hit"} 6`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_tls_handshake_seconds" type="Histogram (s)">
+          TLS handshake duration for the SNI proxy.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordProxyTLSHandshake`  
+            **Example:** `gerbil_proxy_tls_handshake_seconds_bucket{le="0.1"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_bytes_transmitted_total" type="Counter (bytes)">
+          Bytes sent or received by the SNI proxy.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `direction`  
+            **Emission path:** `metrics.RecordProxyBytesTransmitted`  
+            **Example:** `gerbil_proxy_bytes_transmitted_total{direction="egress"} 16384`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_connections_total" type="Counter">
+          Connections processed by the SNI proxy.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordSNIConnection`  
+            **Example:** `gerbil_sni_connections_total{result="success"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_connection_duration_seconds" type="Histogram (s)">
+          Lifetime distribution of proxied TLS connections.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordSNIConnectionDuration`  
+            **Example:** `gerbil_sni_connection_duration_seconds_bucket{le="10"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_active_connections" type="UpDownCounter">
+          Active SNI tunnels.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordSNIActiveConnection`  
+            **Example:** `gerbil_sni_active_connections 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_route_cache_hits_total" type="Counter">
+          SNI route cache hits and misses.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordSNIRouteCacheHit`  
+            **Example:** `gerbil_sni_route_cache_hits_total{result="hit"} 10`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_route_api_requests_total" type="Counter">
+          SNI route API requests.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordSNIRouteAPIRequest`  
+            **Example:** `gerbil_sni_route_api_requests_total{result="success"} 5`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_route_api_latency_seconds" type="Histogram (s)">
+          Route API call latency.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordSNIRouteAPILatency`  
+            **Example:** `gerbil_sni_route_api_latency_seconds_bucket{le="0.25"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_local_override_total" type="Counter">
+          Routes using local overrides.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `hit`  
+            **Emission path:** `metrics.RecordSNILocalOverride`  
+            **Example:** `gerbil_sni_local_override_total{hit="true"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_trusted_proxy_events_total" type="Counter">
+          PROXY protocol events.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `event`  
+            **Emission path:** `metrics.RecordSNITrustedProxyEvent`  
+            **Example:** `gerbil_sni_trusted_proxy_events_total{event="parsed"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_proxy_protocol_parse_errors_total" type="Counter">
+          PROXY protocol parse failures.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordSNIProxyProtocolParseError`  
+            **Example:** `gerbil_sni_proxy_protocol_parse_errors_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_data_bytes_total" type="Counter (bytes)">
+          Bytes proxied through SNI tunnels.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `direction`  
+            **Emission path:** `metrics.RecordSNIDataBytes`  
+            **Example:** `gerbil_sni_data_bytes_total{direction="ingress"} 4096`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_tunnel_terminations_total" type="Counter">
+          SNI tunnel terminations keyed by reason.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `reason`  
+            **Emission path:** `metrics.RecordSNITunnelTermination`  
+            **Example:** `gerbil_sni_tunnel_terminations_total{reason="client_close"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="HTTP API & Peer Management">
+        <ResponseField name="gerbil_http_requests_total" type="Counter">
+          HTTP requests to the management API.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `endpoint`, `method`, `status_code`  
+            **Emission path:** `metrics.RecordHTTPRequest`  
+            **Example:** `gerbil_http_requests_total{endpoint="/peer",method="POST",status_code="200"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_http_request_duration_seconds" type="Histogram (s)">
+          HTTP request handling time.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `endpoint`, `method`  
+            **Emission path:** `metrics.RecordHTTPRequestDuration`  
+            **Example:** `gerbil_http_request_duration_seconds_bucket{endpoint="/peer",method="POST",le="0.1"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_peer_operations_total" type="Counter">
+          Peer lifecycle operations.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `operation`, `result`  
+            **Emission path:** `metrics.RecordPeerOperation`  
+            **Example:** `gerbil_peer_operations_total{operation="add",result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_mapping_update_requests_total" type="Counter">
+          Proxy mapping update API calls.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordProxyMappingUpdateRequest`  
+            **Example:** `gerbil_proxy_mapping_update_requests_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_destinations_update_requests_total" type="Counter">
+          Destination update API calls.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordDestinationsUpdateRequest`  
+            **Example:** `gerbil_destinations_update_requests_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Remote Config & Reporting">
+        <ResponseField name="gerbil_remote_config_fetches_total" type="Counter">
+          Remote configuration fetch attempts.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordRemoteConfigFetch`  
+            **Example:** `gerbil_remote_config_fetches_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_bandwidth_reports_total" type="Counter">
+          Bandwidth report transmissions.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordBandwidthReport`  
+            **Example:** `gerbil_bandwidth_reports_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_peer_bandwidth_bytes_total" type="Counter (bytes)">
+          Bytes per peer tracked by bandwidth calculation.
+          <Expandable title="Details">
+            **Unit:** bytes  
+            **Labels:** `peer`, `direction`  
+            **Emission path:** `metrics.RecordPeerBandwidthBytes`  
+            **Example:** `gerbil_peer_bandwidth_bytes_total{peer="abc",direction="rx"} 8192`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="System & Operations">
+        <ResponseField name="gerbil_netlink_events_total" type="Counter">
+          Netlink events processed.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `event_type`  
+            **Emission path:** `metrics.RecordNetlinkEvent`  
+            **Example:** `gerbil_netlink_events_total{event_type="link_up"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_netlink_errors_total" type="Counter">
+          Netlink or kernel errors.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `component`, `error_type`  
+            **Emission path:** `metrics.RecordNetlinkError`  
+            **Example:** `gerbil_netlink_errors_total{component="wg",error_type="permission"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sync_duration_seconds" type="Histogram (s)">
+          Duration of reconciliation or sync loops.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `component`  
+            **Emission path:** `metrics.RecordSyncDuration`  
+            **Example:** `gerbil_sync_duration_seconds_bucket{component="remote_config",le="0.5"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_workqueue_depth" type="UpDownCounter">
+          Current length of internal work queues.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `queue`  
+            **Emission path:** `metrics.RecordWorkqueueDepth`  
+            **Example:** `gerbil_workqueue_depth{queue="relay"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_kernel_module_loads_total" type="Counter">
+          Kernel module load attempts.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordKernelModuleLoad`  
+            **Example:** `gerbil_kernel_module_loads_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_firewall_rules_applied_total" type="Counter">
+          Firewall rules applied.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`, `chain`  
+            **Emission path:** `metrics.RecordFirewallRuleApplied`  
+            **Example:** `gerbil_firewall_rules_applied_total{result="success",chain="FORWARD"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_config_reloads_total" type="Counter">
+          Configuration reloads.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `result`  
+            **Emission path:** `metrics.RecordConfigReload`  
+            **Example:** `gerbil_config_reloads_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_restart_total" type="Counter">
+          Process restart count.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordRestart`  
+            **Example:** `gerbil_restart_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_auth_failures_total" type="Counter">
+          Authentication or peer validation failures.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `peer`, `reason`  
+            **Emission path:** `metrics.RecordAuthFailure`  
+            **Example:** `gerbil_auth_failures_total{peer="abc",reason="invalid_key"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_acl_denied_total" type="Counter">
+          Access-control denied events.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `ifname`, `peer`, `policy`  
+            **Emission path:** `metrics.RecordACLDenied`  
+            **Example:** `gerbil_acl_denied_total{ifname="wg0",peer="abc",policy="deny"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_certificate_expiry_days" type="Float64Gauge">
+          Days until certificate expiry.
+          <Expandable title="Details">
+            **Unit:** days  
+            **Labels:** `cert_name`, `ifname`  
+            **Emission path:** `metrics.RecordCertificateExpiry`  
+            **Example:** `gerbil_certificate_expiry_days{cert_name="server",ifname="wg0"} 42`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_memory_spike_total" type="Counter">
+          Memory spikes detected by severity.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `severity`  
+            **Emission path:** `metrics.RecordMemorySpike`  
+            **Example:** `gerbil_memory_spike_total{severity="warning"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_heap_profiles_written_total" type="Counter">
+          Heap profile files generated.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** —  
+            **Emission path:** `metrics.RecordHeapProfileWritten`  
+            **Example:** `gerbil_heap_profiles_written_total 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Tab>
+
+  <Tab title="Prometheus">
+    <ResponseField name="gerbil">
+      Prometheus-style series for the same Gerbil metrics. Gerbil exposes these only when `METRICS_BACKEND=prometheus`.
+
+      <Note>
+        In Prometheus mode, Gerbil registers a native Prometheus client and exposes the configured metrics path, default `/metrics`.
+        In OTel mode, `/metrics` is not exposed.
+      </Note>
+
+      <Expandable title="WireGuard">
+        <ResponseField name="gerbil_wg_interface_up" type="gauge">
+          Operational state of a WireGuard interface.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `instance` • **Unit:** 1 • **Path:** `metrics.RecordInterfaceUp`  
+            **Example:** `gerbil_wg_interface_up{ifname="wg0",instance="gerbil-1"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_peers_total" type="gauge">
+          Number of configured peers per interface.
+          <Expandable title="Details">
+            **Labels:** `ifname` • **Unit:** 1 • **Path:** `metrics.RecordPeersTotal`  
+            **Example:** `gerbil_wg_peers_total{ifname="wg0"} 5`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_peer_connected" type="gauge">
+          Current peer connection state.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer` • **Unit:** 1 • **Path:** `metrics.RecordPeerConnected`  
+            **Example:** `gerbil_wg_peer_connected{ifname="wg0",peer="abc"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_allowed_ips_count" type="gauge">
+          Number of allowed IPs configured per peer.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer` • **Unit:** 1 • **Path:** `metrics.RecordAllowedIPsCount`  
+            **Example:** `gerbil_allowed_ips_count{ifname="wg0",peer="abc"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_key_rotation_total" type="counter">
+          Key rotation events.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `reason` • **Unit:** 1 • **Path:** `metrics.RecordKeyRotation`  
+            **Example:** `gerbil_key_rotation_total{ifname="wg0",reason="scheduled"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_handshakes_total" type="counter">
+          WireGuard handshake attempts keyed by result.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer`, `result` • **Unit:** 1 • **Path:** `metrics.RecordHandshake`  
+            **Example:** `gerbil_wg_handshakes_total{ifname="wg0",peer="abc",result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_handshake_latency_seconds" type="histogram">
+          Distribution of WireGuard handshake latencies.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer` • **Unit:** seconds • **Path:** `metrics.RecordHandshakeLatency`  
+            **Example:** `gerbil_wg_handshake_latency_seconds_bucket{ifname="wg0",peer="abc",le="0.1"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_peer_rtt_seconds" type="histogram">
+          Observed peer round-trip time.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer` • **Unit:** seconds • **Path:** `metrics.RecordPeerRTT`  
+            **Example:** `gerbil_wg_peer_rtt_seconds_bucket{ifname="wg0",peer="abc",le="0.05"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_bytes_received_total" type="counter">
+          Bytes received from a WireGuard peer.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer` • **Unit:** bytes • **Path:** `metrics.RecordBytesReceived`  
+            **Example:** `gerbil_wg_bytes_received_total{ifname="wg0",peer="abc"} 8192`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_wg_bytes_transmitted_total" type="counter">
+          Bytes transmitted to a WireGuard peer.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer` • **Unit:** bytes • **Path:** `metrics.RecordBytesTransmitted`  
+            **Example:** `gerbil_wg_bytes_transmitted_total{ifname="wg0",peer="abc"} 16384`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Relay">
+        <ResponseField name="gerbil_active_sessions" type="gauge">
+          Active UDP relay sessions.
+          <Expandable title="Details">
+            **Labels:** `ifname` • **Unit:** 1 • **Path:** `metrics.RecordActiveSession` / `metrics.RecordSession`  
+            **Example:** `gerbil_active_sessions{ifname="wg0"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_udp_packets_total" type="counter">
+          UDP packets processed by relay workers.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `type`, `direction` • **Unit:** 1 • **Path:** `metrics.RecordUDPPacket`  
+            **Example:** `gerbil_udp_packets_total{ifname="wg0",type="data",direction="rx"} 42`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_udp_packet_size_bytes" type="histogram">
+          Size distribution of packets forwarded through the relay.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `type` • **Unit:** bytes • **Path:** `metrics.RecordUDPPacketSize`  
+            **Example:** `gerbil_udp_packet_size_bytes_bucket{ifname="wg0",type="data",le="1024"} 7`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_hole_punch_events_total" type="counter">
+          Hole punch messages processed by result.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `result` • **Unit:** 1 • **Path:** `metrics.RecordHolePunchEvent`  
+            **Example:** `gerbil_hole_punch_events_total{ifname="wg0",result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_mapping_active" type="gauge">
+          Active proxy mappings.
+          <Expandable title="Details">
+            **Labels:** `ifname` • **Unit:** 1 • **Path:** `metrics.RecordProxyMapping`  
+            **Example:** `gerbil_proxy_mapping_active{ifname="wg0"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_session_rebuilt_total" type="counter">
+          Sessions rebuilt from communication patterns.
+          <Expandable title="Details">
+            **Labels:** `ifname` • **Unit:** 1 • **Path:** `metrics.RecordSessionRebuilt`  
+            **Example:** `gerbil_session_rebuilt_total{ifname="wg0"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_comm_pattern_active" type="gauge">
+          Active communication patterns.
+          <Expandable title="Details">
+            **Labels:** `ifname` • **Unit:** 1 • **Path:** `metrics.RecordCommPattern`  
+            **Example:** `gerbil_comm_pattern_active{ifname="wg0"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_cleanup_removed_total" type="counter">
+          Items removed by cleanup routines.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `component` • **Unit:** 1 • **Path:** `metrics.RecordProxyCleanupRemoved`  
+            **Example:** `gerbil_proxy_cleanup_removed_total{ifname="wg0",component="sessions"} 5`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_connection_errors_total" type="counter">
+          Proxy connection errors.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `error_type` • **Unit:** 1 • **Path:** `metrics.RecordProxyConnectionError`  
+            **Example:** `gerbil_proxy_connection_errors_total{ifname="wg0",error_type="timeout"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_initial_mappings" type="gauge">
+          Initial proxy mappings loaded.
+          <Expandable title="Details">
+            **Labels:** `ifname` • **Unit:** 1 • **Path:** `metrics.RecordProxyInitialMappings`  
+            **Example:** `gerbil_proxy_initial_mappings{ifname="wg0"} 8`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_mapping_updates_total" type="counter">
+          Proxy mapping updates.
+          <Expandable title="Details">
+            **Labels:** `ifname` • **Unit:** 1 • **Path:** `metrics.RecordProxyMappingUpdate`  
+            **Example:** `gerbil_proxy_mapping_updates_total{ifname="wg0"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_idle_cleanup_duration_seconds" type="histogram">
+          Duration of idle cleanup cycles.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `component` • **Unit:** seconds • **Path:** `metrics.RecordProxyIdleCleanupDuration`  
+            **Example:** `gerbil_proxy_idle_cleanup_duration_seconds_bucket{ifname="wg0",component="sessions",le="0.1"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="SNI Proxy">
+        <ResponseField name="gerbil_active_proxy_connections" type="gauge">
+          Active SNI proxy connections.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** 1 • **Path:** `metrics.RecordActiveProxyConnection`  
+            **Example:** `gerbil_active_proxy_connections 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_route_lookups_total" type="counter">
+          Route lookups keyed by result.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordProxyRouteLookup`  
+            **Example:** `gerbil_proxy_route_lookups_total{result="hit"} 6`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_tls_handshake_seconds" type="histogram">
+          TLS handshake duration for the SNI proxy.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** seconds • **Path:** `metrics.RecordProxyTLSHandshake`  
+            **Example:** `gerbil_proxy_tls_handshake_seconds_bucket{le="0.1"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_bytes_transmitted_total" type="counter">
+          Bytes sent or received by the SNI proxy.
+          <Expandable title="Details">
+            **Labels:** `direction` • **Unit:** bytes • **Path:** `metrics.RecordProxyBytesTransmitted`  
+            **Example:** `gerbil_proxy_bytes_transmitted_total{direction="egress"} 16384`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_connections_total" type="counter">
+          Connections processed by the SNI proxy.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordSNIConnection`  
+            **Example:** `gerbil_sni_connections_total{result="success"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_connection_duration_seconds" type="histogram">
+          Lifetime distribution of proxied TLS connections.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** seconds • **Path:** `metrics.RecordSNIConnectionDuration`  
+            **Example:** `gerbil_sni_connection_duration_seconds_bucket{le="10"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_active_connections" type="gauge">
+          Active SNI tunnels.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** 1 • **Path:** `metrics.RecordSNIActiveConnection`  
+            **Example:** `gerbil_sni_active_connections 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_route_cache_hits_total" type="counter">
+          SNI route cache hits and misses.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordSNIRouteCacheHit`  
+            **Example:** `gerbil_sni_route_cache_hits_total{result="hit"} 10`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_route_api_requests_total" type="counter">
+          SNI route API requests.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordSNIRouteAPIRequest`  
+            **Example:** `gerbil_sni_route_api_requests_total{result="success"} 5`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_route_api_latency_seconds" type="histogram">
+          Route API call latency.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** seconds • **Path:** `metrics.RecordSNIRouteAPILatency`  
+            **Example:** `gerbil_sni_route_api_latency_seconds_bucket{le="0.25"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_local_override_total" type="counter">
+          Routes using local overrides.
+          <Expandable title="Details">
+            **Labels:** `hit` • **Unit:** 1 • **Path:** `metrics.RecordSNILocalOverride`  
+            **Example:** `gerbil_sni_local_override_total{hit="true"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_trusted_proxy_events_total" type="counter">
+          PROXY protocol events.
+          <Expandable title="Details">
+            **Labels:** `event` • **Unit:** 1 • **Path:** `metrics.RecordSNITrustedProxyEvent`  
+            **Example:** `gerbil_sni_trusted_proxy_events_total{event="parsed"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_proxy_protocol_parse_errors_total" type="counter">
+          PROXY protocol parse failures.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** 1 • **Path:** `metrics.RecordSNIProxyProtocolParseError`  
+            **Example:** `gerbil_sni_proxy_protocol_parse_errors_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_data_bytes_total" type="counter">
+          Bytes proxied through SNI tunnels.
+          <Expandable title="Details">
+            **Labels:** `direction` • **Unit:** bytes • **Path:** `metrics.RecordSNIDataBytes`  
+            **Example:** `gerbil_sni_data_bytes_total{direction="ingress"} 4096`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sni_tunnel_terminations_total" type="counter">
+          SNI tunnel terminations keyed by reason.
+          <Expandable title="Details">
+            **Labels:** `reason` • **Unit:** 1 • **Path:** `metrics.RecordSNITunnelTermination`  
+            **Example:** `gerbil_sni_tunnel_terminations_total{reason="client_close"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="HTTP API & Peer Management">
+        <ResponseField name="gerbil_http_requests_total" type="counter">
+          HTTP requests to the management API.
+          <Expandable title="Details">
+            **Labels:** `endpoint`, `method`, `status_code` • **Unit:** 1 • **Path:** `metrics.RecordHTTPRequest`  
+            **Example:** `gerbil_http_requests_total{endpoint="/peer",method="POST",status_code="200"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_http_request_duration_seconds" type="histogram">
+          HTTP request handling time.
+          <Expandable title="Details">
+            **Labels:** `endpoint`, `method` • **Unit:** seconds • **Path:** `metrics.RecordHTTPRequestDuration`  
+            **Example:** `gerbil_http_request_duration_seconds_bucket{endpoint="/peer",method="POST",le="0.1"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_peer_operations_total" type="counter">
+          Peer lifecycle operations.
+          <Expandable title="Details">
+            **Labels:** `operation`, `result` • **Unit:** 1 • **Path:** `metrics.RecordPeerOperation`  
+            **Example:** `gerbil_peer_operations_total{operation="add",result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_proxy_mapping_update_requests_total" type="counter">
+          Proxy mapping update API calls.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordProxyMappingUpdateRequest`  
+            **Example:** `gerbil_proxy_mapping_update_requests_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_destinations_update_requests_total" type="counter">
+          Destination update API calls.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordDestinationsUpdateRequest`  
+            **Example:** `gerbil_destinations_update_requests_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Remote Config & Reporting">
+        <ResponseField name="gerbil_remote_config_fetches_total" type="counter">
+          Remote configuration fetch attempts.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordRemoteConfigFetch`  
+            **Example:** `gerbil_remote_config_fetches_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_bandwidth_reports_total" type="counter">
+          Bandwidth report transmissions.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordBandwidthReport`  
+            **Example:** `gerbil_bandwidth_reports_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_peer_bandwidth_bytes_total" type="counter">
+          Bytes per peer tracked by bandwidth calculation.
+          <Expandable title="Details">
+            **Labels:** `peer`, `direction` • **Unit:** bytes • **Path:** `metrics.RecordPeerBandwidthBytes`  
+            **Example:** `gerbil_peer_bandwidth_bytes_total{peer="abc",direction="rx"} 8192`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="System & Operations">
+        <ResponseField name="gerbil_netlink_events_total" type="counter">
+          Netlink events processed.
+          <Expandable title="Details">
+            **Labels:** `event_type` • **Unit:** 1 • **Path:** `metrics.RecordNetlinkEvent`  
+            **Example:** `gerbil_netlink_events_total{event_type="link_up"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_netlink_errors_total" type="counter">
+          Netlink or kernel errors.
+          <Expandable title="Details">
+            **Labels:** `component`, `error_type` • **Unit:** 1 • **Path:** `metrics.RecordNetlinkError`  
+            **Example:** `gerbil_netlink_errors_total{component="wg",error_type="permission"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_sync_duration_seconds" type="histogram">
+          Duration of reconciliation or sync loops.
+          <Expandable title="Details">
+            **Labels:** `component` • **Unit:** seconds • **Path:** `metrics.RecordSyncDuration`  
+            **Example:** `gerbil_sync_duration_seconds_bucket{component="remote_config",le="0.5"} 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_workqueue_depth" type="gauge">
+          Current length of internal work queues.
+          <Expandable title="Details">
+            **Labels:** `queue` • **Unit:** 1 • **Path:** `metrics.RecordWorkqueueDepth`  
+            **Example:** `gerbil_workqueue_depth{queue="relay"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_kernel_module_loads_total" type="counter">
+          Kernel module load attempts.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordKernelModuleLoad`  
+            **Example:** `gerbil_kernel_module_loads_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_firewall_rules_applied_total" type="counter">
+          Firewall rules applied.
+          <Expandable title="Details">
+            **Labels:** `result`, `chain` • **Unit:** 1 • **Path:** `metrics.RecordFirewallRuleApplied`  
+            **Example:** `gerbil_firewall_rules_applied_total{result="success",chain="FORWARD"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_config_reloads_total" type="counter">
+          Configuration reloads.
+          <Expandable title="Details">
+            **Labels:** `result` • **Unit:** 1 • **Path:** `metrics.RecordConfigReload`  
+            **Example:** `gerbil_config_reloads_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_restart_total" type="counter">
+          Process restart count.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** 1 • **Path:** `metrics.RecordRestart`  
+            **Example:** `gerbil_restart_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_auth_failures_total" type="counter">
+          Authentication or peer validation failures.
+          <Expandable title="Details">
+            **Labels:** `peer`, `reason` • **Unit:** 1 • **Path:** `metrics.RecordAuthFailure`  
+            **Example:** `gerbil_auth_failures_total{peer="abc",reason="invalid_key"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_acl_denied_total" type="counter">
+          Access-control denied events.
+          <Expandable title="Details">
+            **Labels:** `ifname`, `peer`, `policy` • **Unit:** 1 • **Path:** `metrics.RecordACLDenied`  
+            **Example:** `gerbil_acl_denied_total{ifname="wg0",peer="abc",policy="deny"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_certificate_expiry_days" type="gauge">
+          Days until certificate expiry.
+          <Expandable title="Details">
+            **Labels:** `cert_name`, `ifname` • **Unit:** days • **Path:** `metrics.RecordCertificateExpiry`  
+            **Example:** `gerbil_certificate_expiry_days{cert_name="server",ifname="wg0"} 42`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_memory_spike_total" type="counter">
+          Memory spikes detected by severity.
+          <Expandable title="Details">
+            **Labels:** `severity` • **Unit:** 1 • **Path:** `metrics.RecordMemorySpike`  
+            **Example:** `gerbil_memory_spike_total{severity="warning"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="gerbil_heap_profiles_written_total" type="counter">
+          Heap profile files generated.
+          <Expandable title="Details">
+            **Labels:** — • **Unit:** 1 • **Path:** `metrics.RecordHeapProfileWritten`  
+            **Example:** `gerbil_heap_profiles_written_total 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Tab>
+</Tabs>
+
+### Pangolin Kubernetes Controller metrics
+
+<Tabs>
+  <Tab title="OpenTelemetry (OTel)">
+    <ResponseField name="pangolin-kube-controller">
+      Additional OpenTelemetry metric instruments exposed by the Pangolin Kubernetes Controller.
+
+      <Note>
+        The controller exposes Prometheus-native metrics and additional OTel-backed metrics on the same `/metrics` endpoint.
+        The OTel-backed series use the `pangolin_controller_*` prefix.
+      </Note>
+
+      <Warning>
+        The controller documentation mentions metrics, traces, and optional profiling.
+        The metrics below are verified from the current repository documentation and metrics implementation.
+        Do not advertise full distributed tracing unless trace instrumentation is verified separately.
+      </Warning>
+
+      <Expandable title="Reconcile">
+        <ResponseField name="pangolin_controller_reconcile_phase_duration_seconds" type="Histogram (s)">
+          Duration of each reconcile phase.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `phase`, `result`  
+            **Label values:**  
+            `phase`: `middlewares` | `routers` | `serversTransports` | `services` | `tcp` | `udp`  
+            `result`: `success` | `error`  
+            **Emission path:** OTel reconcile phase instrumentation  
+            **Example:** `pangolin_controller_reconcile_phase_duration_seconds_bucket{phase="routers",result="success",le="0.5"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_controller_active_reconcile_routines" type="UpDownCounter">
+          Number of active reconcile routines by phase.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `phase`  
+            **Label values:** `middlewares` | `routers` | `serversTransports` | `services` | `tcp` | `udp`  
+            **Emission path:** Parallel reconcile instrumentation  
+            **Example:** `pangolin_controller_active_reconcile_routines{phase="routers"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_controller_loop_iterations_total" type="Counter">
+          Controller loop iterations by outcome.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `outcome`  
+            **Label values:** `success` | `nochange` | `error`  
+            **Emission path:** Controller loop instrumentation  
+            **Example:** `pangolin_controller_loop_iterations_total{outcome="success"} 10`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Fetch & Config">
+        <ResponseField name="pangolin_controller_fetch_duration_seconds" type="Histogram (s)">
+          Duration of remote fetch cycle HTTP requests.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `status_code`, `status_class`  
+            **Label values:**  
+            `status_code`: `200` | `304` | `401` | `403` | `404` | `5xx`  
+            `status_class`: `2xx` | `3xx` | `4xx` | `5xx`  
+            **Emission path:** Remote config fetch instrumentation  
+            **Example:** `pangolin_controller_fetch_duration_seconds_bucket{status_code="200",status_class="2xx",le="0.25"} 4`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_controller_config_parse_duration_seconds" type="Histogram (s)">
+          Duration of configuration parsing.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `section`  
+            **Label values:** `full`  
+            **Emission path:** Config parse instrumentation  
+            **Example:** `pangolin_controller_config_parse_duration_seconds_bucket{section="full",le="0.1"} 2`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Kubernetes API">
+        <ResponseField name="pangolin_controller_k8s_request_duration_seconds" type="Histogram (s)">
+          Duration of Kubernetes API requests.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `verb`, `resource_kind`, `result`, `forced`  
+            **Label values:**  
+            `verb`: `get` | `create` | `patch` | `update` | `delete` | `list`  
+            `resource_kind`: `IngressRoute` | `Middleware` | `TraefikService` | `ServersTransport` | `ServersTransportTCP` | `Service` | `EndpointSlice`  
+            `result`: `success` | `error` | `conflict`  
+            `forced`: `true` | `false`  
+            **Emission path:** Kubernetes API request instrumentation  
+            **Example:** `pangolin_controller_k8s_request_duration_seconds_bucket{verb="patch",resource_kind="IngressRoute",result="success",forced="false",le="0.25"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_controller_k8s_requests_total" type="Counter">
+          Total Kubernetes API requests.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `verb`, `resource_kind`, `result`, `forced`  
+            **Emission path:** Kubernetes API request instrumentation  
+            **Example:** `pangolin_controller_k8s_requests_total{verb="patch",resource_kind="IngressRoute",result="success",forced="false"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_controller_retries_total" type="Counter">
+          Retry attempts in the SSA apply loop.
+          <Expandable title="Details">
+            **Unit:** 1  
+            **Labels:** `reason`, `operation`, `resource_kind`  
+            **Label values:**  
+            `reason`: `conflict` | `transient` | `timeout`  
+            `operation`: `get` | `create` | `patch` | `delete` | `apply`  
+            **Emission path:** SSA apply retry instrumentation  
+            **Example:** `pangolin_controller_retries_total{reason="conflict",operation="patch",resource_kind="IngressRoute"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Garbage Collection">
+        <ResponseField name="pangolin_controller_gc_run_duration_seconds" type="Histogram (s)">
+          Duration of garbage collection runs.
+          <Expandable title="Details">
+            **Unit:** seconds  
+            **Labels:** `result`  
+            **Label values:** `success` | `fail` | `dryrun`  
+            **Emission path:** GC instrumentation  
+            **Example:** `pangolin_controller_gc_run_duration_seconds_bucket{result="success",le="0.5"} 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Tab>
+
+  <Tab title="Prometheus">
+    <ResponseField name="pangolin-kube-controller">
+      Prometheus-native metrics exposed by the Pangolin Kubernetes Controller. These use the `pangolin_kube_controller_*` prefix.
+
+      <Note>
+        The metrics endpoint is exposed at `GET /metrics` on `METRICS_ADDR`, default `:9090`.
+        The same HTTP server also exposes `/healthz`, `/readyz`, and optionally `/debug/pprof/` when pprof is enabled.
+      </Note>
+
+      <Expandable title="Reconcile">
+        <ResponseField name="pangolin_kube_controller_reconcile_seconds" type="histogram">
+          Duration of a full successful reconcile loop.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** seconds  
+            **Path:** `Collector.ReconcileDuration`  
+            **Example:** `pangolin_kube_controller_reconcile_seconds_bucket{le="0.5"} 3`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_reconcile_errors_total" type="counter">
+          Total errors during reconcile steps.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Path:** `Collector.ReconcileErrors`  
+            **Example:** `pangolin_kube_controller_reconcile_errors_total 2`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_consecutive_errors" type="gauge">
+          Number of consecutive reconcile or fetch errors.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Path:** `Collector.ConsecutiveErrors`  
+            **Example:** `pangolin_kube_controller_consecutive_errors 0`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_last_fetch_success_timestamp_seconds" type="gauge">
+          Unix timestamp of the last successful fetch.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** seconds since Unix epoch  
+            **Path:** `Collector.LastFetchSuccess`  
+            **Example:** `pangolin_kube_controller_last_fetch_success_timestamp_seconds 1767225600`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_ready" type="gauge">
+          Controller readiness state.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Value:** `1` = ready, `0` = not ready  
+            **Path:** `Collector.Ready`  
+            **Example:** `pangolin_kube_controller_ready 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Objects">
+        <ResponseField name="pangolin_kube_controller_objects_applied_total" type="counter">
+          Applied objects by kind and action.
+          <Expandable title="Details">
+            **Labels:** `kind`, `action`  
+            **Label values:**  
+            `kind`: `IngressRoute` | `Middleware` | `TraefikService` | other managed Traefik CRDs  
+            `action`: `create` | `patch`  
+            **Unit:** 1  
+            **Path:** `Collector.AppliedObjects`  
+            **Example:** `pangolin_kube_controller_objects_applied_total{kind="IngressRoute",action="patch"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_objects_deleted_total" type="counter">
+          Deleted objects by kind.
+          <Expandable title="Details">
+            **Labels:** `kind`  
+            **Unit:** 1  
+            **Path:** `Collector.DeletedObjects`  
+            **Example:** `pangolin_kube_controller_objects_deleted_total{kind="Middleware"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_desired_objects_count" type="gauge">
+          Desired objects count by kind from the last processed config.
+          <Expandable title="Details">
+            **Labels:** `kind`  
+            **Unit:** 1  
+            **Path:** `Collector.DesiredObjects`  
+            **Example:** `pangolin_kube_controller_desired_objects_count{kind="IngressRoute"} 12`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Garbage Collection">
+        <ResponseField name="pangolin_kube_controller_gc_deleted_total" type="counter">
+          Garbage-collected objects by kind and reason.
+          <Expandable title="Details">
+            **Labels:** `kind`, `reason`  
+            **Label values:**  
+            `reason`: `immediate` | `grace`  
+            **Unit:** 1  
+            **Path:** `Collector.GCDeletedTotal`  
+            **Example:** `pangolin_kube_controller_gc_deleted_total{kind="IngressRoute",reason="grace"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_gc_runs_total" type="counter">
+          Garbage collection runs by result.
+          <Expandable title="Details">
+            **Labels:** `result`  
+            **Label values:** `start` | `success` | `fail` | `dryrun`  
+            **Unit:** 1  
+            **Path:** `Collector.GCRunsTotal`  
+            **Example:** `pangolin_kube_controller_gc_runs_total{result="success"} 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_grace_queue_dropped_total" type="counter">
+          Grace deletion queue items dropped due to queue overflow.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Path:** `Collector.GraceQueueDropped`  
+            **Example:** `pangolin_kube_controller_grace_queue_dropped_total 0`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_grace_queue_depth" type="gauge">
+          Current depth of the grace deletion queue.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Path:** `Collector.GraceQueueDepth`  
+            **Example:** `pangolin_kube_controller_grace_queue_depth 3`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Instance Label">
+        <ResponseField name="pangolin_kube_controller_instance_label_detect_success_total" type="counter">
+          Successful Traefik instance label resolutions.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Path:** `Collector.InstanceLabelDetectSuccess`  
+            **Example:** `pangolin_kube_controller_instance_label_detect_success_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_instance_label_detect_failure_total" type="counter">
+          Failed Traefik instance label resolutions or verifications.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Path:** `Collector.InstanceLabelDetectFailures`  
+            **Example:** `pangolin_kube_controller_instance_label_detect_failure_total 1`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="pangolin_kube_controller_instance_label_last_check_timestamp_seconds" type="gauge">
+          Unix timestamp of the last instance label verification.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** seconds since Unix epoch  
+            **Path:** `Collector.InstanceLabelLastCheck`  
+            **Example:** `pangolin_kube_controller_instance_label_last_check_timestamp_seconds 1767225600`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Leader Election">
+        <ResponseField name="pangolin_kube_controller_leader_state" type="gauge">
+          Current leader election state of the controller.
+          <Expandable title="Details">
+            **Labels:** —  
+            **Unit:** 1  
+            **Value:** `1` = leader, `0` = follower, `-1` = leader election disabled  
+            **Path:** `Collector.LeaderState`  
+            **Example:** `pangolin_kube_controller_leader_state 1`
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+
+      <Expandable title="Runtime">
+        <ResponseField name="go_*" type="runtime metrics">
+          Go runtime metrics registered by the Prometheus Go collector.
+          <Expandable title="Details">
+            **Labels:** varies  
+            **Unit:** varies  
+            **Path:** `collectors.NewGoCollector()`  
+            **Example:** `go_goroutines 14`
+          </Expandable>
+        </ResponseField>
+
+        <ResponseField name="process_*" type="process metrics">
+          Process metrics registered by the Prometheus process collector.
+          <Expandable title="Details">
+            **Labels:** varies  
+            **Unit:** varies  
+            **Path:** `collectors.NewProcessCollector()`  
+            **Example:** `process_resident_memory_bytes 52428800`
           </Expandable>
         </ResponseField>
       </Expandable>
