@@ -27,10 +27,10 @@ Pangolin includes a built-in SSH client so you can connect to remote servers and
 You can SSH into any Pangolin site or private resource. Two components handle SSH on the server side:
 
 <CardGroup cols={2}>
-  <Card title="Newt Host" icon="plug" href="#configure-ssh-on-the-newt-host">
+  <Card title="Newt Host" icon="plug" href="#option-1-newt-as-the-auth-daemon-same-host">
     Runs as a daemon and handles SSH for the host it runs on. Use this when the machine you want to SSH into is the same server running Newt.
   </Card>
-  <Card title="Hosts Behind Newt" icon="server" href="#configure-ssh-on-hosts-behind-newt">
+  <Card title="Hosts Behind Newt" icon="server" href="#option-2-external-auth-daemon-ssh-on-another-server-that-doesnt-run-newt">
     Handles SSH for other servers on the same network. Run the auth daemon on each target host; Newt on a bastion proxies connections to them.
   </Card>
 </CardGroup>
@@ -85,7 +85,7 @@ If TCP 22 is not allowed in the resource’s port restrictions, users will not b
   <img src="/images/auth-daemon-location.png" alt="Pangolin Dashboard"/>
 </Frame>
 
-After the resource exists and access is granted, proceed with [Option 1](#option-1-newt-as-the-auth-daemon-same-host) or [Option 2](#option-2-external-auth-daemon-different-servers) below.
+After the resource exists and access is granted, proceed with [Option 1](#option-1-newt-as-the-auth-daemon-same-host) or [Option 2](#option-2-external-auth-daemon-ssh-on-another-server-that-doesnt-run-newt) below.
 
 ## Option 1: Newt as the auth daemon (same host)
 
