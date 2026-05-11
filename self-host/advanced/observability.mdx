@@ -7,78 +7,52 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
+Pangolin exposes observability signals across multiple components, but not every component provides the same telemetry surface. This page explains which metrics, traces, logs, and profiling endpoints are available today, how they are exposed, and which collection patterns are recommended for production deployments.
 
-
-Pangolin currently does not expose one uniform observability surface across all components. Newt currently has the most complete native implementation, including Prometheus metrics, OTLP metrics, OTLP traces, health checks, and optional pprof. Gerbil supports metrics through either a Prometheus or OTLP backend. The Pangolin Kubernetes Controller exposes a Prometheus-compatible scrape endpoint and additional OTel-backed metric instruments on that scrape endpoint.
-
-Other components currently rely primarily on logs, application analytics, reverse proxy telemetry, or platform-specific client logs.
+**Newt** provides the broadest native observability support with Prometheus metrics, OTLP metrics, OTLP traces, health checks, and optional `pprof`. **Gerbil** supports metrics through either a Prometheus backend or an OTLP backend. The **Pangolin Kubernetes Controller** exposes a Prometheus-compatible scrape endpoint and includes additional OTel-backed metric instruments on that endpoint.
 
 <Note>
-This page covers Pangolin-native observability for metrics, traces, logs, and profiling. For a community walkthrough that collects Traefik and CrowdSec metrics with Prometheus and Grafana, see the [community metrics guide](/self-host/community-guides/metrics).
-</Note>
+This page focuses on Pangolin-native observability. For a community walkthrough that collects Traefik and CrowdSec metrics with Prometheus and Grafana, see the [community metrics guide](/self-host/community-guides/metrics).
 
-<Warning>
-Do not assume every Pangolin component exposes Prometheus metrics, OTLP metrics, or traces. Pyroscope is not natively supported by Pangolin components today, and only verified components should be wired into Tempo or other trace backends.
-</Warning>
+All currently documented component metrics are listed in the [Full Metric Reference](#full-metric-reference).
+</Note>
 
 <CardGroup cols={2}>
   <Card title="Capability Matrix" icon="chart-line" href="#observability-capability-matrix">
-    See which components expose metrics, traces, logs, or profiling endpoints.
+    Compare metrics, traces, logs, and profiling support across Pangolin components.
   </Card>
   <Card title="Newt" icon="route" href="#newt">
-    The most complete observability implementation: Prometheus, OTLP metrics, OTLP traces, and optional pprof.
+    Native Prometheus metrics, OTLP metrics, OTLP traces, health checks, and optional pprof.
   </Card>
   <Card title="Gerbil" icon="network-wired" href="#gerbil">
-    Metrics-only observability with a mutually exclusive Prometheus or OTLP backend.
+    Metrics-only observability using either a Prometheus or OTLP backend.
   </Card>
   <Card title="Kubernetes Controller" icon="cubes" href="#pangolin-kubernetes-controller">
-    Prometheus scraping, health probes, ServiceMonitor patterns, and optional pprof.
+    Prometheus scraping, health probes, ServiceMonitor examples, and optional pprof.
   </Card>
 </CardGroup>
 
 ## Observability Capability Matrix
 
-| Component | Metrics | Traces | Logs | Profiling | Status |
-| --- | --- | --- | --- | --- | --- |
-| `newt` | Prometheus, OTLP | OTLP | stdout | pprof optional | Most complete |
-| `gerbil` | Prometheus or OTLP | No | stdout | No | Metrics-only |
-| `pangolin-kube-controller` | Prometheus scrape | Not verified | stdout | pprof optional | Kubernetes monitoring |
-| `pangolin` | No native metrics | No | Winston/stdout | No | Log-based |
-| `pangolin-node` | No native metrics | No | Winston/stdout | No | Log-based |
-| `badger` | No native metrics | No | middleware logs | No | Use Traefik/logs |
-| `windows` | No native metrics | No | local logs | No | Client logs |
-| `apple` | No native metrics | No | `os.log` / app logs | No | Client logs |
-| `android` | No native metrics | No | app logs | No | Client logs |
-
-<Tip>
-If you need a single rule of thumb: Newt is the only verified Pangolin component today with native Prometheus metrics, OTLP metrics, and OTLP traces in the same implementation.
-</Tip>
+| Component | Metrics | Traces | Logs | Profiling |
+| --- | --- | --- | --- | --- |
+| `newt` | Prometheus, OTLP | OTLP | stdout | pprof optional |
+| `gerbil` | Prometheus or OTLP | — | stdout | — |
+| `pangolin-kube-controller` | Prometheus scrape | — | stdout | pprof optional |
 
 ## Supported Signals
 
-| Signal | What it means | Verified Pangolin support |
-| --- | --- | --- |
-| Prometheus scrape metrics | Pull-based metrics served over HTTP, usually on `/metrics` | Newt, Gerbil, `pangolin-kube-controller` |
-| OTLP metrics | Push-based OpenTelemetry metrics to an OTel Collector or compatible backend | Newt, Gerbil; controller has OTel instruments exported via Prometheus scrape |
-| OTLP traces | Distributed traces sent to an OTel Collector or trace backend | Newt only |
-| Application logs | stdout, file logs, audit logs, or platform logging | All components, with different quality and structure |
-| Profiling | Debug endpoints such as `pprof` | Newt and `pangolin-kube-controller` |
-| Client telemetry / RUM | Privacy-safe crash and lifecycle telemetry from desktop/mobile apps | Not built in today; should be implemented separately from backend scraping |
-
-Pangolin components do not all expose the same observability signals. Newt currently has the most complete observability support. Gerbil and the Kubernetes controller expose metrics, while several other components currently only provide logs or app-specific telemetry. Profiling exists only where explicitly documented, and Pyroscope is not currently implemented.
-
-## Grafana Stack Mapping
-
-| Signal | Pangolin source | Grafana backend |
-| --- | --- | --- |
-| Prometheus scrape metrics | Newt, Gerbil, controller | Prometheus or Mimir |
-| OTLP metrics | Newt, Gerbil | OTel Collector to Mimir |
-| OTel-backed scrape metrics | Controller | Prometheus scrape to Mimir |
-| OTLP traces | Newt | OTel Collector to Tempo |
-| Logs | Containers and apps | Loki or SIEM |
-| Profiling | pprof endpoints | Manual pprof; not Pyroscope-native |
+| Signal | What it means |
+| --- | --- |
+| Prometheus scrape metrics | Pull-based metrics served over HTTP on `/metrics` |
+| OTLP metrics | Push-based OpenTelemetry metrics sent to an OTel Collector or compatible backend |
+| OTLP traces | Distributed traces sent to an OTel Collector or trace backend |
+| Application logs | stdout, file logs, audit logs, or platform logs |
+| Profiling | Debug endpoints such as `pprof` |
 
 ## Collection Patterns
+
+Use one or more of the following patterns depending on your deployment model. Prometheus scrape mode is the simplest option for local or Kubernetes monitoring. OTLP is useful when you already operate an OpenTelemetry Collector or want to forward telemetry to a managed backend such as Grafana Cloud, Mimir, or Tempo.
 
 <Tabs>
   <Tab title="Prometheus scrape mode">
@@ -98,10 +72,6 @@ scrape_configs:
     static_configs:
       - targets: ["pangolin-kube-controller:9090"]
 ```
-
-<Note>
-`newt` only exposes `/metrics` when Prometheus metrics are enabled. `gerbil` only exposes `/metrics` when `METRICS_BACKEND=prometheus`. The controller always exposes a Prometheus-compatible scrape endpoint on `METRICS_ADDR`.
-</Note>
 
   </Tab>
   <Tab title="OTel Collector">
@@ -180,7 +150,7 @@ controller:
 ```
 
 <Note>
-The Newt Helm values above are documented in [the Kubernetes Newt configuration page](/self-host/manual/kubernetes/newt/configuration). The controller ServiceMonitor values are documented in [the Kubernetes Pangolin configuration page](/self-host/manual/kubernetes/pangolin/configuration). Do not invent additional chart values unless they exist in the chart.
+Helm values for Newt are documented on the [Kubernetes Newt configuration page](/self-host/manual/kubernetes/newt/configuration). Controller and Gerbil ServiceMonitor values are documented on the [Kubernetes Pangolin configuration page](/self-host/manual/kubernetes/pangolin/configuration).
 </Note>
 
   </Tab>
@@ -205,18 +175,14 @@ scrape_configs:
           __path__: /var/log/containers/*pangolin*.log
 ```
 
-Use Grafana Alloy, Promtail, Fluent Bit, or your preferred SIEM forwarder to collect container and application logs from components that do not expose native metrics.
+Use Grafana Alloy, Promtail, Fluent Bit, or your preferred SIEM forwarder to collect container and application logs.
 
   </Tab>
 </Tabs>
 
 ## Newt
 
-<Tip>
-Newt is the recommended starting point for Pangolin observability. It is the only verified component today with Prometheus metrics, OTLP metrics, OTLP traces, a health endpoint, and optional `pprof` on the same admin surface.
-</Tip>
-
-Newt metrics are not typically enabled in default deployments. Turn them on explicitly and expose the admin address only where you intend to scrape or profile.
+Newt metrics are not typically enabled in default deployments. Turn them on explicitly and expose the admin address only where you intend to scrape or profile. Available metrics are listed in [Newt metrics](#newt-metrics).
 
 <AccordionGroup>
 <Accordion title="Configuration">
@@ -276,8 +242,6 @@ The Newt OTLP switch enables the OTLP telemetry pipeline. The current environmen
 Newt's admin server defaults to a loopback bind address. In containers or Kubernetes, set `NEWT_ADMIN_ADDR=:2112` or another non-loopback address only when you intentionally want Prometheus, pprof, or health checks to reach it.
 </Warning>
 
-Representative metrics include `newt_connection_attempts_total`, `newt_tunnel_latency_seconds`, `newt_tunnel_reconnects_total`, `newt_websocket_connected`, and `newt_proxy_connection_duration_seconds`.
-
 </Accordion>
 
 <Accordion title="Examples">
@@ -327,11 +291,7 @@ Representative metrics include `newt_connection_attempts_total`, `newt_tunnel_la
 
 ## Gerbil
 
-Gerbil currently supports **metrics only**. Choose either a native Prometheus backend or an OTLP metrics backend at runtime. Those backends are mutually exclusive.
-
-<Note>
-Gerbil does not currently emit OTel traces. Gerbil does not currently support `pprof` or Pyroscope profiling.
-</Note>
+Gerbil supports **metrics only**. Choose either a native Prometheus backend or an OTLP metrics backend at runtime. Those backends are mutually exclusive. Available metrics are listed in [Gerbil metrics](#gerbil-metrics).
 
 <AccordionGroup>
 <Accordion title="Configuration">
@@ -380,15 +340,8 @@ Gerbil does not currently emit OTel traces. Gerbil does not currently support `p
 - The Docker Compose metrics example commonly scrapes `gerbil:3003`
 - Health endpoint: `/healthz`
 - OTLP metrics: enabled when `METRICS_BACKEND=otel`
-- Traces: not supported
-- Profiling: not supported
-
-| Metric | Type | Labels | Purpose |
-| --- | --- | --- | --- |
-| `gerbil_wg_interface_up` | Gauge | `ifname`, `instance` | Interface health |
-| `gerbil_wg_peer_connected` | Gauge | `ifname`, `peer` | Peer connectivity |
-| `gerbil_wg_bytes_received_total` | Counter | `ifname`, `peer` | Per-peer ingress bytes |
-| `gerbil_wg_handshake_latency_seconds` | Histogram | `ifname`, `peer` | Handshake latency |
+- Traces: not supported yet
+- Profiling: not supported yet
 
 </Accordion>
 
@@ -436,10 +389,10 @@ Gerbil does not currently emit OTel traces. Gerbil does not currently support `p
 
 ## Pangolin Kubernetes Controller
 
-The controller exposes a Prometheus-compatible `/metrics` endpoint and standard health probes. It also registers additional OpenTelemetry metric instruments, but those instruments are exported on the same scrape endpoint rather than pushed through OTLP.
+The controller exposes a Prometheus-compatible `/metrics` endpoint and standard health probes. It also registers additional OpenTelemetry metric instruments, but those instruments are exported on the same scrape endpoint rather than pushed through OTLP. Available metrics are listed in [Controller metrics](#pangolin-kubernetes-controller-metrics).
 
 <Note>
-Tracing support for `pangolin-kube-controller` is reserved for future use and should not be advertised as available. `pprof` is available only when explicitly enabled.
+`pprof` is available only when explicitly enabled via `ENABLE_PPROF=true`.
 </Note>
 
 <AccordionGroup>
@@ -486,14 +439,6 @@ Expose the controller metrics endpoint only inside trusted networks or through K
 
 <Accordion title="Representative metrics and Kubernetes examples">
 
-| Metric | Type | Labels | Purpose |
-| --- | --- | --- | --- |
-| `pangolin_kube_controller_reconcile_seconds` | Histogram | none | Full reconcile loop duration |
-| `pangolin_kube_controller_reconcile_errors_total` | Counter | none | Reconcile error count |
-| `pangolin_kube_controller_ready` | Gauge | none | Readiness state |
-| `pangolin_controller_fetch_duration_seconds` | Histogram | `status_code`, `status_class` | Remote fetch latency |
-| `pangolin_controller_active_reconcile_routines` | UpDownCounter | `phase` | Parallel reconcile activity |
-
 ```yaml title="service-and-servicemonitor.yaml"
 apiVersion: v1
 kind: Service
@@ -525,26 +470,6 @@ spec:
 
 </Accordion>
 </AccordionGroup>
-
-## Components Without Native Metrics
-
-The following components do not currently expose verified native Prometheus metrics, OTLP metrics, or OTLP traces:
-
-- `pangolin`
-- `pangolin-node`
-- `badger`
-
-For these components, operators should currently rely on container logs, application logs, reverse proxy logs, audit streams, and external log collection.
-
-| Component | What exists today | Recommended collection path |
-| --- | --- | --- |
-| `pangolin` | Winston-style logging, analytics/event features, alerting integrations | Loki, Grafana Alloy, Promtail, Fluent Bit, or SIEM forwarders |
-| `pangolin-node` | Logging and audit-style request logging | Loki, Promtail, Fluent Bit, or SIEM forwarders |
-| `badger` | Minimal middleware / container logs | Traefik metrics plus container log collection |
-
-<Warning>
-Do not advertise these components as Prometheus- or OTel-native until the code actually exposes those signals.
-</Warning>
 
 ## Alerting Examples
 
@@ -593,17 +518,6 @@ increase(pangolin_kube_controller_reconcile_errors_total[10m]) > 5
   </Tab>
 </Tabs>
 
-## Dashboard Guidance
-
-Recommended dashboard groupings for operators:
-
-- Newt tunnel overview: active sessions, bytes, reconnects, tunnel latency
-- Newt connection health: connection attempts, connection errors, WebSocket connected state
-- Gerbil WireGuard health: interface state, peer connectivity, handshake latency, per-peer throughput
-- Controller reconciliation health: reconcile duration, reconcile errors, readiness, fetch latency
-- Logs overview: Pangolin, pangolin-node, Badger, and client log streams in Loki
-- End-to-end service health: combine Newt, Gerbil, controller, and reverse proxy signals in one operational view
-
 <CardGroup cols={2}>
   <Card title="Community Metrics Guide" icon="chart-simple" href="/self-host/community-guides/metrics">
     Traefik and CrowdSec metrics collection with Prometheus and Grafana.
@@ -616,20 +530,17 @@ Recommended dashboard groupings for operators:
   </Card>
 </CardGroup>
 
-## Version and verification
+## Versions
 
-<Info>
-This reference documents the metrics verified from the public Pangolin component repositories and current public documentation. Metric names, labels, and defaults can change between component releases.
-</Info>
-
-| Component | Reference status |
-| --- | --- |
-| Newt | Verified |
-| Gerbil | Verified |
-| Controller | Verified |
-| Pangolin | No native metrics found |
-| Pangolin Node | No native metrics found |
-| Badger | No native metrics found |
+| Component | Signal | Since version |
+| --- | --- | --- |
+| Newt | Prometheus scrape metrics | `v1.6.0` |
+| Newt | OTLP metrics | `v1.6.0` |
+| Newt | OTLP traces | `v1.6.0` |
+| Newt | pprof | `v1.10.4` |
+| Gerbil | Prometheus scrape metrics | `v1.4.0` |
+| Gerbil | OTLP metrics | `v1.4.0` |
+| Pangolin Kubernetes Controller | Prometheus scrape metrics | `v0.1.0-alpha.1` |
 
 ## Full Metric Reference
 
@@ -638,6 +549,10 @@ The full reference below is grouped by component.
 - Newt: Prometheus metrics, OTLP metrics, OTLP traces
 - Gerbil: Prometheus or OTLP metrics
 - Pangolin Kubernetes Controller: Prometheus-native metrics and additional OTel-backed scrape metrics
+
+<Info>
+Metric names, labels, and defaults can change between component releases.
+</Info>
 
 ### Newt metrics
 
@@ -1188,7 +1103,6 @@ The full reference below is grouped by component.
 
       <Note>
         In `otel` mode, Gerbil pushes metrics to an OTLP collector. The `/metrics` endpoint is not exposed in this mode.
-        OTel tracing and OTel logging are not currently implemented for Gerbil.
       </Note>
 
       <Expandable title="WireGuard">
@@ -2284,12 +2198,6 @@ The full reference below is grouped by component.
         The controller exposes Prometheus-native metrics and additional OTel-backed metrics on the same `/metrics` endpoint.
         The OTel-backed series use the `pangolin_controller_*` prefix.
       </Note>
-
-      <Warning>
-        The controller documentation mentions metrics, traces, and optional profiling.
-        The metrics below are verified from the current repository documentation and metrics implementation.
-        Do not advertise full distributed tracing unless trace instrumentation is verified separately.
-      </Warning>
 
       <Expandable title="Reconcile">
         <ResponseField name="pangolin_controller_reconcile_phase_duration_seconds" type="Histogram (s)">
