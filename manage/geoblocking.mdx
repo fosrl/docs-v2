@@ -1,6 +1,6 @@
 ---
 title: "Geo-blocking"
-description: "Configure geo blocking to restrict access based on geographic location"
+description: "Configure geo-blocking to restrict access based on geographic location"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -10,12 +10,12 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 <Note>
-Geoblocking is available in Pangolin community! Make sure to follow this guide for how to enable: [Enabling Geo Blocking](/self-host/advanced/enable-geoblocking)
+Geo-blocking is available in Pangolin Community Edition. It depends on Pangolin's geo-location database, which is also used by other location-aware features such as analytics. Follow [Enable Geo-location](/self-host/advanced/enable-geolocation) before creating country or region rules.
 </Note>
 
-## Benefits of Geo Blocking
+## Benefits of Geo-blocking
 
-Geo blocking provides several important security and compliance advantages:
+Geo-blocking provides several important security and compliance advantages:
 
 ### Security Benefits
 - **Reduce Attack Surface**: Block access from regions with high levels of malicious activity or where you don't expect legitimate users
@@ -23,15 +23,15 @@ Geo blocking provides several important security and compliance advantages:
 - **Compliance Requirements**: Meet regulatory requirements that restrict data access based on geographic location
 - **Resource Protection**: Prevent unnecessary load on your services from regions where you don't operate
 
-## Implementing Geo Blocking with Bypass Rules
+## Implementing Geo-blocking with Bypass Rules
 
-Geo blocking in Pangolin is implemented using [bypass rules](/manage/access-control/rules) with country-based matching. You can create rules that either allow or deny access based on the visitor's country.
+Geo-blocking in Pangolin is implemented using [bypass rules](/manage/access-control/rules) with country-based matching. You can create rules that either allow or deny access based on the visitor's country.
 
 <Frame caption="Screenshot of resources rules from the Pangolin Dashboard.">
   <img src="/images/country_rules.png" alt="Pangolin Dashboard"/>
 </Frame>
 
-### Setting Up Geo Blocking Rules
+### Setting Up Geo-blocking Rules
 
 1. Navigate to your target resource and select the **Rules** tab
 2. Create a new rule and select **Country** as the match type
@@ -40,7 +40,7 @@ Geo blocking in Pangolin is implemented using [bypass rules](/manage/access-cont
    - **Deny**: Block all access from specific countries
    - **Pass to Auth**: Let users from specific countries proceed to authentication
 
-### Common Geo Blocking Patterns
+### Common Geo-blocking Patterns
 
 #### Allow Only Specific Countries
 Create a "Deny" rule that blocks all countries except those you want to allow:
@@ -63,7 +63,7 @@ Create targeted deny rules for specific countries while allowing all others:
 3. Set appropriate priorities
 
 #### Regional Access Control
-Combine geo blocking with other rule types for sophisticated access control:
+Combine geo-blocking with other rule types for sophisticated access control:
 
 1. **Path + Country**: Block admin paths (`/admin/*`) from all countries except your headquarters
 2. **IP + Country**: Allow specific IPs from restricted countries (for VPN users or partners)

@@ -1,0 +1,77 @@
+---
+title: "Enable Geo-location"
+description: "Configuration requirements to enable geolocation features in Pangolin"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Pangolin uses a GeoIP database to map request IP addresses to approximate locations. That location data powers multiple features, including country and region access rules, geo-blocking patterns, and analytics.
+
+To enable geo-location features in Pangolin self-hosted, download a MaxMind GeoIP database, place it in the `config/` directory, and point Pangolin at the database file. This can be done for free.
+
+<Tip>
+Remember to keep the GeoIP database updated regularly, as IP-to-country mappings can change over time. You can just repeat the download and extraction steps periodically to ensure your database is current.
+</Tip>
+
+<Tip>
+You can automate this process with a MaxMind Docker container. See the [GeoLite2 Automation community guide](/self-host/community-guides/geolite2automation) for an example.
+</Tip>
+
+## Install with the Installer
+
+You can use the installer to download and place the database for you. Download the latest installer:
+
+```bash
+curl -fsSL https://static.pangolin.net/get-installer.sh | bash
+```
+
+Then run the installer again:
+
+```bash
+./installer
+```
+
+## Manual Installation
+
+<Steps>
+<Step title="Download and extract the GeoIP database">
+  Download and extract the GeoLite2 Country database using the following commands:
+  
+  ```bash
+  # Download the GeoLite2 Country database
+  curl -L -o GeoLite2-Country.tar.gz https://github.com/GitSquared/node-geolite2-redist/raw/refs/heads/master/redist/GeoLite2-Country.tar.gz
+  
+  # Extract the database
+  tar -xzf GeoLite2-Country.tar.gz
+  
+  # Move the .mmdb file to the config directory
+  mv GeoLite2-Country_*/GeoLite2-Country.mmdb config/
+  
+  # Clean up the downloaded files
+  rm -rf GeoLite2-Country.tar.gz GeoLite2-Country_*
+  ```
+</Step>
+<Step title="Update the Pangolin config file">
+  Update your Pangolin configuration to point to the new GeoIP database file. Edit `config/config.yml` to include the following entry:
+  
+  ```yaml
+  server:
+    maxmind_db_path: "./config/GeoLite2-Country.mmdb"
+  ```
+</Step>
+<Step title="Restart Pangolin">
+  Restart your Pangolin instance to apply the changes:
+  
+  ```bash
+  docker compose restart pangolin
+  ```
+</Step>
+</Steps>
+
+Alternatively, you can create an account at [MaxMind](https://www.maxmind.com/en/geolite2/signup) to get a license key and download the database directly from them.
+
+<Note>
+After the geo-location database is enabled, use [access control rules](/manage/access-control/rules) or the [Geo-blocking](/manage/geoblocking) guide to create blocking or allow rules.
+</Note>
