@@ -41,48 +41,31 @@ Create the following project structure:
     ├── config.yml
     ├── db/
     ├── letsencrypt/
-    │   └── acme.json
     └── traefik/
         ├── dynamic_config.yml
         ├── logs/
         └── traefik_config.yml
 ```
 
-The following files are created later by the running services:
+The following files are created later by the running services or added only when you enable optional features:
 
 - `config/db/db.sqlite` is created by Pangolin on first startup.
 - `config/key` is created by Gerbil when tunneling is enabled.
-- `config/GeoLite2-Country.mmdb` is optional and only needed for [geo-blocking](/self-host/advanced/enable-geoblocking).
+- `config/GeoLite2-Country.mmdb` is optional and only needed for [geo-blocking](/self-host/advanced/enable-geoblocking). It is not downloaded by the running services in a manual install; download it manually before enabling geo-blocking.
 
 ## Create the Directories
 
+Create the project folders:
+
+```bash
+mkdir -p config/db config/letsencrypt config/traefik/logs
+```
+
+## Create the Configuration Files
+
 <Steps>
-<Step title="Create the project folders">
-  ```bash
-  mkdir -p config/db config/letsencrypt config/traefik/logs
-  ```
-</Step>
-
-<Step title="Create the ACME storage file">
-  ```bash
-  touch config/letsencrypt/acme.json
-  chmod 600 config/letsencrypt/acme.json
-  ```
-</Step>
-
-<Step title="Create the configuration files">
-  Create these files in the paths shown below:
-
-  - `docker-compose.yml`
-  - `config/traefik/traefik_config.yml`
-  - `config/traefik/dynamic_config.yml`
-  - `config/config.yml`
-</Step>
-</Steps>
-
-## Docker Compose Configuration
-
-Create `docker-compose.yml`:
+<Step title="Create docker-compose.yml">
+  This file defines the Pangolin, Gerbil, and Traefik containers, their shared volumes, and the ports exposed on the host.
 
 ```yaml title="docker-compose.yml"
 name: pangolin
@@ -119,7 +102,7 @@ services:
       - 51820:51820/udp
       - 21820:21820/udp
       - 443:443
-      - 443:443/udp
+      # - 443:443/udp # Uncomment if you enable HTTP/3 in Traefik.
       - 80:80
 
   traefik:
@@ -147,10 +130,10 @@ networks:
 <Note>
 This is the installer's default community layout with Gerbil enabled. If you want to pin releases instead of using `latest`, replace the image tags with the versions you intend to run.
 </Note>
+</Step>
 
-## Traefik Static Configuration
-
-Create `config/traefik/traefik_config.yml`:
+<Step title="Create config/traefik/traefik_config.yml">
+  This file configures Traefik's providers, Badger plugin, Let's Encrypt resolver, entry points, logs, and health check endpoint.
 
 ```yaml title="config/traefik/traefik_config.yml"
 api:
@@ -168,7 +151,7 @@ experimental:
   plugins:
     badger:
       moduleName: "github.com/fosrl/badger"
-      version: "v1.3.1"
+      version: "v1.4.0" # Check github.com/fosrl/badger for the latest release.
 
 log:
   level: "INFO"
@@ -195,8 +178,9 @@ entryPoints:
     transport:
       respondingTimeouts:
         readTimeout: "30m"
-    http3:
-      advertisedPort: 443
+    # Uncomment to enable HTTP/3. You must also expose 443/udp in docker-compose.yml.
+    # http3:
+    #   advertisedPort: 443
     http:
       tls:
         certResolver: "letsencrypt"
@@ -211,9 +195,13 @@ ping:
   entryPoint: "web"
 ```
 
-## Traefik Dynamic Configuration
+  <Note>
+  Traefik stores Let's Encrypt certificates at `/letsencrypt/acme.json` inside the container. The Compose file mounts that path from `./config/letsencrypt`, so Traefik will create `config/letsencrypt/acme.json` when it needs certificate storage.
+  </Note>
+</Step>
 
-Create `config/traefik/dynamic_config.yml`:
+<Step title="Create config/traefik/dynamic_config.yml">
+  This file defines the routers, middleware, and services that send dashboard, API, and WebSocket traffic to Pangolin.
 
 ```yaml title="config/traefik/dynamic_config.yml"
 http:
@@ -286,10 +274,10 @@ tcp:
       proxyProtocol:
         version: 2
 ```
+</Step>
 
-## Pangolin Configuration
-
-Create `config/config.yml`:
+<Step title="Create config/config.yml">
+  This file contains Pangolin's application settings, dashboard domain, base domain, CORS origin, and server secret.
 
 ```yaml title="config/config.yml"
 # To see all available options, please visit the docs:
@@ -340,6 +328,9 @@ openssl rand -hex 32
 <Warning>
 Do not reuse a weak or short `server.secret`. If you need to rotate it later, use `pangctl rotate-server-secret`. See the [container CLI tool guide](/self-host/advanced/container-cli-tool#rotate-server-secret).
 </Warning>
+
+</Step>
+</Steps>
 
 ### Optional Email Configuration
 
