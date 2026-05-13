@@ -292,8 +292,8 @@
         "socials": {
             "slack": "https://pangolin.net/slack",
             "github": "https://github.com/fosrl/pangolin",
-            "linkedin": "https://linkedin.com/company/digpangolin",
-            "youtube": "https://youtube.com/@pangolin"
+            "linkedin": "https://linkedin.com/company/pangolin-net",
+            "youtube": "https://youtube.com/@pangolin-net"
         },
         "links": [
             {
@@ -360,7 +360,7 @@
                     },
                     {
                         "label": "YouTube",
-                        "href": "https://youtube.com/@pangolin"
+                        "href": "https://youtube.com/@pangolin-net"
                     }
                 ]
             }
