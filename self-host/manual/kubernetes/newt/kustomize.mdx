@@ -1,5 +1,5 @@
 ---
-title: "Newt Kustomize"
+title: "Kustomize"
 description: "Deploy Newt on Kubernetes using Helm-rendered manifests and Kustomize overlays."
 ---
 
@@ -558,15 +558,6 @@ Check live resources:
 kubectl get all --namespace pangolin
 kubectl get events --namespace pangolin --sort-by=.lastTimestamp
 ```
-
-## Kustomize with GitOps
-
-Kustomize overlays work well with GitOps tools.
-
-* [Argo CD](/self-host/manual/kubernetes/gitops/argocd) can reconcile a Kustomize overlay path directly.
-* [Flux](/self-host/manual/kubernetes/gitops/flux) can reconcile a Kustomize overlay with a `Kustomization` resource.
-
-In GitOps workflows, the controller owns the apply operation. Do not also apply the same overlay manually unless you are debugging.
 
 ## Troubleshooting
 

@@ -19,18 +19,6 @@ Use Kustomize when you need:
 - a manifest-driven workflow for GitOps tools
 - small changes on top of a shared base without maintaining separate full manifests
 
-## When to use Kustomize
-
-Use Kustomize if:
-
-- you want to manage rendered Pangolin or Newt manifests in Git
-- you need different overlays for different environments
-- your team prefers reviewing concrete Kubernetes manifests
-- you use Argo CD or Flux with Kustomize sources
-- you want to patch generated manifests without forking the Helm chart
-
-For a single environment or a first installation, [Helm](/self-host/manual/kubernetes/helm) is usually simpler.
-
 ## Supported workflow
 
 The chart repository does not provide native Kustomize bases. Use this workflow instead:
@@ -289,15 +277,6 @@ Apply after review:
 kubectl apply -k overlays/prod
 ```
 
-## Kustomize with GitOps
-
-Kustomize overlays work well with GitOps tools.
-
-* [Argo CD](/self-host/manual/kubernetes/gitops/argocd) can reconcile a Kustomize overlay path directly.
-* [Flux](/self-host/manual/kubernetes/gitops/flux) can reconcile a Kustomize overlay with a `Kustomization` resource.
-
-In GitOps workflows, the controller applies the overlay. Do not also apply the same overlay manually unless you are debugging.
-
 ## Important considerations
 
 ### Namespace handling
@@ -400,4 +379,3 @@ kubectl get events -n pangolin --sort-by=.lastTimestamp
 		Troubleshoot Pangolin deployments on Kubernetes.
 	</Card>
 </CardGroup>
-```

@@ -193,7 +193,7 @@
                                                 ]
                                             },
                                             {
-                                                "group": "Newt",
+                                                "group": "Site (newt)",
                                                 "pages": [
                                                     "self-host/manual/kubernetes/newt/helm",
                                                     "self-host/manual/kubernetes/newt/kustomize",

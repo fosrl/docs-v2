@@ -1,136 +1,67 @@
 ---
 title: "Prerequisites"
-description: "Cluster requirements, tools, and setup needed to deploy Pangolin and Newt on Kubernetes."
+description: "Cluster, tooling, networking, and storage requirements for deploying Pangolin and Sites (Newt) on Kubernetes."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
+Before installing Pangolin or Sites (Newt) on Kubernetes, check that your cluster, tools, networking, and storage setup match the deployment path you want to use.
 
-Before installing Pangolin or Newt on Kubernetes, check that your cluster, local tools, networking, and storage setup are ready.
+## Kubernetes cluster
 
-## Cluster requirements
-
-### Kubernetes version
-
-The Pangolin and Newt Helm charts currently require Kubernetes **1.30.14 or newer**.
-
-Use a Kubernetes version that is both:
-
-- supported by your Kubernetes provider or distribution
-- compatible with the chart requirement
-
-Kubernetes 1.30 satisfies the chart minimum, but it is no longer a supported upstream Kubernetes release. See the [Kubernetes version skew policy](https://kubernetes.io/releases/version-skew-policy/) for current support details. For production, use a currently supported Kubernetes minor release whenever possible.
+Use a Kubernetes version that satisfies the Helm chart `kubeVersion` requirement and is supported by your Kubernetes provider or distribution.
 
 Check your cluster version:
 
 ```bash
 kubectl version
-``` 
+```
 
 <Info>
-For the exact version support, refer to the Pangolin and Newt Helm chart READMEs before installing or upgrading.
+See the [Version Matrix](https://github.com/fosrl/helm-charts/VERSION_MATRIX.md) for the supported Kubernetes versions of the Pangolin and Newt Helm charts.
 </Info>
 
-### Cluster access
+## Controller access and RBAC
 
-You need `kubectl` access to the target cluster.
+Controller mode is the default and recommended Kubernetes deployment mode for Pangolin.
 
-The user or service account used for installation must be able to create and manage the resources required by the selected install method.
+When controller mode is enabled, the Pangolin Kube Controller runs with its own ServiceAccount and needs permission to watch and manage the Kubernetes and Traefik resources it reconciles. The chart creates the required RBAC resources for you, unless RBAC creation is disabled.
 
-For a standard Helm install, this usually includes:
+By default, the controller is scoped to the namespace of a single Pangolin deployment. It can also be configured for a broader scope when one controller should reconcile resources for multiple Pangolin deployments.
 
-* namespaces
-* deployments and statefulsets
-* services
-* configmaps
-* secrets
-* persistent volume claims
-* service accounts
-* roles and role bindings
-* network policies, if enabled
+Depending on the configured controller scope, the controller needs namespace-scoped or cluster-scoped access to the resources it reconciles:
 
-For Pangolin controller mode, additional permissions are required for the controller resources managed by the chart.
+| API group | Resources | Verbs |
+| --- | --- | --- |
+| `""` | `events` | `create`, `patch`, `update` |
+| `""` | `services`, `endpoints` | `get`, `list`, `watch`, `create`, `update`, `patch`, `delete` |
+| `discovery.k8s.io` | `endpointslices` | `get`, `list`, `watch`, `create`, `update`, `patch`, `delete` |
+| `traefik.io` | `ingressroutes`, `ingressroutetcps`, `ingressrouteudps`, `middlewares`, `middlewaretcps`, `traefikservices`, `serverstransports`, `serverstransporttcps`, `tlsoptions`, `tlsstores` | `get`, `list`, `watch`, `create`, `update`, `patch`, `delete` |
 
-Check cluster access:
+If leader election is enabled, the controller also needs access to:
 
-```bash
-kubectl cluster-info
-kubectl auth can-i create namespace
-kubectl auth can-i create deployments --namespace pangolin
-kubectl auth can-i create secrets --namespace pangolin
-```
+| API group | Resources | Verbs |
+| --- | --- | --- |
+| `coordination.k8s.io` | `leases` | `get`, `list`, `watch`, `create`, `update`, `patch` |
 
-<Note>
-The exact permissions depend on the selected chart options. If you install cluster-scoped components or CRDs, cluster-level permissions may be required.
-</Note>
+The controller also needs cluster-wide read access to Kubernetes discovery resources:
 
-## Required tools
+| API group | Resources | Verbs |
+| --- | --- | --- |
+| `networking.k8s.io` | `ingressclasses` | `get`, `list`, `watch` |
+| `apiextensions.k8s.io` | `customresourcedefinitions` | `get`, `list`, `watch` |
 
-### kubectl
+<Info>
+For namespace-scoped deployments, the chart creates namespaced RBAC for the controller namespace and, if configured, the target namespace. For broader controller scopes, the chart creates the required cluster-scoped RBAC.
+</Info>
 
-`kubectl` is required for checking cluster access, inspecting resources, and troubleshooting.
+## Database and storage
 
-Install a `kubectl` version that is compatible with your cluster version. As a general rule, keep `kubectl` close to the Kubernetes API server version used by your cluster.
+Pangolin requires a database backend. The Helm chart supports multiple database modes, including CloudNativePG, external PostgreSQL, embedded PostgreSQL, and SQLite.
 
-Verify:
-
-```bash
-kubectl version --client
-```
-
-### Helm
-
-Helm is required for Helm-based installs and for rendering Helm charts.
-- **Minimum version**: 3.10 or later
-- **Installation**: [Helm official install guide](https://helm.sh/docs/intro/install/)
-
-Verify:
-
-```bash
-helm version
-```
-
-Install Helm from the official Helm installation guide if it is not already available.
-
-### Kustomize
-
-Kustomize is required for Kustomize-based installs.
-
-You can use either:
-
-* `kubectl apply -k`
-* `kubectl kustomize`
-* the standalone `kustomize` CLI
-
-Verify:
-
-```bash
-kubectl kustomize --help
-```
-
-Or, when using the standalone CLI:
-
-```bash
-kustomize version
-```
-
-### Git
-
-Git is required for GitOps workflows with Argo CD or Flux.
-
-Verify:
-
-```bash
-git --version
-```
-
-## Storage requirements
-
-### StorageClass
-
-Pangolin requires persistent storage depending on the selected database mode and chart configuration.
+For persistent database-backed deployments, make sure your cluster has a usable StorageClass or configure the StorageClass explicitly in your chart values.
 
 Check available StorageClasses:
 
@@ -138,66 +69,45 @@ Check available StorageClasses:
 kubectl get storageclasses
 ```
 
-If your cluster has a default StorageClass, Kubernetes can usually provision persistent volumes automatically.
+For long-running/production deployments, prefer PostgreSQL-based modes such as CloudNativePG or external PostgreSQL.
 
-If no default StorageClass exists, configure the StorageClass explicitly in your values file.
+<Info>
+SQLite can be useful for simple or test deployments, but PostgreSQL-based modes are the better fit for long-running/production Kubernetes deployments.
+</Info>
 
-### Pangolin storage
+### Site connector storage
 
-Pangolin deployments use persistent storage for database-backed setups, CloudNativePG, embedded PostgreSQL, or other chart-managed persistent components.
+A Site (Newt) deployment does not require persistent storage by default.
 
-For production, prefer one of these database modes:
+Use writable configuration persistence only if your deployment needs runtime configuration to survive pod replacement, upgrades, node drains, or rescheduling. For simple deployments, no PVC is required.
 
-* CloudNativePG
-* external PostgreSQL
+## Networking
 
-Avoid SQLite for production deployments.
-
-### Newt storage
-
-Newt is lightweight, but persistent storage is still recommended for stable Kubernetes operation.
-The Newt chart supports writable configuration persistence through either `emptyDir` or an existing PVC. While `emptyDir` can be used for simple test deployments, it is ephemeral and is recreated when the Pod is replaced. In that case, Newt may lose its writable runtime configuration and has to re-establish its connection state after the Pod starts again. During this reconnect and handshake phase, existing tunnels or proxied connections can be interrupted temporarily.
-
-<Warning>
-`emptyDir` is suitable for short-lived tests, but pod replacement can interrupt active Newt traffic while connection state is rebuilt.
-</Warning>
-
-<Tip>
-For production Newt deployments, use a PersistentVolumeClaim so writable runtime configuration survives restarts, upgrades, and rescheduling.
-</Tip>
-
-For production or any setup where short interruptions after Pod restarts should be avoided, use a PersistentVolumeClaim. This allows Newt to keep its writable configuration across Pod restarts, node drains, upgrades, and rescheduling events.
-
-## Networking requirements
-
-### Ingress or Traefik routing
+### Ingress and routing
 
 Pangolin needs an external entrypoint for the dashboard, API, and site traffic.
 
-The Pangolin chart supports different deployment modes:
+Depending on your chart values, this can use:
 
-* `controller` mode with a Traefik ingress controller and Traefik CRDs integration
-* `standalone` mode with chart-managed Traefik workload
-* optional bundled Traefik controller installation in controller mode
+* controller mode with a Traefik ingress controller
+* standalone mode with chart-managed Traefik components
+* an existing ingress or load balancer setup
 
-Controller mode is the recommended production mode.
+If you use controller mode with Traefik CRDs, verify that the required Traefik API resources are available:
 
-<Note>
-In controller mode, Traefik CRDs must be available. And it may add additional version requirements based on the Pangolin/Controller version. Check the chart README for the exact requirements.
-</Note>
+```bash
+kubectl api-resources --api-group=traefik.io
+```
 
-Check ingress-related resources:
+You can also check existing ingress resources:
 
 ```bash
 kubectl get ingress -A
-kubectl get ingressroute.traefik.io -A
 ```
-
-The `IngressRoute.traefik.io` command only works when Traefik CRDs are installed.
 
 ### DNS
 
-Configure DNS records before exposing Pangolin publicly.
+Configure DNS records for the domains used by Pangolin before exposing it publicly.
 
 At minimum, the Pangolin dashboard domain should resolve to the ingress controller, load balancer, or public endpoint used by your deployment.
 
@@ -207,51 +117,30 @@ Example:
 nslookup pangolin.example.com
 ```
 
-For tunneled site deployments, also verify the DNS records used by the tunnel entrypoint and Newt connection settings.
+For tunneled site deployments, also verify the DNS name used by the site connector endpoint.
 
 ### TLS
 
 Use HTTPS for the Pangolin dashboard and API.
 
-Common TLS options are:
+Common TLS options include:
 
 * Traefik ACME / Let's Encrypt
-* cert-manager, Infisical or similar with an existing ingress or certificate workflow
-* a pre-created Kubernetes TLS secret
+* cert-manager
+* a pre-created Kubernetes TLS Secret
 * TLS termination at an external load balancer or ingress controller
 
-The Pangolin chart supports cert-manager, Infisical, Traefik-related TLS configuration and custom Kubernetes TLS secrets. Make sure the configured entrypoints, certificate resolver names, or TLS secret names match your actual Traefik setup.
+Use the TLS method that matches your ingress and cluster setup.
 
-If you use cert-manager, verify that cert-manager is already installed:
+If you use cert-manager, verify that the certificate CRDs are available:
 
-<Info>
-cert-manager is useful for many Kubernetes TLS setups, but it is not required for every Pangolin deployment. Use the TLS method that matches your ingress controller and cluster.
-</Info>
+```bash
+kubectl get crd certificates.cert-manager.io
+```
 
-### Network policies
+## Namespace and security
 
-The Pangolin and Newt charts include NetworkPolicy configuration for the required application traffic. When enabled, the chart-managed policies are designed to allow the necessary communication between Pangolin, Newt, Gerbil, Traefik, the database, DNS, and other required components.
-
-<Note>
-Keep chart-managed NetworkPolicies enabled by default. Add custom policies mainly when your security model requires stricter controls.
-</Note>
-
-You usually do not need to create additional NetworkPolicies for a standard installation. However, if you disable the chart-managed policies or replace them with your own policies because of custom security or other requirements, make sure your policies still allow the required traffic between:
-
-* Traefik (IngressController or Standalone), Pangolin and Pangolin-Kube-Controller, if used
-* Pangolin and its database
-* Pangolin and Gerbil, when the tunnel stack is enabled
-* Newt and the Pangolin endpoint
-* workloads and DNS
-* workloads and external identity providers or APIs, if used
-
-For most deployments, it is recommended to keep the chart-managed NetworkPolicies enabled and only customize them when your cluster has specific network security requirements.
-
-## Namespace and RBAC
-
-### Namespace
-
-Choose a namespace for the installation.
+Choose the namespace where Pangolin and related components should run.
 
 Example:
 
@@ -259,7 +148,7 @@ Example:
 kubectl create namespace pangolin
 ```
 
-When installing with Helm, you can also let Helm create the namespace:
+When using Helm, you can also let Helm create the namespace:
 
 ```bash
 helm upgrade --install pangolin fossorial/pangolin \
@@ -267,158 +156,68 @@ helm upgrade --install pangolin fossorial/pangolin \
   --create-namespace
 ```
 
-It's recommended to create the namespace explicitly before installation, so you can apply any required labels or annotations for Pod Security Admission or other cluster policies.
+If your cluster enforces Pod Security Admission, make sure the namespace labels match the selected deployment mode. Deployments that include tunnel components may require permissions that are not compatible with a fully restricted namespace profile.
 
-### Pod Security Admission
+## NetworkPolicy
 
-Some clusters enforce Pod Security Admission labels at the namespace level.
+The Pangolin and Newt charts can manage NetworkPolicies for the required application traffic.
 
-Pangolin deployments that include Gerbil may require permissions that are not compatible with a restricted namespace profile, because Gerbil manages WireGuard and requires capabilities such as `NET_ADMIN`.
-
-If the chart creates the namespace, it can apply the labels required by its configuration. If you manage the namespace yourself, apply the required labels manually based on the chart values and your selected deployment mode.
-
-### Service accounts and RBAC
-
-The Helm charts can create the required service accounts and RBAC resources.
-
-Controller mode requires Kubernetes API access for the Pangolin controller. The main Pangolin application and Gerbil do not need the same Kubernetes API permissions in the default multi-workload topology.
-
-## Secrets and configuration
-
-### Secret management
-
-Pangolin and Newt require secrets for different parts of the deployment.
-
-Common examples:
-
-* Pangolin application secrets
-* database credentials or connection strings
-* Newt credentials or provisioning keys
-* TLS certificates, if not managed by the ingress layer
-* identity provider client secrets, if used
-
-Do not commit plaintext secrets to Git.
-
-<Warning>
-Do not commit plaintext secrets to Git. Use encrypted or external secret backends for GitOps workflows.
-</Warning>
-
-If you deploy with GitOps tools such as Argo CD or Flux, use a secret management approach that allows secrets to be stored safely in Git or injected from an external secret backend. Common options include encrypted secrets with SOPS, Sealed Secrets, External Secrets Operator, HashiCorp Vault, Infisical, or cloud provider secret managers. These approaches allow you to keep the deployment declarative without storing plaintext credentials in the repository.
-
-Use your existing secret management workflow, for example:
-
-* SOPS-encrypted secrets for GitOps workflows
-* Sealed Secrets
-* External Secrets Operator
-* HashiCorp Vault
-* Infisical
-* cloud provider secret managers
-* manually created Kubernetes Secrets for small test environments
-
-### ConfigMaps
-
-Configuration that is not sensitive can be stored in ConfigMaps or provided through Helm values.
-
-Do not put passwords, private keys, API tokens, provisioning secrets, or other sensitive values into ConfigMaps. ConfigMaps are not designed for secret data and should only be used for non-sensitive configuration.
-## Database requirements
-
-### Pangolin
-
-Pangolin supports several database modes through the Helm chart.
-
-For production, use:
-
-* CloudNativePG
-* external PostgreSQL
-
-The default Pangolin chart database mode is `cloudnativepg`.
-
-When using CloudNativePG, make sure either:
-
-* the chart installs the required CloudNativePG components, or
-* an existing CloudNativePG operator and cluster are already available, depending on your selected values
-
-When using an external PostgreSQL database, provide the connection details through a Kubernetes Secret or a chart-supported secret generation method.
+If you enable chart-managed NetworkPolicies, review the generated policies before adding custom deny rules. If you replace them with your own policies, allow the required traffic between the components you deploy, such as Pangolin, Traefik, Gerbil, the database, DNS, and Site connectors.
 
 ## Resource planning
 
-Set resource requests and limits according to your expected workload and cluster sizing.
+Pangolin and Site (Newt) Kubernetes deployments include predefined resource profiles for the supported deployment methods. These profiles set CPU and memory requests and limits for the components used by the selected deployment mode.
 
-At minimum, plan resources for:
+The available profiles are:
 
-* Pangolin
-* Gerbil, when the tunnel stack is enabled
-* pangolin-kube-controller, when controller mode is used
-* Traefik, if installed or managed as part of the deployment
-* PostgreSQL or CloudNativePG components, if used
-* Newt instances
+| Profile | Intended use |
+| --- | --- |
+| Small | Small deployments, or clusters with very limited available resources. |
+| Standard | Default profile for most normal deployments. |
+| Large | Larger environments with more Sites, more users, higher traffic, or stricter availability expectations. |
 
-Resource usage depends on traffic volume, number of sites, number of users, database mode, enabled metrics, and ingress/tunnel configuration.
+The selected profile applies to the workloads that are part of your deployment, for example:
 
-Configure resources in your Helm values, for example:
+| Component | Resource considerations |
+| --- | --- |
+| Pangolin | Main application workload. Size according to dashboard/API usage, users, and traffic. |
+| Pangolin Kube Controller | Required in controller mode. Size according to the number of reconciled Kubernetes and Traefik resources. |
+| Traefik | Size according to ingress and proxy traffic. |
+| Gerbil | Required when the tunnel stack is enabled. Size according to tunnel traffic and number of connected Sites. |
+| PostgreSQL / CloudNativePG | Size according to database mode, stored state, and expected write/read activity. |
+| Site connectors (Newt) | Each Site connector adds its own resource usage. Size according to the traffic handled by that Site. |
 
-```yaml
-resources:
-  requests:
-    cpu: 500m
-    memory: 512Mi
-  limits:
-    memory: 1Gi
-``` 
+<Info>
+The Standard profile is intended to be enough for most standard deployments. Use Small for very limited lab or test environments, and Large for higher traffic, more Sites, more users, or larger production environments.
+</Info>
 
-<Note>
-Use the chart defaults as the starting point, then adjust requests and limits based on actual usage in your cluster.
-</Note>
+After installation, monitor CPU and memory usage and adjust the selected profile or individual resource overrides if needed.
 
 <Warning>
-Avoid setting CPU limits unless you have a specific reason to enforce them. CPU limits can cause throttling when a workload temporarily needs more CPU, even if spare CPU capacity is available on the node. This can negatively affect latency-sensitive components such as ingress, tunnel, proxy, or controller workloads.
-For most deployments, set CPU requests to reserve an appropriate baseline and set memory limits to protect the node from excessive memory usage. Add CPU limits only when your cluster policy requires them or when you intentionally want to cap a component's maximum CPU usage.
+Avoid setting CPU limits on latency-sensitive Pangolin components unless your cluster policy requires them or you intentionally want to cap CPU usage.
+
+CPU limits can cause throttling when a workload temporarily needs more CPU, even if spare CPU capacity is available on the node. This can negatively affect ingress, tunnel, proxy, database, and controller workloads.
+
+For most deployments, use CPU requests to reserve baseline capacity and memory limits to protect the node from excessive memory usage.
 </Warning>
-
-## Optional tools
-
-### Argo CD
-
-Use Argo CD if you want GitOps reconciliation with a web UI, sync status, and drift detection.
-
-### Flux
-
-Use Flux if you want GitOps reconciliation through Kubernetes custom resources such as `HelmRelease` and `Kustomization`.
-
-### Helmfile
-
-Use Helmfile if you want to manage multiple Helm releases together, for example supporting components plus Pangolin and Newt.
-
-## Verification checklist
-
-Before proceeding with installation:
-
-* [ ] The cluster runs a supported Kubernetes version that satisfies the chart requirement.
-* [ ] `kubectl` can access the cluster.
-* [ ] Helm is installed, if using the Helm workflow.
-* [ ] Kustomize is available, if using the Kustomize workflow.
-* [ ] A namespace is created or planned.
-* [ ] A StorageClass is available if persistent storage is required.
-* [ ] The ingress or Traefik routing strategy is defined.
-* [ ] DNS records are configured.
-* [ ] The TLS strategy is defined.
-* [ ] Database mode is selected for Pangolin.
-* [ ] Secret management is planned.
-* [ ] Pod Security Admission requirements are understood.
-* [ ] NetworkPolicy requirements are understood, if policies are enabled.
-* [ ] Resource requests and limits are reviewed.
 
 ## Next steps
 
 <CardGroup cols={2}>
+	<Card title="Choose an Installation Path" href="/self-host/manual/kubernetes/choose-method" icon="route">
+		Pick the Kubernetes workflow that matches how you deploy applications.
+	</Card>
 	<Card title="Helm Quick-Start" href="/self-host/manual/kubernetes/helm" icon="box">
-		Install Pangolin or Newt with Helm.
+		Install Pangolin or Sites (Newt) with Helm.
 	</Card>
 	<Card title="Kustomize Quick-Start" href="/self-host/manual/kubernetes/kustomize" icon="layer-group">
 		Use Kustomize overlays and patches.
 	</Card>
-	<Card title="GitOps Overview" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
-		Deploy with Argo CD or Flux.
+	<Card title="Argo CD Guide" href="/self-host/manual/kubernetes/gitops/argocd" icon="code-branch">
+		Deploy Pangolin or Sites (Newt) with Argo CD.
+	</Card>
+	<Card title="Flux Guide" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch">
+		Deploy Pangolin or Sites (Newt) with Flux.
 	</Card>
 	<Card title="Pangolin Helm" href="/self-host/manual/kubernetes/pangolin/helm" icon="server">
 		Start with the Pangolin Helm installation guide.

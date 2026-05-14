@@ -1,5 +1,5 @@
 ---
-title: "Pangolin Helm"
+title: "Helm"
 description: "Quick-start guide for installing Pangolin on Kubernetes using Helm."
 ---
 
@@ -24,20 +24,15 @@ Depending on the selected values, the chart can deploy:
 - **Traefik integration**: Traefik CRD-based routing in controller mode, bundled Traefik controller when enabled, or standalone Traefik mode.
 - **Database backend**: CloudNativePG, external PostgreSQL, embedded PostgreSQL, or SQLite.
 
-## Version matrix
+See [Version Matrix](https://github.com/fosrl/helm-charts/VERSION_MATRIX.md) for chart and default app version references.
 
-| Item | Value |
-| --- | --- |
-| Chart version | `0.1.0-alpha.0` |
-| Kubernetes version | `>=1.30.14-0` |
-| Pangolin appVersion | `1.18.2` |
-| Pangolin default image tag | `1.18.2` |
-| Pangolin PostgreSQL image tag | `postgresql-1.18.2` |
-| pangolin-kube-controller tag | `0.1.0-alpha.1` |
-| Gerbil tag | `1.3.1` |
-| Traefik tag | `v3.6.15` |
+## Gerbil setup in the Pangolin chart
 
-The current chart metadata defines chart version `0.1.0-alpha.0`, app version `1.18.2`, Kubernetes `>=1.30.14-0`, and the component image metadata listed above.
+This chart deploys Gerbil when `gerbil.enabled=true`. This is the default when using `deployment.type=controller` and recommended.
+
+<Info>
+If Gerbil is exposed through a reverse proxy or UDP gateway, keep proxy protocol settings aligned end-to-end. Do not enable proxy protocol on the upstream hop unless Gerbil is configured to accept it.
+</Info>
 
 ## Prerequisites
 

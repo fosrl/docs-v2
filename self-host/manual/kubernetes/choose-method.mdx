@@ -1,180 +1,53 @@
 ---
-title: "Choose a Method"
-description: "Choose the right Kubernetes installation workflow for Pangolin and Newt."
+title: "Choose an Installation Path"
+description: "Choose the Kubernetes deployment workflow for Pangolin and Sites (Newt)."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
+Use this page to pick the right Kubernetes guide for your deployment workflow.
 
-This page helps you choose the right Kubernetes workflow for installing and managing Pangolin and related components.
+These guides assume you are already familiar with Kubernetes and the deployment tools listed below.
 
-## Quick decision table
+If you are new to Kubernetes, start with the [official Kubernetes learning resources](https://kubernetes.io/docs/tutorials/kubernetes-basics/) first. Then review the [Prerequisites](/self-host/manual/kubernetes/prerequisites) guide to check your cluster, tools, and setup.
 
-| If you... | Use | Why |
+## Installation paths
+
+| Path | Use when | Start here |
 | --- | --- | --- |
-| Want the recommended Kubernetes install path | **Helm** | Standard chart-based workflow for installing, upgrading, and uninstalling releases |
-| Need environment-specific overlays or manifest customization | **Kustomize** | Patch and reuse Kubernetes manifests without a separate templating language |
-| Already use Argo CD or want GitOps with a web UI | **Argo CD** | Git-driven reconciliation, sync status, drift detection, and optional auto-sync |
-| Already use Flux or want GitOps defined through Kubernetes CRDs | **Flux** | Declarative reconciliation with resources such as `HelmRelease` and `Kustomization` |
-| Need to manage several Helm releases together | **Helmfile** | Declarative orchestration for multiple Helm releases and shared values |
+| Helm | You want the standard chart-based installation path for Pangolin or Sites (Newt). | [Helm Quick-Start](/self-host/manual/kubernetes/helm) |
+| Kustomize | You want manifest overlays, for example for environment-specific configuration, patches, or rendered manifests that can be reviewed before applying. | [Kustomize Quick-Start](/self-host/manual/kubernetes/kustomize) |
+| Argo CD | You already use Argo CD and want to deploy Pangolin or Sites (Newt) through a Kubernetes-native GitOps workflow. | [Argo CD Guide](/self-host/manual/kubernetes/gitops/argocd) |
+| Flux | You already use Flux and want to manage Pangolin or Sites (Newt) through `HelmRelease` or `Kustomization` resources. | [Flux Guide](/self-host/manual/kubernetes/gitops/flux) |
+| Helmfile | You want to manage multiple related Helm releases as one stack. | [Helmfile Guide](/self-host/manual/kubernetes/helmfile) |
 
-## Detailed method descriptions
+## Recommended starting point
 
-### Use Helm if...
+For most Kubernetes deployments, start with Helm. Use the GitOps guides only if Argo CD or Flux is already part of your deployment workflow.
 
-- You want the recommended Kubernetes install workflow for Pangolin or Newt.
-- You want a straightforward chart-based install.
-- You manage releases manually or through CI/CD.
-- You want normal Helm release operations such as install, upgrade, rollback, and uninstall.
-- You are comfortable managing configuration through `values.yaml`.
-
-Helm is the default choice for most Kubernetes installations. It packages Kubernetes resources into versioned charts and manages releases in the cluster.
-
-**Get started**: [Helm Quick-Start](/self-host/manual/kubernetes/helm)
-
-### Use Kustomize if...
-
-- You need environment-specific overlays for dev, staging, or production.
-- You want to patch Kubernetes manifests without using a templating language.
-- You prefer a manifest-driven workflow.
-- You want to keep rendered or curated manifests in Git.
-- You are comfortable with `kubectl apply -k` or `kustomize build`.
-
-Kustomize works well when you want a shared base with small environment-specific changes. It can be used with curated manifests, generated manifests, or GitOps tools.
-
-**Common scenario**: Keep a base deployment and apply overlays for each environment.
-
-**Get started**: [Kustomize Quick-Start](/self-host/manual/kubernetes/kustomize)
-
-### Use Argo CD if...
-
-- Your Git repository should be the source of truth.
-- You want a web UI for application status, sync state, and troubleshooting.
-- You want drift detection when the live cluster state differs from the desired state.
-- You want manual sync, automated sync, or self-healing behavior.
-- You already use Argo CD for other applications.
-
-Argo CD reconciles applications from a declared source into the cluster. It can use Helm charts, Kustomize overlays, plain YAML, Jsonnet, or configured plugins as sources.
-
-When Argo CD deploys a Helm chart, Helm is used to render the manifests. The application lifecycle is then managed by Argo CD, not by the local `helm` CLI.
-
-**Argo CD can deploy**:
-
-- Helm charts
-- Kustomize overlays
-- Plain YAML manifests
-- Jsonnet or custom config-management plugin output
-
-**Get started**: [Argo CD Guide](/self-host/manual/kubernetes/gitops/argocd)
-
-### Use Flux if...
-
-- You want GitOps managed through Kubernetes custom resources.
-- You already use Flux for other workloads.
-- You want Helm releases reconciled by a controller.
-- You want Kustomize overlays reconciled from Git.
-- You prefer a lightweight workflow without depending on a central web UI.
-
-Flux defines sources and desired state as Kubernetes resources. Typical resources include `GitRepository`, `HelmRepository`, `OCIRepository`, `Kustomization`, and `HelmRelease`.
-
-**Flux can deploy**:
-
-- Helm charts with `HelmRepository` and `HelmRelease`
-- OCI-based Helm charts with `OCIRepository` and `HelmRelease`
-- Kustomize overlays with `GitRepository` and `Kustomization`
-- Plain manifests through a Flux `Kustomization`
-
-**Get started**: [Flux Guide](/self-host/manual/kubernetes/gitops/flux)
-
-### Use Helmfile if...
-
-- You need to manage multiple Helm releases as one deployment stack.
-- You want to install Pangolin together with supporting components.
-- You want one declarative file for releases, values files, and release ordering.
-- You prefer running one controlled workflow instead of several manual `helm upgrade --install` commands.
-
-Helmfile is a declarative wrapper around Helm. It does not replace Helm; it calls Helm to apply the declared releases.
-
-**Common scenario**: One Helmfile manages supporting components such as an ingress controller, certificate management, database components, Pangolin, and Newt.
-
-**Get started**: [Helmfile Guide](/self-host/manual/kubernetes/helmfile)
-
-## Important clarifications
-
-### Argo CD and Flux are not Helm replacements
-
-Argo CD and Flux are delivery and reconciliation tools. They do not replace Helm or Kustomize.
-
-- **Helm** packages and renders Kubernetes resources from charts.
-- **Kustomize** customizes Kubernetes manifests through bases, overlays, and patches.
-- **Argo CD** reconciles applications from Git, Helm repositories, OCI registries, or other configured sources.
-- **Flux** reconciles sources and workloads through Kubernetes custom resources such as `HelmRelease` and `Kustomization`.
-
-You can use Argo CD or Flux with Helm charts, Kustomize overlays, or plain manifests.
-
-### OCI is not a separate install method
-
-OCI (Open Container Initiative) describes a chart distribution format, not a separate deployment workflow.
-
-For Pangolin and Newt, OCI chart publishing is available in GHCR:
-
-- Newt: `oci://ghcr.io/fosrl/helm-charts/newt` (for example `1.4.0`)
-- Pangolin: `oci://ghcr.io/fosrl/helm-charts/pangolin` (for example `0.1.0-alpha.0`)
-
-You still choose the same deployment method (Helm directly, or GitOps with Argo CD/Flux). OCI only changes where charts are pulled from.
-
-Classic Helm repository flow is still valid:
-
-```bash
-helm repo add fossorial https://charts.fossorial.io
-helm repo update fossorial
-helm install my-newt fossorial/newt
-helm install my-pangolin fossorial/pangolin
-```
-
-OCI workflow with Helm:
-
-```bash
-helm pull oci://ghcr.io/fosrl/helm-charts/newt --version 1.4.0
-helm pull oci://ghcr.io/fosrl/helm-charts/pangolin --version 0.1.0-alpha.0
-```
-
-```bash
-helm install my-newt oci://ghcr.io/fosrl/helm-charts/newt \
-	--version 1.4.0
-
-helm install my-pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
-	--version 0.1.0-alpha.0
-```
-
-### Raw YAML is not a separate primary workflow
-
-This documentation does not provide a dedicated raw-YAML installation path.
-
-Raw manifests are still possible:
-
-- Render a Helm chart with `helm template`.
-- Render Kustomize overlays with `kustomize build` or `kubectl kustomize`.
-- Apply generated manifests with `kubectl apply -f`.
-- Reconcile plain manifests with Argo CD or Flux.
-
-For most users, Helm, Kustomize, Argo CD, or Flux is easier to maintain than applying standalone YAML files manually.
+Kustomize and Helmfile are useful when you need more control over manifests, overlays, or multiple coordinated releases.
 
 ## Next steps
 
 <CardGroup cols={2}>
 	<Card title="Prerequisites" href="/self-host/manual/kubernetes/prerequisites" icon="list-check">
-		Review cluster, tooling, ingress, DNS, storage, and secret requirements.
+		Review the required cluster, ingress, DNS, storage, and secret setup.
 	</Card>
 	<Card title="Helm Quick-Start" href="/self-host/manual/kubernetes/helm" icon="box">
-		Install Pangolin or Newt with the recommended chart-based workflow.
+		Install Pangolin or Sites (Newt) with the standard chart-based workflow.
 	</Card>
 	<Card title="Kustomize Quick-Start" href="/self-host/manual/kubernetes/kustomize" icon="layer-group">
-		Use bases, overlays, and patches for manifest-driven deployments.
+		Use overlays and patches for manifest-based deployments.
 	</Card>
-	<Card title="GitOps Overview" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
-		Deploy and reconcile Pangolin or Newt with Argo CD or Flux.
+	<Card title="Argo CD Guide" href="/self-host/manual/kubernetes/gitops/argocd" icon="code-branch">
+		Deploy Pangolin or Sites (Newt) with Argo CD.
+	</Card>
+	<Card title="Flux Guide" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch">
+		Deploy Pangolin or Sites (Newt) with Flux.
+	</Card>
+	<Card title="Helmfile Guide" href="/self-host/manual/kubernetes/helmfile" icon="boxes-stacked">
+		Manage multiple Helm releases together.
 	</Card>
 </CardGroup>

@@ -10,22 +10,6 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 Flux is a declarative GitOps tool that uses Kubernetes-native Custom Resources to manage deployments. This guide covers installing Pangolin and Newt using Flux.
 
-## Flux overview
-
-Flux watches your Git repository and continuous reconciles cluster state using Kubernetes CRDs:
-
-- **HelmRepository**: Defines a Helm chart repository
-- **HelmRelease**: Declaratively manages a Helm chart deployment
-- **GitRepository**: References a Git repository
-- **Kustomization**: Reconciles Kustomize overlays
-- **OCIRepository**: References an OCI-based container registry (for Helm charts)
-
-**Key benefits**:
-
-- Native Kubernetes reconciliation (no separate UI needed, though one exists)
-- Lightweight footprint
-- Excellent for multi-cluster deployments
-- Declarative everything: sources, releases, dependencies
 
 ## Flux prerequisites
 
@@ -522,32 +506,6 @@ clusters/
 ```
 
 Each environment's HelmRelease uses environment-specific values.
-
-## Important notes
-
-### CRD management
-
-When using Flux with Helm charts that include CRDs:
-
-```yaml
-spec:
-  install:
-    crds: Create      # Create CRDs on first install
-  upgrade:
-    crds: CreateReplace  # Update CRDs on upgrade
-```
-
-### Namespace creation
-
-Flux automatically creates namespaces if they don't exist. Ensure appropriate RBAC.
-
-### GitOps best practices
-
-- Use branches for different environments
-- Protect production branches with review requirements
-- Store secrets using sealed-secrets or external-secrets
-- Track all changes in Git
-- Use consistent naming conventions
 
 ## Next steps
 

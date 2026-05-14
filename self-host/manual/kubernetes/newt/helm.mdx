@@ -1,6 +1,6 @@
 ---
-title: "Newt Helm"
-description: "Quick-start guide for installing Newt on Kubernetes using Helm."
+title: "Helm"
+description: "Quick-start guide for installing Site (newt) on Kubernetes using Helm."
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -8,20 +8,9 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <PangolinCloudTocCta />
 
 
-Newt is the site connector used to expose private resources through Pangolin. It runs close to the resources you want to publish and connects back to Pangolin.
+This guide installs and manages Site (newt) in Kubernetes using Helm.
 
-Newt is a user-space WireGuard tunnel client and TCP/UDP proxy. It does not require users to manage WireGuard tunnels or NAT rules manually.
-
-## Version matrix
-
-| Item | Value |
-| --- | --- |
-| Chart version | `1.4.0` |
-| App version | `1.12.3` |
-| Kubernetes version | `>=1.30.14-0` |
-| Default image tag | `1.12.3` |
-
-Newt chart `1.4.0` includes Newt `1.12.3` and supports Kubernetes `>=1.30.14-0`.
+See [Version Matrix](https://github.com/fosrl/helm-charts/VERSION_MATRIX.md) for chart and default app version references.
 
 ## What the chart supports
 
@@ -29,13 +18,12 @@ The Newt chart can deploy one or more Newt instances through `newtInstances[]`.
 
 Newt chart `1.4.0` includes support for:
 
-- Newt 1.11+ provisioning with `NEWT_PROVISIONING_KEY` and `NEWT_NAME`
+- provisioning with `NEWT_PROVISIONING_KEY` and `NEWT_NAME`
 - legacy credential installs with `NEWT_ID` and `NEWT_SECRET`
 - existing Kubernetes Secrets for production credentials
 - writable config persistence with `emptyDir` or an existing PVC
 - optional metrics, PodMonitor, ServiceMonitor, and PrometheusRule
 - optional NetworkPolicy
-- optional native WireGuard mode
 - multi-instance deployments with per-instance overrides
 
 The chart README lists these features for version `1.4.0`.
@@ -50,7 +38,7 @@ Before installing Newt, you need:
 - a reachable Pangolin instance
 - either:
   - Newt credentials from Pangolin: `NEWT_ID` and `NEWT_SECRET`
-  - or a provisioning key for Newt 1.11+ provisioning
+  - or a provisioning key for provisioning installs
 
 The chart quickstart lists Kubernetes `>=1.30.14`, Helm 3.x, configured `kubectl`, and Newt credentials from Pangolin as prerequisites.
 
@@ -63,7 +51,7 @@ Newt chart `1.4.0` supports three credential patterns:
 | Method | Recommended for | Notes |
 | --- | --- | --- |
 | Existing Secret | Production | Credentials are stored in a Kubernetes Secret created outside Helm |
-| Provisioning key | Newt 1.11+ provisioning | Requires writable config persistence |
+| Provisioning key | Provisioning installs | Requires writable config persistence |
 | Inline values | Local testing only | Credentials may be stored in Helm release history |
 
 For production, use `auth.existingSecretName` or a GitOps-safe secret workflow. The chart values explicitly warn that inline credentials can be stored in Helm release history and recommend existing Secrets for production.
@@ -204,7 +192,7 @@ kubectl wait --for=condition=ready pod \
 
 ## Quick install with provisioning key
 
-Newt 1.11+ supports provisioning-based installs. Use this when you want Newt to bootstrap credentials from a provisioning key.
+Provisioning-based installs bootstrap credentials from a provisioning key.
 
 Provisioning requires writable config persistence so Newt can store the generated configuration. The chart quickstart explicitly notes that provisioning requires a writable `CONFIG_FILE` target and that the chart provides this through `newtInstances[x].configPersistence`. ([GitHub][3])
 
@@ -351,16 +339,6 @@ kubectl create secret generic newt-auth-site-b \
 * Per-instance namespace and service account overrides require `allowGlobalOverride: true`.
 
 The chart values include `newtInstances[]`, per-instance namespace settings, and per-instance service account overrides. ([GitHub][2])
-
-### Security defaults
-
-By default, Newt runs without native WireGuard mode.
-
-The chart values describe the default non-native mode as non-root with privilege escalation disabled, read-only root filesystem, and dropped capabilities. Native WireGuard mode requires a privileged container with capabilities such as `NET_ADMIN` and `SYS_MODULE`. ([GitHub][2])
-
-<Warning>
-Only enable native WireGuard mode if you understand the required privileges and your cluster policy allows them.
-</Warning>
 
 ### RBAC
 

@@ -60,7 +60,7 @@ It is recommended to create the namespace explicitly before installation. This a
 For detailed installation steps, see:
 
 * [Pangolin Helm Quick-Start](/self-host/manual/kubernetes/pangolin/helm) — Install Pangolin
-* [Newt Helm Quick-Start](/self-host/manual/kubernetes/newt/helm) — Install Newt
+* [Site (Newt) Helm Quick-Start](/self-host/manual/kubernetes/newt/helm) — Install Site (Newt)
 
 ## Install command patterns
 
@@ -340,15 +340,6 @@ helm uninstall newt --namespace pangolin
 Uninstalling a Helm release does not always remove persistent volumes, externally managed secrets, DNS records, certificates, or cloud load balancers. Review the namespace and related cluster resources before deleting data.
 </Warning>
 
-## Using Helm with GitOps
-
-Helm charts can also be installed and reconciled through GitOps tools.
-
-* [Argo CD](/self-host/manual/kubernetes/gitops/argocd) can deploy Helm charts from a Helm repository, Git repository, or OCI source.
-* [Flux](/self-host/manual/kubernetes/gitops/flux) can reconcile Helm charts through `HelmRepository`, `OCIRepository`, and `HelmRelease`.
-
-In these workflows, Helm is the chart format. The GitOps controller manages reconciliation.
-
 ## Troubleshooting
 
 For component-specific troubleshooting, see:
@@ -381,8 +372,8 @@ kubectl logs <pod-name> -n pangolin
 	<Card title="Pangolin Helm Install" href="/self-host/manual/kubernetes/pangolin/helm" icon="server">
 		Install Pangolin with the Helm chart.
 	</Card>
-	<Card title="Newt Helm Install" href="/self-host/manual/kubernetes/newt/helm" icon="globe">
-		Install Newt with the Helm chart.
+    <Card title="Site (Newt) Helm Install" href="/self-host/manual/kubernetes/newt/helm" icon="globe">
+        Install Site (Newt) with the Helm chart.
 	</Card>
 	<Card title="Pangolin Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders">
 		Configure Pangolin chart values for your cluster.

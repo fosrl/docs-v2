@@ -1,5 +1,5 @@
 ---
-title: "Pangolin Troubleshooting"
+title: "Troubleshooting"
 description: "Diagnose and resolve Pangolin Kubernetes deployment issues."
 ---
 
@@ -385,6 +385,47 @@ kubectl describe networkpolicy --namespace "$PANGOLIN_NAMESPACE"
 ```
 
 Verify external firewall rules for the configured UDP ports.
+
+</Accordion>
+
+  <Accordion title="Gerbil is behind reverse proxy or UDP gateway and tunnels fail">
+
+**Symptoms**
+
+* Newt peers do not establish stable handshakes.
+* Tunnel traffic drops even though Gerbil pods are healthy.
+* Logs show connection resets or malformed upstream traffic.
+
+**Cause**
+
+Proxy protocol handling is inconsistent between the upstream hop and Gerbil.
+
+<Info>
+If Gerbil is exposed through a reverse proxy or UDP gateway, keep proxy protocol settings aligned end-to-end. Do not enable proxy protocol on the upstream hop unless Gerbil is configured to accept it.
+</Info>
+
+**Checks**
+
+Check endpoint and port alignment:
+
+```bash
+helm get values "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" --all | grep -A40 gerbil
+```
+
+Check Gerbil logs:
+
+```bash
+kubectl logs --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=gerbil \
+  --tail=200
+```
+
+Check Service exposure:
+
+```bash
+kubectl get svc --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=gerbil -o wide
+```
 
 </Accordion>
 

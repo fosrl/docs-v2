@@ -1,5 +1,5 @@
 ---
-title: "Pangolin Configuration"
+title: "Configuration"
 description: "Configuration reference for Pangolin Kubernetes deployments."
 ---
 
@@ -478,6 +478,10 @@ Important settings:
 | `gerbil.service.enabled`     | Creates a Service for Gerbil UDP traffic.                                                 |
 | `gerbil.persistence.enabled` | Persists Gerbil key/config data. Recommended for production.                              |
 
+<Info>
+If Gerbil is exposed through a reverse proxy or UDP gateway, keep proxy protocol settings aligned end-to-end. Do not enable proxy protocol on the upstream hop unless Gerbil is configured to accept it.
+</Info>
+
 ### Startup mode
 
 ```yaml
@@ -922,6 +926,11 @@ helm upgrade --install pangolin fossorial/pangolin \
 
 See [Pangolin Helm](/self-host/manual/kubernetes/pangolin/helm) for the installation flow.
 
+For complete application configuration keys and examples, see:
+
+- [Public config file reference](/self-host/advanced/config-file)
+- [Private config file reference](/self-host/advanced/private-config-file)
+
 ### Kustomize
 
 Render the chart with Helm, then apply Kustomize overlays:
@@ -972,31 +981,6 @@ spec:
 ```
 
 See [GitOps](/self-host/manual/kubernetes/gitops/overview) for GitOps guidance.
-
-## Production checklist
-
-Before deploying to production:
-
-* [ ] Use `deployment.type=controller`, unless you have a specific reason to use standalone mode.
-* [ ] Use `deployment.mode=multi`.
-* [ ] Use `database.mode=cloudnativepg` or `database.mode=external`.
-* [ ] Avoid SQLite for production.
-* [ ] Configure a real `pangolin.config.app.dashboard_url`.
-* [ ] Replace the default `example.com` domain entry.
-* [ ] Configure `pangolin.config.gerbil.base_endpoint`.
-* [ ] Keep `pangolin.config.gerbil.start_port` aligned with `gerbil.ports.wg1`.
-* [ ] Keep `pangolin.config.gerbil.clients_start_port` aligned with `gerbil.ports.wg2`.
-* [ ] Configure TLS with either a Traefik cert resolver or an existing TLS Secret.
-* [ ] Create or label the namespace so Gerbil can use `NET_ADMIN`.
-* [ ] Keep Gerbil persistence enabled.
-* [ ] Store the Pangolin app secret in a Kubernetes Secret.
-* [ ] Use an existing database connection Secret for external PostgreSQL.
-* [ ] Review NetworkPolicy egress requirements.
-* [ ] Avoid broad `0.0.0.0/0` egress unless required.
-* [ ] Enable monitoring resources only when the required CRDs exist.
-* [ ] Set resource requests and limits based on expected traffic.
-* [ ] Define a database backup strategy.
-* [ ] Test upgrades in a staging environment before production.
 
 ## Next steps
 

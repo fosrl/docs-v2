@@ -1,5 +1,5 @@
 ---
-title: "Newt Configuration"
+title: "Configuration"
 description: "Configuration reference for Newt Kubernetes deployments."
 ---
 
@@ -189,7 +189,7 @@ Chart `1.4.0` also includes `auth.createSecret` and `auth.envVarsDirect` modes f
 
   <Accordion title="Provisioning">
 
-Newt 1.11+ supports provisioning-based installs.
+Provisioning supports installs where Newt bootstraps credentials from a provisioning key.
 
 Use provisioning when Newt should bootstrap credentials from a provisioning key instead of using a static `NEWT_ID` and `NEWT_SECRET`.
 
@@ -417,30 +417,6 @@ newtInstances:
 <Note>
 Use Secrets for certificates and sensitive script inputs. Avoid inline private keys or credentials in values files.
 </Note>
-
-</Accordion>
-
-  <Accordion title="Native WireGuard mode">
-
-By default, Newt runs without native WireGuard mode.
-
-```yaml
-global:
-  nativeMode:
-    enabled: false
-
-newtInstances:
-  - name: main-tunnel
-    useNativeInterface: false
-```
-
-Native mode requires elevated privileges.
-
-When native mode or `useNativeInterface` is enabled, Newt runs as root with privileged settings and capabilities such as `NET_ADMIN` and `SYS_MODULE`.
-
-<Warning>
-Only enable native WireGuard mode if your cluster policy allows privileged workloads and you understand the security impact.
-</Warning>
 
 </Accordion>
 
@@ -723,7 +699,7 @@ helm upgrade --install newt fossorial/newt \
   --set 'newtInstances[0].auth.existingSecretName=newt-auth'
 ```
 
-See [Newt Helm](/self-host/manual/kubernetes/newt/helm) for the installation flow.
+See [Site (newt) Helm](/self-host/manual/kubernetes/newt/helm) for the installation flow.
 
 ### Kustomize
 
@@ -775,23 +751,6 @@ spec:
 ```
 
 See [GitOps](/self-host/manual/kubernetes/gitops/overview) for GitOps guidance.
-
-## Production checklist
-
-Before deploying Newt to production:
-
-- [ ] Create the namespace before installation and apply required labels or annotations.
-- [ ] Store credentials in Kubernetes Secrets.
-- [ ] Avoid inline plaintext credentials.
-- [ ] Use provisioning only with writable config persistence.
-- [ ] Use a PVC for durable provisioning state.
-- [ ] Keep native WireGuard mode disabled unless privileged workloads are allowed.
-- [ ] Confirm the Pangolin endpoint is reachable from the Newt pod.
-- [ ] Confirm TLS certificates are valid for the Pangolin endpoint.
-- [ ] Set resources based on expected traffic.
-- [ ] Configure NetworkPolicy rules if your cluster enforces network isolation.
-- [ ] Enable metrics only when you have a scraping path.
-- [ ] Review RBAC settings before upgrading from older chart versions.
 
 ## Next steps
 

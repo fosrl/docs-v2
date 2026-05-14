@@ -1,5 +1,5 @@
 ---
-title: "Newt Troubleshooting"
+title: "Troubleshooting"
 description: "Diagnose and resolve common Newt Kubernetes deployment issues."
 ---
 
@@ -130,7 +130,6 @@ kubectl logs "$NEWT_POD" --namespace "$NEWT_NAMESPACE" --previous --tail=100
 | Authentication failure              | Wrong `NEWT_ID`, `NEWT_SECRET`, or provisioning key    | Check credentials in Pangolin                              |
 | Endpoint connection errors          | `PANGOLIN_ENDPOINT` is wrong or unreachable            | Test DNS and HTTPS from the pod                            |
 | Image pull failure                  | Registry or image settings are wrong                   | `kubectl describe pod`                                     |
-| Permission error with native mode   | Native WireGuard mode requires privileged settings     | Check `global.nativeMode.enabled` and `useNativeInterface` |
 
 ## Secret issues
 
@@ -255,7 +254,7 @@ If you use provisioning, also verify:
 
 ## Provisioning issues
 
-Newt 1.11+ provisioning requires writable config persistence.
+Provisioning requires writable config persistence.
 
 ### Symptoms
 
@@ -308,50 +307,6 @@ newtInstances:
 <Note>
 `emptyDir` is recreated when the pod is recreated. Use a PVC if the generated configuration must survive pod replacement.
 </Note>
-
-## Native WireGuard permission issues
-
-By default, Newt does not require native WireGuard privileges.
-
-Only check this section if you enabled native WireGuard mode:
-
-```yaml
-global:
-  nativeMode:
-    enabled: true
-
-newtInstances:
-  - name: main-tunnel
-    useNativeInterface: true
-```
-
-### Symptoms
-
-```text
-operation not permitted
-cannot create interface
-permission denied
-```
-
-### Check security context
-
-```bash
-kubectl get pod "$NEWT_POD" --namespace "$NEWT_NAMESPACE" -o yaml | grep -A30 securityContext
-```
-
-Native mode requires privileged workload settings and capabilities such as `NET_ADMIN` and `SYS_MODULE`.
-
-<Warning>
-Only enable native WireGuard mode if your cluster policy allows privileged workloads. Do not add `NET_ADMIN` to the default non-native deployment unless you know it is required.
-</Warning>
-
-### Check namespace policy
-
-```bash
-kubectl get namespace "$NEWT_NAMESPACE" --show-labels
-```
-
-A namespace with a restricted Pod Security Admission profile may block native mode.
 
 ## Service not created or not reachable
 

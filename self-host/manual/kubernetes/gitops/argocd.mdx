@@ -10,50 +10,6 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 Argo CD is a declarative GitOps tool that continuously syncs your cluster state to your Git repository. This guide covers installing Pangolin and Newt using Argo CD.
 
-## Argo CD overview
-
-Argo CD watches your Git repository (or Helm chart repository) and automatically reconciles Kubernetes resources to match the desired state defined in Git.
-
-**Key concepts**:
-
-- **Application**: Argo CD custom resource that defines what to deploy, where, and how
-- **Helm source**: Argo CD uses Helm to render charts; you provide values
-- **Kustomize source**: Argo CD uses Kustomize to build manifests
-- **Sync**: Process of applying desired state to the cluster
-- **Drift**: When cluster state diverges from Git (Argo CD can detect and correct)
-
-## Prerequisites
-
-- Argo CD installed in your cluster (in `argocd` namespace, typically)
-- Helm repo configured: `helm repo add fossorial https://charts.fossorial.io`
-- Git repository with Argo CD configuration (optional, can use chart repo as source)
-- Newt auth secret (if installing Newt)
-
-## Install Argo CD
-
-If you don't have Argo CD yet:
-
-```bash
-# Create namespace
-kubectl create namespace argocd
-
-# Install Argo CD
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update argo
-helm install argocd argo/argo-cd -n argocd
-```
-
-Access the Argo CD UI:
-
-```bash
-# Port-forward
-kubectl port-forward -n argocd svc/argocd-server 8080:443
-
-# Visit https://localhost:8080
-# Default username: admin
-# Password: kubectl get secret -n argocd argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-```
-
 ## Install Pangolin with Argo CD using Helm
 
 ### Step 1: Create Pangolin namespace
