@@ -443,6 +443,11 @@
         {
             "source": "/manage/resources/private/icmp-access",
             "destination": "/manage/resources/private/port-restrictions"
+        },
+        {
+            "source": "/manage/sites/install-kubernetes",
+            "destination": "/self-host/manual/kubernetes/newt/helm",
+            "permanent": true
         }
     ],
     "seo": {
