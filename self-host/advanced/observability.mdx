@@ -12,7 +12,7 @@ Pangolin exposes observability signals across multiple components, but not every
 **Newt** provides the broadest native observability support with Prometheus metrics, OTLP metrics, OTLP traces, health checks, and optional `pprof`. **Gerbil** supports metrics through either a Prometheus backend or an OTLP backend. The **Pangolin Kubernetes Controller** exposes a Prometheus-compatible scrape endpoint and includes additional OTel-backed metric instruments on that endpoint.
 
 <Note>
-This page focuses on Pangolin-native observability. For a community walkthrough that collects Traefik and CrowdSec metrics with Prometheus and Grafana, see the [community metrics guide](/self-host/community-guides/metrics).
+This page focuses on Pangolin-native observability. For a community walkthrough that collects Traefik metrics with Prometheus and Grafana, see the [community metrics guide](/self-host/community-guides/metrics).
 
 All currently documented component metrics are listed in the [Full Metric Reference](#full-metric-reference).
 </Note>
@@ -520,7 +520,7 @@ increase(pangolin_kube_controller_reconcile_errors_total[10m]) > 5
 
 <CardGroup cols={2}>
   <Card title="Community Metrics Guide" icon="chart-simple" href="/self-host/community-guides/metrics">
-    Traefik and CrowdSec metrics collection with Prometheus and Grafana.
+    Traefik and metrics collection with Prometheus and Grafana.
   </Card>
   <Card title="Newt Kubernetes Monitoring" icon="cubes" href="/self-host/manual/kubernetes/newt/configuration">
     Verified Newt chart values for metrics, Services, and ServiceMonitor resources.
