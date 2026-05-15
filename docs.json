@@ -226,9 +226,9 @@
                                     "self-host/advanced/container-cli-tool",
                                     "self-host/advanced/database-options",
                                     "self-host/advanced/integration-api",
+                                    "self-host/advanced/observability",
                                     "self-host/advanced/enable-geolocation",
                                     "self-host/advanced/enable-asn-lookup",
-                                    "self-host/advanced/metrics",
                                     "self-host/advanced/clustering",
                                     "self-host/advanced/traefik-log-rotation",
                                     "self-host/telemetry"
