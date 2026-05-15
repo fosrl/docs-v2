@@ -38,7 +38,6 @@
                                 "pages": [
                                     "manage/sites/understanding-sites",
                                     "manage/sites/install-site",
-                                    "manage/sites/install-kubernetes",
                                     "manage/sites/configure-site",
                                     "manage/sites/update-site",
                                     "manage/sites/credentials",
@@ -175,7 +174,44 @@
                                 "group": "Manual Installation",
                                 "pages": [
                                     "self-host/manual/docker-compose",
-                                    "self-host/manual/unraid"
+                                    "self-host/manual/unraid",
+                                    {
+                                        "group": "Kubernetes",
+                                        "pages": [
+                                            "self-host/manual/kubernetes/overview",
+                                            "self-host/manual/kubernetes/choose-method",
+                                            "self-host/manual/kubernetes/prerequisites",
+                                            "self-host/manual/kubernetes/helm",
+                                            "self-host/manual/kubernetes/kustomize",
+                                            "self-host/manual/kubernetes/helmfile",
+                                            {
+                                                "group": "GitOps",
+                                                "pages": [
+                                                    "self-host/manual/kubernetes/gitops/overview",
+                                                    "self-host/manual/kubernetes/gitops/argocd",
+                                                    "self-host/manual/kubernetes/gitops/flux"
+                                                ]
+                                            },
+                                            {
+                                                "group": "Site (newt)",
+                                                "pages": [
+                                                    "self-host/manual/kubernetes/newt/helm",
+                                                    "self-host/manual/kubernetes/newt/kustomize",
+                                                    "self-host/manual/kubernetes/newt/configuration",
+                                                    "self-host/manual/kubernetes/newt/troubleshooting"
+                                                ]
+                                            },
+                                            {
+                                                "group": "Pangolin",
+                                                "pages": [
+                                                    "self-host/manual/kubernetes/pangolin/helm",
+                                                    "self-host/manual/kubernetes/pangolin/kustomize",
+                                                    "self-host/manual/kubernetes/pangolin/configuration",
+                                                    "self-host/manual/kubernetes/pangolin/troubleshooting"
+                                                ]
+                                            }
+                                        ]
+                                    }
                                 ]
                             },
                             "self-host/dns-and-networking",
@@ -415,6 +451,11 @@
         {
             "source": "/manage/resources/private/icmp-access",
             "destination": "/manage/resources/private/port-restrictions"
+        },
+        {
+            "source": "/manage/sites/install-kubernetes",
+            "destination": "/self-host/manual/kubernetes/newt/helm",
+            "permanent": true
         }
     ],
     "seo": {

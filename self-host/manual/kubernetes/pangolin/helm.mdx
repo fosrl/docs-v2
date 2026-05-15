@@ -1,0 +1,403 @@
+---
+title: "Helm"
+description: "Quick-start guide for installing Pangolin on Kubernetes using Helm."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+<Warning>
+The Pangolin Helm chart is currently alpha (`0.1.0-alpha.0`). Test installs and upgrades in a non-production environment before using the chart for production traffic.
+</Warning>
+
+## What Pangolin deploys
+
+The Pangolin Helm chart deploys the Pangolin control plane and related Kubernetes components.
+
+Depending on the selected values, the chart can deploy:
+
+- **Pangolin application**: dashboard, API, authentication, configuration, and application state.
+- **pangolin-kube-controller**: Kubernetes controller used in controller mode.
+- **Gerbil**: WireGuard tunnel manager used by the Pangolin tunnel stack.
+- **Traefik integration**: Traefik CRD-based routing in controller mode, bundled Traefik controller when enabled, or standalone Traefik mode.
+- **Database backend**: CloudNativePG, external PostgreSQL, embedded PostgreSQL, or SQLite.
+
+See [Version Matrix](https://github.com/fosrl/helm-charts/VERSION_MATRIX.md) for chart and default app version references.
+
+## Gerbil setup in the Pangolin chart
+
+This chart deploys Gerbil when `gerbil.enabled=true`. This is the default when using `deployment.type=controller` and recommended.
+
+<Info>
+If Gerbil is exposed through a reverse proxy or UDP gateway, keep proxy protocol settings aligned end-to-end. Do not enable proxy protocol on the upstream hop unless Gerbil is configured to accept it.
+</Info>
+
+## Prerequisites
+
+Before installing Pangolin, you need:
+
+- Kubernetes `1.30.14` or newer.
+- Helm 3.x.
+- `kubectl` access to the target cluster.
+- A namespace prepared for the install.
+- A StorageClass if you use chart-managed persistent storage.
+- DNS records for the Pangolin dashboard and tunnel endpoint.
+- Traefik CRDs and a Traefik controller when using `deployment.type=controller`.
+- A database plan: CloudNativePG, external PostgreSQL, embedded PostgreSQL, or SQLite.
+
+See [Prerequisites](/self-host/manual/kubernetes/prerequisites) for detailed cluster, namespace, storage, networking, and security requirements.
+
+## Recommended quick install
+
+This quick install uses:
+
+- `deployment.type=controller`
+- `deployment.mode=multi`
+- `database.mode=cloudnativepg`
+- chart-managed CloudNativePG operator and cluster
+- chart-managed dashboard `IngressRoute`
+- Traefik cert resolver for TLS
+
+<Note>
+This example assumes a Traefik controller is available and can process the chart-managed `IngressRoute`. If you want the chart to install the bundled Traefik controller, set `deployment.installTraefikController=true`.
+</Note>
+
+### Step 1: Create the namespace
+
+Create the namespace before installing the chart:
+
+```bash
+kubectl create namespace pangolin
+```
+
+Gerbil requires `NET_ADMIN` for WireGuard interface management. If your cluster enforces Pod Security Admission, label the namespace accordingly:
+
+```bash
+kubectl label namespace pangolin \
+  pod-security.kubernetes.io/enforce=privileged \
+  pod-security.kubernetes.io/warn=baseline \
+  pod-security.kubernetes.io/audit=restricted \
+  --overwrite
+```
+
+<Warning>
+Do not use a restricted Pod Security profile for a namespace running Gerbil unless you have validated the selected chart mode. Gerbil requires `NET_ADMIN` for WireGuard.
+</Warning>
+
+### Step 2: Create a Pangolin app secret
+
+Create a Secret for `SERVER_SECRET`:
+
+```bash
+kubectl create secret generic pangolin-app-secret \
+  --namespace pangolin \
+  --from-literal=SERVER_SECRET='<strong-random-secret>'
+```
+
+Use a long random value. Do not commit this secret to Git.
+
+### Step 3: Create a values file
+
+Create `values-pangolin.yaml`:
+
+```yaml
+deployment:
+  type: controller
+  mode: multi
+  installTraefikController: false
+
+database:
+  mode: cloudnativepg
+  cloudnativepg:
+    cluster:
+      name: pangolin-db
+
+cnpg-operator:
+  enabled: true
+
+cnpg-cluster:
+  enabled: true
+  fullnameOverride: pangolin-db
+  cluster:
+    instances: 1
+    storage:
+      size: 8Gi
+
+pangolin:
+  secret:
+    existingSecretName: pangolin-app-secret
+    existingSecretKey: SERVER_SECRET
+
+  config:
+    app:
+      dashboard_url: https://pangolin.example.com
+    domains:
+      domain1:
+        base_domain: example.com
+        cert_resolver: letsencrypt
+    gerbil:
+      base_endpoint: vpn.example.com
+      start_port: 51820
+      clients_start_port: 21820
+    traefik:
+      enabled: true
+      http_entrypoint: web
+      https_entrypoint: websecure
+      cert_resolver: letsencrypt
+
+  ingressRoute:
+    dashboard:
+      enabled: true
+      host: pangolin.example.com
+      entryPoints:
+        - websecure
+      tls:
+        enabled: true
+        certResolver: letsencrypt
+        secretName: ""
+
+gerbil:
+  enabled: true
+  startupMode: delayed
+  persistence:
+    enabled: true
+    size: 1Gi
+```
+
+Important points:
+
+* Replace `pangolin.example.com`, `example.com`, and `vpn.example.com`.
+* Keep `pangolin.config.gerbil.start_port` aligned with `gerbil.ports.wg1`.
+* Keep `pangolin.config.gerbil.clients_start_port` aligned with `gerbil.ports.wg2`.
+* Use `gerbil.startupMode=delayed` for the first install if Gerbil should not start before the initial Pangolin setup is complete.
+
+The chart defaults to `deployment.type=controller`, `deployment.mode=multi`, `database.mode=cloudnativepg`, and NetworkPolicy rendering enabled. Gerbil `startupMode` supports `normal`, `delayed`, and `disabledUntilSetup`. ([GitHub][1])
+
+### Step 4: Install Pangolin
+
+Add the Helm repository:
+
+```bash
+helm repo add fossorial https://charts.fossorial.io
+helm repo update fossorial
+```
+
+Install Pangolin:
+
+```bash
+helm upgrade --install pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+Do not use `--create-namespace` here. The namespace was created and labeled before installation.
+
+### Step 5: Verify the deployment
+
+Check Helm release status:
+
+```bash
+helm status pangolin --namespace pangolin
+helm history pangolin --namespace pangolin
+```
+
+Check workloads:
+
+```bash
+kubectl get pods --namespace pangolin
+kubectl get deploy,statefulset --namespace pangolin
+```
+
+Check Services:
+
+```bash
+kubectl get svc --namespace pangolin
+```
+
+Check Traefik `IngressRoute` resources:
+
+```bash
+kubectl get ingressroute --namespace pangolin
+```
+
+If Traefik CRDs are not installed, this command will fail. In that case, install Traefik CRDs or enable/install the Traefik controller path required by your selected deployment mode.
+
+Wait for the Pangolin pod to become ready:
+
+```bash
+kubectl wait --for=condition=ready pod \
+  -l app.kubernetes.io/name=pangolin \
+  --namespace pangolin \
+  --timeout=300s
+```
+
+## Accessing the dashboard
+
+After DNS and Traefik routing are configured, access Pangolin through the dashboard URL:
+
+```text
+https://pangolin.example.com
+```
+
+The API route is exposed under:
+
+```text
+https://pangolin.example.com/api/v1
+```
+
+<Tip>
+For a temporary local check, port-forward the dashboard/UI port:
+
+```bash
+kubectl port-forward --namespace pangolin svc/pangolin 8080:3002
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+</Tip>
+
+The chart routes `/api/v1` to the Pangolin external/API port and the dashboard route to the Next/UI port. The default service ports are `3000` for external/API and `3002` for the dashboard/UI. ([GitHub][1])
+
+## Switch Gerbil to normal startup
+
+If you installed with `gerbil.startupMode=delayed`, switch Gerbil to normal mode after the initial setup is complete:
+
+```bash
+helm upgrade pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --reuse-values \
+  --set gerbil.startupMode=normal
+```
+
+Check Gerbil resources:
+
+```bash
+kubectl get pods,svc,pvc --namespace pangolin \
+  -l app.kubernetes.io/name=gerbil
+```
+
+## Upgrade
+
+Update the Helm repository:
+
+```bash
+helm repo update fossorial
+```
+
+Upgrade the release:
+
+```bash
+helm upgrade pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+Check upgrade status:
+
+```bash
+helm status pangolin --namespace pangolin
+helm history pangolin --namespace pangolin
+```
+
+Rollback if needed:
+
+```bash
+helm rollback pangolin <revision> --namespace pangolin
+```
+
+## OCI install
+
+The Pangolin chart is also published as an OCI chart in GHCR.
+
+Pull the chart:
+
+```bash
+helm pull oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0
+```
+
+Install from OCI:
+
+```bash
+helm upgrade --install pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0 \
+  --namespace pangolin \
+  --values values-pangolin.yaml
+```
+
+OCI changes where Helm pulls the chart from. It does not change the values file or the release behavior.
+
+## Architecture overview
+
+Recommended deployment mode:
+
+```yaml
+deployment:
+  type: controller
+  mode: multi
+```
+
+In this topology:
+
+| Component                  | Role                                                                 |
+| -------------------------- | -------------------------------------------------------------------- |
+| Pangolin                   | Main application, dashboard, API, authentication, and configuration. |
+| pangolin-kube-controller   | Reconciles dynamic Kubernetes and Traefik CRD configuration.         |
+| Gerbil                     | WireGuard tunnel manager for Pangolin sites.                         |
+| Traefik                    | Routes dashboard, API, and site traffic.                             |
+| CloudNativePG / PostgreSQL | Stores Pangolin application state.                                   |
+
+Database modes:
+
+| Mode            | Use case                                            |
+| --------------- | --------------------------------------------------- |
+| `cloudnativepg` | Recommended Kubernetes production path.             |
+| `external`      | Production path with externally managed PostgreSQL. |
+| `embedded`      | Lab or test setups.                                 |
+| `sqlite`        | Development or CI only.                             |
+
+The chart supports `cloudnativepg`, `external`, `embedded`, and `sqlite` database modes. The chart comments mark `cloudnativepg` as the preferred production mode and SQLite as development/test only. ([GitHub][1])
+
+## Chart signing
+
+The chart metadata includes Artifact Hub signing information:
+
+```text
+Fingerprint: 48E7F670FCC13645FC48B08D587294B228C2EC2C
+Public key: https://charts.fossorial.io/pgp_keys.asc
+```
+
+Use this metadata when verifying signed chart releases. The signing key and fingerprint are published in the chart annotations. ([GitHub][2])
+
+## References
+
+<CardGroup cols={2}>
+  <Card title="Chart README" href="https://github.com/fosrl/helm-charts/blob/main/charts/pangolin/README.md" icon="book" />
+  <Card title="values.yaml" href="https://github.com/fosrl/helm-charts/blob/main/charts/pangolin/values.yaml" icon="file-code" />
+  <Card title="values.schema.json" href="https://github.com/fosrl/helm-charts/blob/main/charts/pangolin/values.schema.json" icon="file-code" />
+  <Card title="Examples" href="https://github.com/fosrl/helm-charts/tree/main/charts/pangolin/examples" icon="list-check" />
+  <Card title="Issues" href="https://github.com/fosrl/helm-charts/issues" icon="circle-question" />
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Full Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders">
+		Review Pangolin chart options.
+	</Card>
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/pangolin/troubleshooting" icon="circle-question">
+		Debug Pangolin deployment and routing issues.
+	</Card>
+	<Card title="Kustomize Install" href="/self-host/manual/kubernetes/pangolin/kustomize" icon="layer-group">
+		Install Pangolin with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="GitOps" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
+		Deploy Pangolin with Argo CD or Flux.
+	</Card>
+</CardGroup>

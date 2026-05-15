@@ -1,0 +1,415 @@
+---
+title: "Helm"
+description: "Quick-start guide for installing Site (newt) on Kubernetes using Helm."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+This guide installs and manages Site (newt) in Kubernetes using Helm.
+
+See [Version Matrix](https://github.com/fosrl/helm-charts/VERSION_MATRIX.md) for chart and default app version references.
+
+## What the chart supports
+
+The Newt chart can deploy one or more Newt instances through `newtInstances[]`.
+
+Newt chart `1.4.0` includes support for:
+
+- provisioning with `NEWT_PROVISIONING_KEY` and `NEWT_NAME`
+- legacy credential installs with `NEWT_ID` and `NEWT_SECRET`
+- existing Kubernetes Secrets for production credentials
+- writable config persistence with `emptyDir` or an existing PVC
+- optional metrics, PodMonitor, ServiceMonitor, and PrometheusRule
+- optional NetworkPolicy
+- multi-instance deployments with per-instance overrides
+
+The chart README lists these features for version `1.4.0`.
+
+## Prerequisites
+
+Before installing Newt, you need:
+
+- Kubernetes `1.30.14` or newer
+- Helm 3.x
+- `kubectl` access to the target cluster
+- a reachable Pangolin instance
+- either:
+  - Newt credentials from Pangolin: `NEWT_ID` and `NEWT_SECRET`
+  - or a provisioning key for provisioning installs
+
+The chart quickstart lists Kubernetes `>=1.30.14`, Helm 3.x, configured `kubectl`, and Newt credentials from Pangolin as prerequisites.
+
+See [Prerequisites](/self-host/manual/kubernetes/prerequisites) for cluster, namespace, storage, networking, and security planning.
+
+## Authentication options
+
+Newt chart `1.4.0` supports three credential patterns:
+
+| Method | Recommended for | Notes |
+| --- | --- | --- |
+| Existing Secret | Production | Credentials are stored in a Kubernetes Secret created outside Helm |
+| Provisioning key | Provisioning installs | Requires writable config persistence |
+| Inline values | Local testing only | Credentials may be stored in Helm release history |
+
+For production, use `auth.existingSecretName` or a GitOps-safe secret workflow. The chart values explicitly warn that inline credentials can be stored in Helm release history and recommend existing Secrets for production.
+
+## Quick install with existing Secret
+
+This is the recommended simple production pattern.
+
+### Step 1: Create the namespace
+
+Create the namespace before installing the chart:
+
+```bash
+kubectl create namespace pangolin
+```
+
+If your cluster uses Pod Security Admission labels, namespace labels, or policy annotations, apply them before installing Newt.
+
+Example:
+
+```bash
+kubectl label namespace pangolin \
+  pod-security.kubernetes.io/enforce=baseline \
+  pod-security.kubernetes.io/audit=restricted \
+  pod-security.kubernetes.io/warn=restricted
+```
+
+<Note>
+The chart can create namespaces through `namespace.create`, but creating the namespace explicitly is recommended when your cluster uses Pod Security Admission, namespace labels, or policy annotations.
+</Note>
+
+### Step 2: Create the Newt Secret
+
+Create a Secret with the credentials from Pangolin:
+
+```bash
+kubectl create secret generic newt-auth \
+  --namespace pangolin \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<your-newt-id> \
+  --from-literal=NEWT_SECRET=<your-newt-secret>
+```
+
+<Tip>
+Get the Newt credentials from the Pangolin dashboard for the site you want this Newt instance to connect to.
+</Tip>
+
+### Step 3: Create a values file
+
+Create `values-newt.yaml`:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      existingSecretName: newt-auth
+    replicas: 1
+```
+
+The default Secret keys are:
+
+```yaml
+PANGOLIN_ENDPOINT
+NEWT_ID
+NEWT_SECRET
+```
+
+You only need to set `auth.keys.*` if your Secret uses different key names.
+
+Example with custom Secret keys:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    auth:
+      existingSecretName: newt-auth
+      keys:
+        endpointKey: PANGOLIN_ENDPOINT
+        idKey: NEWT_ID
+        secretKey: NEWT_SECRET
+    replicas: 1
+```
+
+`auth.keys.*` are key names inside the Kubernetes Secret, not the credential values themselves. ([GitHub][2])
+
+### Step 4: Install Newt
+
+Add the Helm repository:
+
+```bash
+helm repo add fossorial https://charts.fossorial.io
+helm repo update fossorial
+```
+
+Install Newt:
+
+```bash
+helm upgrade --install newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+Do not use `--create-namespace` here if you created and labeled the namespace manually.
+
+### Step 5: Verify the deployment
+
+Check the Helm release:
+
+```bash
+helm status newt --namespace pangolin
+```
+
+Check the pods:
+
+```bash
+kubectl get pods --namespace pangolin \
+  -l app.kubernetes.io/name=newt
+```
+
+Check the logs:
+
+```bash
+kubectl logs --namespace pangolin \
+  -l app.kubernetes.io/name=newt \
+  --tail=50
+```
+
+Wait for the Newt pod to become ready:
+
+```bash
+kubectl wait --for=condition=ready pod \
+  -l app.kubernetes.io/name=newt \
+  --namespace pangolin \
+  --timeout=60s
+```
+
+## Quick install with provisioning key
+
+Provisioning-based installs bootstrap credentials from a provisioning key.
+
+Provisioning requires writable config persistence so Newt can store the generated configuration. The chart quickstart explicitly notes that provisioning requires a writable `CONFIG_FILE` target and that the chart provides this through `newtInstances[x].configPersistence`. ([GitHub][3])
+
+Create `values-newt.yaml`:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    pangolinEndpoint: https://pangolin.example.com
+    provisioningKey: "<your-provisioning-key>"
+    newtName: "my-site"
+    configPersistence:
+      enabled: true
+      type: emptyDir
+      mountPath: /var/lib/newt
+      fileName: config.json
+```
+
+Install Newt:
+
+```bash
+helm upgrade --install newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+<Note>
+`emptyDir` is enough for testing, but it is ephemeral. For durable provisioning state, use `type: persistentVolumeClaim` with an existing PVC.
+</Note>
+
+Example with an existing PVC:
+
+```yaml
+newtInstances:
+  - name: main-tunnel
+    enabled: true
+    pangolinEndpoint: https://pangolin.example.com
+    provisioningKey: "<your-provisioning-key>"
+    newtName: "my-site"
+    configPersistence:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: my-newt-config
+      mountPath: /var/lib/newt
+      fileName: config.json
+```
+
+The Newt README includes both `emptyDir` and existing PVC provisioning examples. ([GitHub][4])
+
+## Verifying connectivity
+
+Follow the Newt logs:
+
+```bash
+kubectl logs --namespace pangolin \
+  -l app.kubernetes.io/name=newt \
+  --follow
+```
+
+In the Pangolin dashboard, verify that the site connected by this Newt instance is online.
+
+If the pod is running but the site does not connect, check:
+
+* `PANGOLIN_ENDPOINT`
+* Newt credentials or provisioning key
+* DNS resolution from inside the cluster
+* outbound network access from the Newt pod
+* TLS validity for the Pangolin endpoint
+
+## Upgrade
+
+Update the Helm repository:
+
+```bash
+helm repo update fossorial
+```
+
+Upgrade the release:
+
+```bash
+helm upgrade newt fossorial/newt \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+Check upgrade status:
+
+```bash
+helm status newt --namespace pangolin
+helm history newt --namespace pangolin
+```
+
+Rollback to a previous revision if needed:
+
+```bash
+helm rollback newt <revision> --namespace pangolin
+```
+
+## Multiple Newt instances
+
+You can deploy multiple Newt instances with one chart release.
+
+Example:
+
+```yaml
+newtInstances:
+  - name: site-a
+    enabled: true
+    auth:
+      existingSecretName: newt-auth-site-a
+    replicas: 1
+
+  - name: site-b
+    enabled: true
+    auth:
+      existingSecretName: newt-auth-site-b
+    replicas: 1
+```
+
+Create a separate Secret for each site:
+
+```bash
+kubectl create secret generic newt-auth-site-a \
+  --namespace pangolin \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<site-a-newt-id> \
+  --from-literal=NEWT_SECRET=<site-a-newt-secret>
+
+kubectl create secret generic newt-auth-site-b \
+  --namespace pangolin \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<site-b-newt-id> \
+  --from-literal=NEWT_SECRET=<site-b-newt-secret>
+```
+
+## Architecture notes
+
+### Instance-based deployment
+
+* `newtInstances[]` defines the Newt instances rendered by the chart.
+* Each enabled instance creates its own workload.
+* Each instance can use its own Secret, provisioning settings, resources, service settings, and network policy settings.
+* Per-instance namespace and service account overrides require `allowGlobalOverride: true`.
+
+The chart values include `newtInstances[]`, per-instance namespace settings, and per-instance service account overrides. ([GitHub][2])
+
+### RBAC
+
+Newt chart `1.4.0` defaults `rbac.create` to `false`. Enable RBAC only when your selected Newt configuration requires Kubernetes API permissions.
+
+```yaml
+rbac:
+  create: true
+```
+
+The chart changelog for `1.4.0` marks this as a breaking change: installations that relied on auto-created RBAC must explicitly enable `rbac.create=true` during upgrade. ([GitHub][1])
+
+### Helm tests
+
+Helm test Jobs are disabled by default.
+
+Enable them only when you want to run chart test jobs:
+
+```yaml
+global:
+  tests:
+    enabled: true
+```
+
+The chart quickstart notes that test Jobs are gated behind `global.tests.enabled`, which defaults to `false`. ([GitHub][3])
+
+## OCI install
+
+The Newt chart is also published as an OCI chart in GHCR.
+
+Pull the chart:
+
+```bash
+helm pull oci://ghcr.io/fosrl/helm-charts/newt \
+  --version 1.4.0
+```
+
+Install from OCI:
+
+```bash
+helm upgrade --install newt oci://ghcr.io/fosrl/helm-charts/newt \
+  --version 1.4.0 \
+  --namespace pangolin \
+  --values values-newt.yaml
+```
+
+OCI changes where Helm pulls the chart from. It does not change the values file or the release behavior.
+
+## References
+
+<CardGroup cols={2}>
+  <Card title="Chart README" href="https://github.com/fosrl/helm-charts/blob/main/charts/newt/README.md" icon="book" />
+  <Card title="values.yaml" href="https://github.com/fosrl/helm-charts/blob/main/charts/newt/values.yaml" icon="file-code" />
+  <Card title="values.schema.json" href="https://github.com/fosrl/helm-charts/blob/main/charts/newt/values.schema.json" icon="file-code" />
+  <Card title="Artifact Hub" href="https://artifacthub.io/packages/helm/fosrl/newt" icon="box" />
+  <Card title="Issues" href="https://github.com/fosrl/helm-charts/issues" icon="circle-question" />
+</CardGroup>
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Full Configuration" href="/self-host/manual/kubernetes/newt/configuration" icon="sliders">
+		Review all Newt chart options.
+	</Card>
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/newt/troubleshooting" icon="circle-question">
+		Debug Newt deployment and connection issues.
+	</Card>
+	<Card title="Kustomize Install" href="/self-host/manual/kubernetes/newt/kustomize" icon="layer-group">
+		Install Newt with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="Pangolin Helm" href="/self-host/manual/kubernetes/pangolin/helm" icon="server">
+		Install the Pangolin control plane.
+	</Card>
+</CardGroup>
