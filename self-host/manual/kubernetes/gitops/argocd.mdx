@@ -1,0 +1,424 @@
+---
+title: "Argo CD"
+description: "Deploy Pangolin and Newt using Argo CD for Git-driven GitOps reconciliation."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Argo CD is a declarative GitOps tool that continuously syncs your cluster state to your Git repository. This guide covers installing Pangolin and Newt using Argo CD.
+
+## Install Pangolin with Argo CD using Helm
+
+### Step 1: Create Pangolin namespace
+
+```bash
+kubectl create namespace pangolin
+```
+
+### Step 2: Create Application
+
+Create an Argo CD Application resource that tells Argo CD to deploy Pangolin using the Helm chart:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pangolin
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://charts.fossorial.io
+    chart: pangolin
+    targetRevision: 0.1.0-alpha.0  # or use ~0.1.0 for range
+    helm:
+      values: |
+        deployment:
+          type: controller
+          mode: multi
+
+        database:
+          mode: cloudnativepg
+
+        pangolin:
+          config:
+            app:
+              dashboard_url: https://pangolin.example.com
+            domains:
+              domain1:
+                base_domain: example.com
+            gerbil:
+              base_endpoint: vpn.example.com
+
+        ingress:
+          enabled: true
+          className: traefik
+          hosts:
+            - host: pangolin.example.com
+              paths:
+                - path: /
+                  pathType: Prefix
+          tls:
+            - secretName: pangolin-tls
+              hosts:
+                - pangolin.example.com
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pangolin
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+Apply the Application:
+
+```bash
+kubectl apply -f pangolin-app.yaml
+```
+
+### Step 3: Monitor in Argo CD
+
+In the Argo CD UI, you should see the `pangolin` application. Argo CD will:
+
+1. Fetch the Helm chart from `https://charts.fossorial.io`
+2. Render the chart with your inline `values`
+3. Create all resources in the `pangolin` namespace
+4. Continuously monitor for drift
+
+### Step 4: Verify deployment
+
+```bash
+# Check Argo CD status
+kubectl describe app -n argocd pangolin
+
+# Check pod status
+kubectl get pods -n pangolin
+```
+
+## Install Newt with Argo CD using Helm
+
+### Step 1: Create Newt auth secret
+
+```bash
+kubectl create secret generic newt-auth \
+  -n pangolin \
+  --from-literal=PANGOLIN_ENDPOINT=https://pangolin.example.com \
+  --from-literal=NEWT_ID=<your-newt-id> \
+  --from-literal=NEWT_SECRET=<your-newt-secret>
+```
+
+### Step 2: Create Newt Application
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: newt
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://charts.fossorial.io
+    chart: newt
+    targetRevision: 1.4.0
+    helm:
+      values: |
+        newtInstances:
+          - name: main-tunnel
+            enabled: true
+            auth:
+              existingSecretName: newt-auth
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pangolin
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+Apply:
+
+```bash
+kubectl apply -f newt-app.yaml
+```
+
+## Using Argo CD with Git repository
+
+Instead of inline values, you can store configuration in Git and have Argo CD deploy from there:
+
+### Repository structure
+
+```
+infrastructure/
+├── apps/
+│   ├── pangolin/
+│   │   ├── values-base.yaml
+│   │   ├── values-prod.yaml
+│   │   └── app.yaml  (Argo CD Application CRD)
+│   └── newt/
+│       ├── values.yaml
+│       └── app.yaml
+└── clusters/
+    └── production/
+        ├── pangolin.yaml (reference to app)
+        └── newt.yaml
+```
+
+### Git-based Application
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pangolin
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/my-org/infrastructure
+    path: apps/pangolin
+    targetRevision: main
+    helm:
+      valuesObject:
+        deployment:
+          type: controller
+          mode: multi
+      releaseName: pangolin
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pangolin
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+Argo CD will watch the Git repository and auto-sync on changes to `apps/pangolin`.
+
+## Using Argo CD with Kustomize
+
+Deploy Pangolin using Kustomize overlays:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: pangolin
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/my-org/infrastructure
+    path: overlays/production
+    targetRevision: main
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: pangolin
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+    automated:
+      prune: true
+      selfHeal: true
+```
+
+## Sync policies
+
+### Automated sync
+
+**prune: true**: Deletes resources in cluster that are no longer in Git
+
+**selfHeal: true**: Resyncs if cluster drifts from Git (e.g., manual `kubectl apply`)
+
+```yaml
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+    allowEmpty: false  # prevent accidental deletion of all resources
+```
+
+### Manual sync
+
+Sync only when you explicitly trigger it:
+
+```yaml
+syncPolicy:
+  syncOptions:
+    - CreateNamespace=true
+```
+
+Manually sync:
+
+```bash
+argocd app sync pangolin
+# or use UI
+```
+
+## Advanced: ApplicationSet for multi-environment
+
+Deploy Pangolin and Newt across multiple clusters or environments:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: pangolin-multienv
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - cluster: production
+            env: prod
+          - cluster: staging
+            env: staging
+  template:
+    metadata:
+      name: pangolin-{{ .cluster }}
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/my-org/infrastructure
+        path: clusters/{{ .cluster }}/pangolin
+        targetRevision: main
+      destination:
+        name: '{{ .cluster }}'
+        namespace: pangolin
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+```
+
+## OCI Helm sources (if available)
+
+If the Helm chart is available in an OCI registry:
+
+```yaml
+source:
+  repoURL: oci://registry.example.com/fossorial
+  chart: pangolin
+  targetRevision: 0.1.0-alpha.0
+  helm:
+    values: |
+      # ... values ...
+```
+
+OCI chart references work the same as traditional Helm repository references in Argo CD.
+
+## Troubleshooting Argo CD deployments
+
+### Check Application status
+
+```bash
+kubectl describe app -n argocd pangolin
+kubectl get app -n argocd pangolin -o yaml
+```
+
+### Check sync status
+
+```bash
+argocd app get pangolin
+argocd app logs pangolin
+```
+
+### Manual sync
+
+```bash
+argocd app sync pangolin --force
+```
+
+### Refresh from repository
+
+```bash
+argocd app diff pangolin
+```
+
+### Delete Application
+
+```bash
+kubectl delete app -n argocd pangolin
+```
+
+## Common patterns
+
+### Different values per environment
+
+Use multiple Applications:
+
+```yaml
+# production/pangolin-app.yaml
+spec:
+  source:
+    helm:
+      values: |
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+        replicas: 3
+
+# staging/pangolin-app.yaml
+spec:
+  source:
+    helm:
+      values: |
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        replicas: 1
+```
+
+### Secrets with sealed-secrets
+
+Use sealed-secrets to safely store secrets in Git:
+
+```yaml
+# In Git
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: newt-auth
+  namespace: pangolin
+spec:
+  encryptedData:
+    PANGOLIN_ENDPOINT: AgC4F5qd...
+    NEWT_ID: AgB9l2pK...
+    NEWT_SECRET: AgDq3jX...
+```
+
+Argo CD applies the sealed secret; the cluster decrypts it.
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="GitOps Overview" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch" />
+	<Card title="Flux" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch" />
+	<Card title="Pangolin Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders" />
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/pangolin/troubleshooting" icon="circle-question" />
+</CardGroup>

@@ -13,7 +13,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 This is a community guide and is not officially supported. If you have any issues, please reach out to the [author](https://github.com/txwgnd).
 </Note>
 
-This automation lets your system automatically download & upgrade the `GeoLite2-Country` and `GeoLite2-ASN` databases from Maxmind to use for geoblocking and ASN blocking on your Pangolin host. It's utilizing Maxmind's [geoipupdate](https://github.com/maxmind/geoipupdate/tree/main) Docker container to achieve this.
+This automation lets your system automatically download and update the `GeoLite2-Country` and `GeoLite2-ASN` databases from MaxMind. Pangolin uses these databases for geo-location features such as country or region rules, geo-blocking, analytics, and ASN blocking. It uses MaxMind's [geoipupdate](https://github.com/maxmind/geoipupdate/tree/main) Docker container to do this.
 
 Maxmind's service is free of charge for development, personal or community use. [Quote](https://support.maxmind.com/knowledge-base/articles/create-a-maxmind-account#h_01G4G4NG5C63BQ6HRG6MSS50T3)
 
@@ -21,8 +21,8 @@ Maxmind's service is free of charge for development, personal or community use. 
 1. **[Requirements](#1-requirements)**
 2. **[Maxmind Account](#2-maxmind-account)**
 3. **[API key creation](#3-api-key-creation)**
-4. **[Modification of Pangolin's `docker-compose.yml`](#4-modification-of-pangolin’s-docker-compose-yml)**
-5. **[Modification of Pangolin's `config.yml`](#5-modification-of-pangolin’s-config-yml)**
+4. **[Modification of Pangolin's `docker-compose.yml`](#4-modification-of-pangolins-docker-compose-yml)**
+5. **[Modification of Pangolin's `config.yml`](#5-modification-of-pangolins-config-yml)**
 
 ## 1. Requirements
 * A Maxmind account for API access

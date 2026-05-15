@@ -1,0 +1,381 @@
+---
+title: "Kustomize"
+description: "Customize Helm-rendered Kubernetes manifests with Kustomize overlays."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+Kustomize can be used to customize Kubernetes manifests with bases, overlays, and patches.
+
+For Pangolin and Newt, the supported Kustomize workflow is to render the Helm charts into manifests and use those rendered manifests as the Kustomize base.
+
+Use Kustomize when you need:
+
+- environment-specific overlays for dev, staging, or production
+- explicit manifest patches in Git
+- a manifest-driven workflow for GitOps tools
+- small changes on top of a shared base without maintaining separate full manifests
+
+## Supported workflow
+
+The chart repository does not provide native Kustomize bases. Use this workflow instead:
+
+<Steps>
+  <Step title="Render chart manifests">
+    Render the Helm chart with your values file and save the output as base manifests.
+  </Step>
+  <Step title="Commit base manifests">
+    Commit rendered manifests as the Kustomize base in Git.
+  </Step>
+  <Step title="Create environment overlays">
+    Create overlays for each environment (for example dev, staging, production).
+  </Step>
+  <Step title="Apply or reconcile">
+    Apply overlays manually or reconcile them with Argo CD or Flux.
+  </Step>
+</Steps>
+
+<Warning>
+Do not manage the same resources with both a live Helm release and Kustomize. Pick one ownership model per environment.
+</Warning>
+
+Recommended ownership model:
+
+- Use Helm only to render manifests.
+- Use Kustomize, Argo CD, or Flux to apply and reconcile the rendered manifests.
+- Re-render the base when upgrading the chart version.
+
+## Example repository layout
+
+```text
+my-pangolin-k8s/
+├── base/
+│   ├── kustomization.yaml
+│   ├── pangolin.yaml
+│   └── newt.yaml
+├── overlays/
+│   ├── dev/
+│   │   ├── kustomization.yaml
+│   │   └── pangolin-resources.patch.yaml
+│   ├── staging/
+│   │   ├── kustomization.yaml
+│   │   └── pangolin-resources.patch.yaml
+│   └── prod/
+│       ├── kustomization.yaml
+│       └── pangolin-resources.patch.yaml
+└── values/
+    ├── values-pangolin.yaml
+    └── values-newt.yaml
+```
+
+## Step 1: Render manifests from Helm
+
+Create a base directory:
+
+```bash
+mkdir -p base overlays/dev overlays/staging overlays/prod
+```
+
+Render Pangolin:
+
+<CodeGroup>
+```bash Classic Helm repository
+helm template pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values/values-pangolin.yaml \
+  > base/pangolin.yaml
+```
+
+```bash OCI (GHCR)
+helm template pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
+  --version 0.1.0-alpha.0 \
+  --namespace pangolin \
+  --values values/values-pangolin.yaml \
+  > base/pangolin.yaml
+```
+</CodeGroup>
+
+Render Newt:
+
+<CodeGroup>
+```bash Classic Helm repository
+helm template newt fossorial/newt \
+  --namespace pangolin \
+  --values values/values-newt.yaml \
+  > base/newt.yaml
+```
+
+```bash OCI (GHCR)
+helm template newt oci://ghcr.io/fosrl/helm-charts/newt \
+  --version 1.4.0 \
+  --namespace pangolin \
+  --values values/values-newt.yaml \
+  > base/newt.yaml
+```
+</CodeGroup>
+
+## Step 2: Create the base kustomization
+
+```yaml
+# base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - pangolin.yaml
+  - newt.yaml
+```
+
+## Step 3: Create an overlay
+
+Use `resources` to reference the base.
+
+```yaml
+# overlays/prod/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+labels:
+  - pairs:
+      app.kubernetes.io/environment: production
+      app.kubernetes.io/managed-by: kustomize
+
+patches:
+  - path: pangolin-resources.patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: pangolin
+```
+
+<Note>
+Avoid `namePrefix` and `nameSuffix` for Helm-rendered bases unless you have verified every generated reference. Renaming chart-generated resources can break service names, selectors, secret references, and workload dependencies.
+</Note>
+
+## Step 4: Add patches
+
+Example Strategic Merge patch for container resources:
+
+```yaml
+# overlays/prod/pangolin-resources.patch.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pangolin
+spec:
+  template:
+    spec:
+      containers:
+        - name: pangolin
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1Gi
+            limits:
+              memory: 2Gi
+```
+
+Example JSON6902-style inline patch:
+
+```yaml
+# overlays/prod/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+patches:
+  - target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: pangolin
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "1000m"
+```
+
+<Note>
+Modern Kustomize uses the `patches` field for both Strategic Merge and JSON6902-style patches. Avoid `patchesStrategicMerge`, `patchesJson6902`, and `bases` in new examples.
+</Note>
+
+## Apply an overlay
+
+Preview the rendered output:
+
+```bash
+kustomize build overlays/prod
+```
+
+Compare with the live cluster:
+
+```bash
+kustomize build overlays/prod | kubectl diff -f -
+```
+
+Apply the overlay:
+
+```bash
+kubectl apply -k overlays/prod
+```
+
+Or apply the rendered output:
+
+```bash
+kustomize build overlays/prod | kubectl apply -f -
+```
+
+## Updating the base
+
+When upgrading chart versions or changing Helm values, re-render the base and review the diff.
+
+```bash
+helm repo update fossorial
+```
+
+Render the updated chart output:
+
+```bash
+helm template pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values/values-pangolin.yaml \
+  > base/pangolin.yaml
+```
+
+```bash
+helm template newt fossorial/newt \
+  --namespace pangolin \
+  --values values/values-newt.yaml \
+  > base/newt.yaml
+```
+
+Then validate the overlay:
+
+```bash
+kustomize build overlays/prod
+```
+
+Review changes before applying:
+
+```bash
+git diff
+kustomize build overlays/prod | kubectl diff -f -
+```
+
+Apply after review:
+
+```bash
+kubectl apply -k overlays/prod
+```
+
+## Important considerations
+
+### Namespace handling
+
+Render the charts with the namespace you intend to use:
+
+```bash
+helm template pangolin fossorial/pangolin \
+  --namespace pangolin \
+  --values values/values-pangolin.yaml \
+  > base/pangolin.yaml
+```
+
+Create the namespace before applying the overlay:
+
+```bash
+kubectl create namespace pangolin
+```
+
+Apply any required Pod Security Admission labels or cluster-policy labels before workloads are created.
+
+### Secrets
+
+Do not commit plaintext secrets into rendered manifests.
+
+Use one of these approaches instead:
+
+* reference existing Kubernetes Secrets in the values file before rendering
+* create secrets separately with your secret-management workflow
+* use Sealed Secrets, External Secrets Operator, SOPS, or another GitOps-safe secret solution
+
+### Do not mix ownership models
+
+Avoid this pattern:
+
+```text
+helm upgrade pangolin fossorial/pangolin
+kubectl apply -k overlays/prod
+```
+
+This creates two tools managing the same objects.
+
+Use one of these models instead:
+
+| Model             | Description                                                                              |
+| ----------------- | ---------------------------------------------------------------------------------------- |
+| Helm-managed      | Helm installs and upgrades the live release. Kustomize is not used for the same objects. |
+| Kustomize-managed | Helm only renders the base. Kustomize applies and owns the live objects.                 |
+| GitOps-managed    | Argo CD or Flux applies the Kustomize overlay and owns reconciliation.                   |
+
+## Troubleshooting
+
+Validate the overlay:
+
+```bash
+kustomize build overlays/prod
+```
+
+Check the generated YAML:
+
+```bash
+kustomize build overlays/prod > manifests.yaml
+```
+
+Run a server-side dry run:
+
+```bash
+kubectl apply -f manifests.yaml --dry-run=server
+```
+
+Preview live changes:
+
+```bash
+kubectl diff -f manifests.yaml
+```
+
+Check live resources:
+
+```bash
+kubectl get all -n pangolin
+kubectl get events -n pangolin --sort-by=.lastTimestamp
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Pangolin Kustomize Install" href="/self-host/manual/kubernetes/pangolin/kustomize" icon="server">
+		Install Pangolin with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="Newt Kustomize Install" href="/self-host/manual/kubernetes/newt/kustomize" icon="globe">
+		Install Newt with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="Argo CD" href="/self-host/manual/kubernetes/gitops/argocd" icon="code-branch">
+		Reconcile Kustomize overlays with Argo CD.
+	</Card>
+	<Card title="Flux" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch">
+		Reconcile Kustomize overlays with Flux.
+	</Card>
+	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/pangolin/troubleshooting" icon="circle-question">
+		Troubleshoot Pangolin deployments on Kubernetes.
+	</Card>
+</CardGroup>

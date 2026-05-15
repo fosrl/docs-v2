@@ -22,6 +22,7 @@ Network logs capture tunnel sessions from clients to private resources. They are
 - Measuring traffic volume with transmitted and received byte counts
 - Auditing session start and end times for troubleshooting and compliance
 
+Network logs are synchronized to the cloud every 30–60 seconds. A brief delay before entries appear in the table is expected.
 
 <Tip>Make sure to enable network logging in the org settings</Tip>
 
@@ -35,6 +36,7 @@ Each network log entry contains the following fields:
 | `protocol` | string | Transport protocol for the session (`tcp` or `udp`) |
 | `siteResourceId` | number \| null | The ID of the [private resource](/manage/resources/understanding-resources) for the session (if applicable) |
 | `clientId` | number \| null | The Pangolin [client ID](/manage/clients/understanding-clients) for the session |
+| `clientEndpoint` | string \| null | The client-side endpoint for the session (e.g. `123.123.123.123:12345`) |
 | `userId` | string \| null | The user ID when the session is tied to an authenticated user |
 | `sourceAddr` | string | Source address for the session (typically the client-side endpoint) |
 | `destAddr` | string | Destination address for the session (typically the resource-side endpoint) |

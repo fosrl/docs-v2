@@ -1,0 +1,53 @@
+---
+title: "Choose an Installation Path"
+description: "Choose the Kubernetes deployment workflow for Pangolin and Sites (Newt)."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Use this page to pick the right Kubernetes guide for your deployment workflow.
+
+These guides assume you are already familiar with Kubernetes and the deployment tools listed below.
+
+If you are new to Kubernetes, start with the [official Kubernetes learning resources](https://kubernetes.io/docs/tutorials/kubernetes-basics/) first. Then review the [Prerequisites](/self-host/manual/kubernetes/prerequisites) guide to check your cluster, tools, and setup.
+
+## Installation paths
+
+| Path | Use when | Start here |
+| --- | --- | --- |
+| Helm | You want the standard chart-based installation path for Pangolin or Sites (Newt). | [Helm Quick-Start](/self-host/manual/kubernetes/helm) |
+| Kustomize | You want manifest overlays, for example for environment-specific configuration, patches, or rendered manifests that can be reviewed before applying. | [Kustomize Quick-Start](/self-host/manual/kubernetes/kustomize) |
+| Argo CD | You already use Argo CD and want to deploy Pangolin or Sites (Newt) through a Kubernetes-native GitOps workflow. | [Argo CD Guide](/self-host/manual/kubernetes/gitops/argocd) |
+| Flux | You already use Flux and want to manage Pangolin or Sites (Newt) through `HelmRelease` or `Kustomization` resources. | [Flux Guide](/self-host/manual/kubernetes/gitops/flux) |
+| Helmfile | You want to manage multiple related Helm releases as one stack. | [Helmfile Guide](/self-host/manual/kubernetes/helmfile) |
+
+## Recommended starting point
+
+For most Kubernetes deployments, start with Helm. Use the GitOps guides only if Argo CD or Flux is already part of your deployment workflow.
+
+Kustomize and Helmfile are useful when you need more control over manifests, overlays, or multiple coordinated releases.
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Prerequisites" href="/self-host/manual/kubernetes/prerequisites" icon="list-check">
+		Review the required cluster, ingress, DNS, storage, and secret setup.
+	</Card>
+	<Card title="Helm Quick-Start" href="/self-host/manual/kubernetes/helm" icon="box">
+		Install Pangolin or Sites (Newt) with the standard chart-based workflow.
+	</Card>
+	<Card title="Kustomize Quick-Start" href="/self-host/manual/kubernetes/kustomize" icon="layer-group">
+		Use overlays and patches for manifest-based deployments.
+	</Card>
+	<Card title="Argo CD Guide" href="/self-host/manual/kubernetes/gitops/argocd" icon="code-branch">
+		Deploy Pangolin or Sites (Newt) with Argo CD.
+	</Card>
+	<Card title="Flux Guide" href="/self-host/manual/kubernetes/gitops/flux" icon="code-branch">
+		Deploy Pangolin or Sites (Newt) with Flux.
+	</Card>
+	<Card title="Helmfile Guide" href="/self-host/manual/kubernetes/helmfile" icon="boxes-stacked">
+		Manage multiple Helm releases together.
+	</Card>
+</CardGroup>

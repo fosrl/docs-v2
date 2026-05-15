@@ -1,0 +1,929 @@
+---
+title: "Troubleshooting"
+description: "Diagnose and resolve Pangolin Kubernetes deployment issues."
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+This page covers troubleshooting Pangolin Kubernetes deployments across Helm, Kustomize, Argo CD, and Flux workflows.
+
+Start with the core checks, then use the section that matches the symptom.
+
+## Core diagnostics
+
+Set the namespace and release name used by your installation:
+
+```bash
+export PANGOLIN_NAMESPACE=pangolin
+export PANGOLIN_RELEASE=pangolin
+```
+
+### Helm diagnostics
+
+Check the release:
+
+```bash
+helm status "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE"
+helm history "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE"
+helm get values "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" --all
+```
+
+Render the chart locally with your values file:
+
+```bash
+helm repo update fossorial
+
+helm template "$PANGOLIN_RELEASE" fossorial/pangolin \
+  --namespace "$PANGOLIN_NAMESPACE" \
+  --values values-pangolin.yaml
+```
+
+Preview an upgrade:
+
+```bash
+helm upgrade "$PANGOLIN_RELEASE" fossorial/pangolin \
+  --namespace "$PANGOLIN_NAMESPACE" \
+  --values values-pangolin.yaml \
+  --dry-run
+```
+
+<Note>
+`helm lint charts/pangolin` is only useful when you are working inside the Helm chart repository. For normal installs, use `helm template` and `helm upgrade --dry-run`.
+</Note>
+
+### Kubernetes diagnostics
+
+Check workloads and events:
+
+```bash
+kubectl get pods --namespace "$PANGOLIN_NAMESPACE"
+kubectl get deploy,statefulset,job,cronjob --namespace "$PANGOLIN_NAMESPACE"
+kubectl get events --namespace "$PANGOLIN_NAMESPACE" --sort-by=.lastTimestamp
+```
+
+Inspect a pod:
+
+```bash
+kubectl describe pod <pod-name> --namespace "$PANGOLIN_NAMESPACE"
+kubectl logs <pod-name> --namespace "$PANGOLIN_NAMESPACE" --all-containers --tail=200
+```
+
+Check services, PVCs, and policies:
+
+```bash
+kubectl get svc,pvc,secret,configmap --namespace "$PANGOLIN_NAMESPACE"
+kubectl get networkpolicy --namespace "$PANGOLIN_NAMESPACE"
+```
+
+### Traefik diagnostics
+
+In controller mode, the chart uses Traefik CRDs such as `IngressRoute`.
+
+Check whether Traefik CRDs are installed:
+
+```bash
+kubectl get crd | grep traefik
+```
+
+Check rendered or applied Traefik resources:
+
+```bash
+kubectl get ingressroute --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe ingressroute <name> --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Depending on your Traefik setup, also check:
+
+```bash
+kubectl get middleware,tlsoption,traefikservice --namespace "$PANGOLIN_NAMESPACE"
+```
+
+<Note>
+`kubectl get ingress` is only useful if your selected deployment mode renders standard Kubernetes Ingress resources. In controller mode, use `IngressRoute`.
+</Note>
+
+### Database diagnostics
+
+If you use CloudNativePG, first check that the CRD exists:
+
+```bash
+kubectl get crd | grep postgresql.cnpg.io
+```
+
+Then check CNPG resources:
+
+```bash
+kubectl get cluster --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe cluster <cluster-name> --namespace "$PANGOLIN_NAMESPACE"
+kubectl get pods --namespace "$PANGOLIN_NAMESPACE" | grep -E 'pangolin-db|postgres'
+kubectl get secret --namespace "$PANGOLIN_NAMESPACE" | grep -E 'pangolin-db|postgres'
+```
+
+If you use external PostgreSQL, verify the connection Secret:
+
+```bash
+kubectl get secret <connection-secret-name> --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe secret <connection-secret-name> --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Do not decode and paste database credentials into logs, screenshots, or issue reports.
+
+## Common issues and solutions
+
+<AccordionGroup>
+
+  <Accordion title="Gerbil fails during the first install">
+
+**Symptoms**
+
+* Gerbil pod crashes during a fresh install.
+* Logs mention missing setup data, missing exit node, or tunnel configuration not being ready.
+* Pangolin itself is not initialized yet.
+
+**Cause**
+
+On first install, Gerbil may start before Pangolin has completed the initial setup. The chart supports `gerbil.startupMode` for this case.
+
+**Resolution**
+
+Use delayed startup for the first install:
+
+```yaml
+gerbil:
+  startupMode: delayed
+```
+
+Install or upgrade with the values file:
+
+```bash
+helm upgrade --install "$PANGOLIN_RELEASE" fossorial/pangolin \
+  --namespace "$PANGOLIN_NAMESPACE" \
+  --values values-pangolin.yaml
+```
+
+After Pangolin setup is complete, switch Gerbil to normal startup:
+
+```bash
+helm upgrade "$PANGOLIN_RELEASE" fossorial/pangolin \
+  --namespace "$PANGOLIN_NAMESPACE" \
+  --reuse-values \
+  --set gerbil.startupMode=normal
+```
+
+Check Gerbil resources:
+
+```bash
+kubectl get pods,svc,pvc --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=gerbil
+```
+
+</Accordion>
+
+  <Accordion title="Gerbil is blocked by Pod Security Admission">
+
+**Symptoms**
+
+* Gerbil pod does not start.
+* Events mention Pod Security Admission.
+* Events mention forbidden capabilities.
+* Logs or events mention `NET_ADMIN`.
+
+**Cause**
+
+Gerbil requires the `NET_ADMIN` Linux capability for WireGuard interface management. A namespace using a restricted Pod Security profile can block this.
+
+**Resolution**
+
+Check namespace labels:
+
+```bash
+kubectl get namespace "$PANGOLIN_NAMESPACE" --show-labels
+```
+
+For a namespace running Gerbil, use a policy profile that allows the required capability. Example:
+
+```bash
+kubectl label namespace "$PANGOLIN_NAMESPACE" \
+  pod-security.kubernetes.io/enforce=privileged \
+  pod-security.kubernetes.io/warn=baseline \
+  pod-security.kubernetes.io/audit=restricted \
+  --overwrite
+```
+
+Then restart the affected pods:
+
+```bash
+kubectl rollout restart deploy --namespace "$PANGOLIN_NAMESPACE"
+```
+
+<Warning>
+Do not use a restricted Pod Security profile for Gerbil unless you have validated the selected chart mode and security context. Removing `NET_ADMIN` breaks WireGuard management.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Dashboard is not reachable through IngressRoute">
+
+**Symptoms**
+
+* The dashboard URL does not load.
+* Browser shows timeout, bad gateway, 404, or TLS error.
+* API path `/api/v1` fails while the dashboard path works, or the reverse.
+
+**Common causes**
+
+* DNS points to the wrong load balancer or ingress endpoint.
+* Traefik CRDs are missing.
+* Traefik controller is not watching the namespace or selector labels.
+* `IngressRoute` host does not match the dashboard URL.
+* API route was changed and no longer matches `PathPrefix(/api/v1)`.
+* TLS resolver or TLS Secret is misconfigured.
+
+**Checks**
+
+Check DNS:
+
+```bash
+nslookup pangolin.example.com
+```
+
+Check Traefik CRDs:
+
+```bash
+kubectl get crd | grep traefik
+```
+
+Check IngressRoute resources:
+
+```bash
+kubectl get ingressroute --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe ingressroute <name> --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Check the rendered values:
+
+```bash
+helm get values "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" --all | grep -A30 ingressRoute
+```
+
+Check Traefik logs. Adjust the namespace and label selector to your Traefik installation:
+
+```bash
+kubectl logs --namespace traefik -l app.kubernetes.io/name=traefik --tail=100
+```
+
+Temporary local check for the dashboard/UI service port:
+
+```bash
+kubectl port-forward --namespace "$PANGOLIN_NAMESPACE" svc/pangolin 8080:3002
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+<Note>
+The dashboard/UI port is `3002`. The API/external port is `3000`. Port-forward `3002` when checking the dashboard locally.
+</Note>
+
+</Accordion>
+
+  <Accordion title="TLS certResolver and secretName conflict">
+
+**Symptoms**
+
+* `IngressRoute` is created but TLS does not work.
+* Traefik logs mention TLS configuration problems.
+* Certificate is not issued or the TLS Secret is not found.
+
+**Cause**
+
+The dashboard `IngressRoute` TLS configuration should use either a Traefik certificate resolver or an existing TLS Secret.
+
+**Resolution**
+
+Use Traefik ACME certificate resolver:
+
+```yaml
+pangolin:
+  ingressRoute:
+    dashboard:
+      tls:
+        enabled: true
+        certResolver: letsencrypt
+        secretName: ""
+```
+
+Or use an existing TLS Secret:
+
+```yaml
+pangolin:
+  ingressRoute:
+    dashboard:
+      tls:
+        enabled: true
+        certResolver: ""
+        secretName: pangolin-dashboard-tls
+```
+
+Verify the Secret if using `secretName`:
+
+```bash
+kubectl get secret pangolin-dashboard-tls --namespace "$PANGOLIN_NAMESPACE"
+```
+
+<Note>
+`certResolver` is a Traefik ACME resolver setting. It is not a cert-manager issuer reference.
+</Note>
+
+</Accordion>
+
+  <Accordion title="Newt cannot reach Gerbil WireGuard ports">
+
+**Symptoms**
+
+* Newt shows repeated connection or tunnel errors.
+* Tunnel traffic does not pass.
+* WireGuard UDP ports are unreachable from the Newt location.
+
+**Common causes**
+
+* `pangolin.config.gerbil.base_endpoint` points to the wrong host.
+* Gerbil Service is not exposed as expected.
+* External firewall blocks UDP traffic.
+* NetworkPolicy blocks the required traffic.
+* `pangolin.config.gerbil.start_port` and `gerbil.ports.wg1` are not aligned.
+* `pangolin.config.gerbil.clients_start_port` and `gerbil.ports.wg2` are not aligned.
+
+**Checks**
+
+Check Gerbil Service:
+
+```bash
+kubectl get svc --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=gerbil
+
+kubectl describe svc <gerbil-service-name> --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Check Gerbil values:
+
+```bash
+helm get values "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" --all | grep -A30 gerbil
+```
+
+Check NetworkPolicies:
+
+```bash
+kubectl get networkpolicy --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe networkpolicy --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Verify external firewall rules for the configured UDP ports.
+
+</Accordion>
+
+  <Accordion title="Gerbil is behind reverse proxy or UDP gateway and tunnels fail">
+
+**Symptoms**
+
+* Newt peers do not establish stable handshakes.
+* Tunnel traffic drops even though Gerbil pods are healthy.
+* Logs show connection resets or malformed upstream traffic.
+
+**Cause**
+
+Proxy protocol handling is inconsistent between the upstream hop and Gerbil.
+
+<Info>
+If Gerbil is exposed through a reverse proxy or UDP gateway, keep proxy protocol settings aligned end-to-end. Do not enable proxy protocol on the upstream hop unless Gerbil is configured to accept it.
+</Info>
+
+**Checks**
+
+Check endpoint and port alignment:
+
+```bash
+helm get values "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" --all | grep -A40 gerbil
+```
+
+Check Gerbil logs:
+
+```bash
+kubectl logs --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=gerbil \
+  --tail=200
+```
+
+Check Service exposure:
+
+```bash
+kubectl get svc --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=gerbil -o wide
+```
+
+</Accordion>
+
+  <Accordion title="External database mode missing or invalid Secret">
+
+**Symptoms**
+
+* Pangolin pod crashes.
+* Logs mention database connection errors.
+* Events mention missing Secret or missing Secret key.
+
+**Cause**
+
+`database.mode=external` needs a valid database connection Secret unless the chart is configured to generate one from values.
+
+**Resolution**
+
+Create a connection Secret:
+
+```bash
+kubectl create secret generic pangolin-db-connection \
+  --namespace "$PANGOLIN_NAMESPACE" \
+  --from-literal=connectionString='postgresql://pangolin:password@postgres.example.com:5432/pangolin?sslmode=require'
+```
+
+Reference it in values:
+
+```yaml
+database:
+  mode: external
+  connection:
+    existingSecretName: pangolin-db-connection
+    existingSecretKey: connectionString
+```
+
+Check the Secret:
+
+```bash
+kubectl describe secret pangolin-db-connection --namespace "$PANGOLIN_NAMESPACE"
+```
+
+<Warning>
+Do not put database passwords directly in values files for production. Use an existing Secret or your normal secret-management workflow.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="CloudNativePG cluster does not provision">
+
+**Symptoms**
+
+* CNPG Cluster resource is missing.
+* CNPG pods do not start.
+* Pangolin cannot connect to the generated CNPG database.
+* Secret such as `pangolin-db-app` is missing.
+
+**Common causes**
+
+* CloudNativePG CRDs/operator are not installed.
+* `cnpg-cluster.enabled` is false when you expected the chart to create a cluster.
+* `cnpg-operator.enabled` is false and no operator exists.
+* `database.cloudnativepg.cluster.name` does not match the CNPG cluster name.
+* StorageClass or PVC provisioning fails.
+
+**Checks**
+
+Check CRDs:
+
+```bash
+kubectl get crd | grep postgresql.cnpg.io
+```
+
+Check CNPG operator pods:
+
+```bash
+kubectl get pods --all-namespaces | grep -i cnpg
+```
+
+Check CNPG Cluster:
+
+```bash
+kubectl get cluster --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe cluster pangolin-db --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Check PVCs and Secrets:
+
+```bash
+kubectl get pvc --namespace "$PANGOLIN_NAMESPACE"
+kubectl get secret --namespace "$PANGOLIN_NAMESPACE" | grep pangolin-db
+```
+
+Expected naming when using the default example:
+
+```yaml
+database:
+  cloudnativepg:
+    cluster:
+      name: pangolin-db
+
+cnpg-cluster:
+  enabled: true
+  fullnameOverride: pangolin-db
+```
+
+</Accordion>
+
+  <Accordion title="NetworkPolicy blocks DNS, database, controller, or tunnel traffic">
+
+**Symptoms**
+
+* DNS lookups fail.
+* Pangolin cannot connect to the database.
+* Controller cannot reach the Kubernetes API.
+* Gerbil or Newt traffic does not work.
+* External services such as SMTP, OIDC, or webhooks time out.
+
+**Cause**
+
+The chart can render NetworkPolicies. If your CNI enforces them, missing egress or ingress rules can break required paths.
+
+**Checks**
+
+```bash
+kubectl get networkpolicy --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe networkpolicy --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Check whether DNS is allowed:
+
+```yaml
+networkPolicy:
+  dns:
+    enabled: true
+```
+
+Check database egress:
+
+```yaml
+networkPolicy:
+  database:
+    enabled: true
+    port: 5432
+```
+
+Check controller API access:
+
+```yaml
+networkPolicy:
+  controller:
+    egress:
+      enabled: true
+      kubernetesApi:
+        enabled: true
+        port: 443
+```
+
+For external integrations, add scoped egress rules for the required services instead of allowing broad egress.
+
+For a temporary isolation test, disable NetworkPolicy and re-apply:
+
+```yaml
+networkPolicy:
+  enabled: false
+```
+
+If this fixes the issue, re-enable policies and add the missing rules.
+
+</Accordion>
+
+  <Accordion title="Pangolin pod is CrashLoopBackOff or Pending">
+
+**Symptoms**
+
+* Pangolin pod restarts repeatedly.
+* Pod stays Pending.
+* Readiness never becomes true.
+
+**Checks**
+
+Find the pod:
+
+```bash
+kubectl get pods --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=pangolin
+```
+
+Inspect it:
+
+```bash
+kubectl describe pod <pod-name> --namespace "$PANGOLIN_NAMESPACE"
+kubectl logs <pod-name> --namespace "$PANGOLIN_NAMESPACE" --tail=200
+kubectl logs <pod-name> --namespace "$PANGOLIN_NAMESPACE" --previous --tail=200
+```
+
+Check PVCs:
+
+```bash
+kubectl get pvc --namespace "$PANGOLIN_NAMESPACE"
+kubectl describe pvc <pvc-name> --namespace "$PANGOLIN_NAMESPACE"
+```
+
+Common causes:
+
+| Status             | Common causes                                                                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------- |
+| `CrashLoopBackOff` | Database connection issue, missing Secret, invalid config, startup dependency not ready               |
+| `Pending`          | PVC not bound, insufficient resources, node selector/affinity mismatch, Pod Security policy rejection |
+| `ImagePullBackOff` | Wrong image override, registry access issue, missing imagePullSecret                                  |
+
+<Note>
+Do not assume tools such as `psql`, `curl`, or `dig` are available inside the Pangolin container. Use logs, Events, or a temporary debug pod when needed.
+</Note>
+
+Run a temporary debug pod for network tests:
+
+```bash
+kubectl run net-debug \
+  --namespace "$PANGOLIN_NAMESPACE" \
+  --rm -it \
+  --image=curlimages/curl:latest \
+  --restart=Never \
+  -- sh
+```
+
+</Accordion>
+
+  <Accordion title="Traefik CRDs or resources are missing">
+
+**Symptoms**
+
+* Helm template or install succeeds, but Traefik resources are not reconciled.
+* `kubectl get ingressroute` fails with unknown resource type.
+* Argo CD or Flux reports missing kind `IngressRoute`.
+
+**Cause**
+
+Controller mode expects Traefik CRDs and a Traefik controller. They must be installed separately or through the bundled dependency when enabled.
+
+**Checks**
+
+```bash
+kubectl get crd | grep traefik
+kubectl get pods --all-namespaces | grep -i traefik
+```
+
+If you want the chart to install the bundled Traefik controller, enable it:
+
+```yaml
+deployment:
+  type: controller
+  installTraefikController: true
+```
+
+If Traefik is already installed elsewhere, keep it disabled and make sure the controller watches the namespace and labels used by the Pangolin `IngressRoute`.
+
+</Accordion>
+
+  <Accordion title="Helm upgrade fails or rendered output is unexpected">
+
+**Symptoms**
+
+* `helm upgrade` fails.
+* Rendered resources changed unexpectedly.
+* Existing resources conflict with chart-managed resources.
+* GitOps reports immutable field changes or ownership conflicts.
+
+**Checks**
+
+Render before upgrading:
+
+```bash
+helm template "$PANGOLIN_RELEASE" fossorial/pangolin \
+  --namespace "$PANGOLIN_NAMESPACE" \
+  --values values-pangolin.yaml > rendered.yaml
+```
+
+Run a server-side dry run:
+
+```bash
+kubectl apply -f rendered.yaml --dry-run=server
+```
+
+Compare the current live release:
+
+```bash
+helm get manifest "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" > live-release.yaml
+diff -u live-release.yaml rendered.yaml
+```
+
+Check ownership conflicts:
+
+```bash
+kubectl get all --namespace "$PANGOLIN_NAMESPACE" -o yaml | grep -E "meta.helm.sh|app.kubernetes.io/managed-by"
+```
+
+Avoid `--force` unless you understand which resources will be recreated.
+
+<Warning>
+`helm upgrade --force` can delete and recreate resources. That can interrupt traffic and may affect persistent workloads depending on the resource type.
+</Warning>
+
+</Accordion>
+
+  <Accordion title="Kustomize patches do not apply">
+
+**Symptoms**
+
+* Kustomize build succeeds but changes are missing.
+* Patch target does not match any resource.
+* Patch breaks after chart upgrade.
+
+**Checks**
+
+List generated resource names:
+
+```bash
+kustomize build base | grep -E "^(kind:|  name:)"
+```
+
+Validate the overlay:
+
+```bash
+kustomize build overlays/prod
+```
+
+Run a server-side dry run:
+
+```bash
+kustomize build overlays/prod | kubectl apply -f - --dry-run=server
+```
+
+Preview live changes:
+
+```bash
+kustomize build overlays/prod | kubectl diff -f -
+```
+
+Use modern Kustomize `patches` syntax:
+
+```yaml
+patches:
+  - path: patches/pangolin-resources.patch.yaml
+    target:
+      group: apps
+      version: v1
+      kind: Deployment
+      name: pangolin
+```
+
+<Note>
+For Helm-rendered bases, do not assume resource names. Check the rendered manifests after each chart upgrade.
+</Note>
+
+</Accordion>
+
+  <Accordion title="GitOps deployment does not sync">
+
+**Symptoms**
+
+* Argo CD Application is OutOfSync or Degraded.
+* Flux HelmRelease or Kustomization is not Ready.
+* Resources are missing or constantly reverted.
+
+**Argo CD checks**
+
+```bash
+kubectl describe application pangolin --namespace argocd
+kubectl logs --namespace argocd deployment/argocd-application-controller --tail=100
+argocd app diff pangolin
+argocd app sync pangolin
+```
+
+**Flux checks**
+
+```bash
+flux get sources all --all-namespaces
+flux get helmreleases --all-namespaces
+flux get kustomizations --all-namespaces
+flux logs --all-namespaces --follow
+```
+
+Reconcile manually:
+
+```bash
+flux reconcile helmrelease pangolin --namespace "$PANGOLIN_NAMESPACE"
+flux reconcile kustomization pangolin --namespace flux-system
+```
+
+Common causes:
+
+- chart repository or OCI source not reachable
+- wrong chart version
+- missing CRDs
+- invalid values
+- rendered resource ownership conflict
+- Secret not available in the expected namespace
+
+</Accordion>
+
+</AccordionGroup>
+
+## Routing issues to the right repository
+
+Use the repository that matches the failing area:
+
+| Area                                                  | Repository          |
+| ----------------------------------------------------- | ------------------- |
+| Chart templates, values, examples, rendered manifests | `fosrl/helm-charts` |
+| Pangolin runtime, API, UI, auth, application behavior | `fosrl/pangolin`    |
+| Newt client behavior or connectivity                  | `fosrl/newt`        |
+| Documentation                                         | `fosrl/docs-v2`     |
+
+## Before opening an issue, collect
+
+Collect this information before opening an issue:
+
+* chart version
+* Pangolin app version
+* Kubernetes version
+* Helm version
+* deployment method: Helm, Kustomize, Argo CD, or Flux
+* sanitized values file
+* pod logs
+* namespace events
+* Traefik logs, if routing is involved
+* rendered manifests from `helm template` or `kustomize build`
+* Helm release status or GitOps sync status
+* reproduction steps
+
+Collect basic diagnostics:
+
+```bash
+kubectl version
+helm version
+
+helm status "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE"
+helm get values "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" --all > pangolin-values.yaml
+helm get manifest "$PANGOLIN_RELEASE" --namespace "$PANGOLIN_NAMESPACE" > pangolin-manifest.yaml
+
+kubectl get pods --namespace "$PANGOLIN_NAMESPACE" -o wide > pangolin-pods.txt
+kubectl get events --namespace "$PANGOLIN_NAMESPACE" --sort-by=.lastTimestamp > pangolin-events.txt
+```
+
+Before sharing diagnostics, remove:
+
+* database passwords
+* `SERVER_SECRET`
+* API keys
+* OAuth/OIDC client secrets
+* TLS private keys
+* internal hostnames, if sensitive
+
+## Useful command reference
+
+```bash
+# General cluster info
+kubectl cluster-info
+kubectl version
+
+# Namespace overview
+kubectl get all --namespace "$PANGOLIN_NAMESPACE"
+kubectl get pvc,secret,configmap --namespace "$PANGOLIN_NAMESPACE"
+kubectl get events --namespace "$PANGOLIN_NAMESPACE" --sort-by=.lastTimestamp
+
+# Logs
+kubectl logs --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=pangolin \
+  --tail=200
+
+kubectl logs --namespace "$PANGOLIN_NAMESPACE" \
+  -l app.kubernetes.io/name=gerbil \
+  --tail=200
+
+# Dashboard local test
+kubectl port-forward --namespace "$PANGOLIN_NAMESPACE" svc/pangolin 8080:3002
+
+# Traefik resources
+kubectl get ingressroute --namespace "$PANGOLIN_NAMESPACE"
+
+# Resource usage
+kubectl top pod --namespace "$PANGOLIN_NAMESPACE"
+kubectl top node
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Pangolin Configuration" href="/self-host/manual/kubernetes/pangolin/configuration" icon="sliders">
+		Review Pangolin chart options.
+	</Card>
+	<Card title="Helm Quick-Start" href="/self-host/manual/kubernetes/pangolin/helm" icon="box">
+		Install Pangolin with Helm.
+	</Card>
+	<Card title="Kustomize Quick-Start" href="/self-host/manual/kubernetes/pangolin/kustomize" icon="layer-group">
+		Install Pangolin with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="GitOps Overview" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
+		Deploy Pangolin with Argo CD or Flux.
+	</Card>
+</CardGroup>
