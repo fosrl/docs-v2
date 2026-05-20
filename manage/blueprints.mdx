@@ -698,10 +698,53 @@ public-resources:
           </ResponseField>
 
           <ResponseField name="value" type="string" required>
-            Value to compare against, such as an IP, CIDR, path, country code, ASN, or region.
+            Value to compare against, such as an IP, CIDR, path, two letter country code, ASN, or region.
 
             YAML: `value: US`  
             Container label: `pangolin.public-resources.web-app.rules[0].value=US`
+              <Note>
+                When using <code>match: region</code>, the value must be a supported region code. The following region IDs are available, based on the United Nations geoscheme:
+                <ul>
+                  <li><b>002</b>: Africa</li>
+                  <ul>
+                    <li>015: Northern Africa</li>
+                    <li>014: Eastern Africa</li>
+                    <li>017: Middle Africa</li>
+                    <li>018: Southern Africa</li>
+                    <li>011: Western Africa</li>
+                  </ul>
+                  <li><b>019</b>: Americas</li>
+                  <ul>
+                    <li>029: Caribbean</li>
+                    <li>013: Central America</li>
+                    <li>005: South America</li>
+                    <li>021: Northern America</li>
+                  </ul>
+                  <li><b>142</b>: Asia</li>
+                  <ul>
+                    <li>143: Central Asia</li>
+                    <li>030: Eastern Asia</li>
+                    <li>035: South-Eastern Asia</li>
+                    <li>034: Southern Asia</li>
+                    <li>145: Western Asia</li>
+                  </ul>
+                  <li><b>150</b>: Europe</li>
+                  <ul>
+                    <li>151: Eastern Europe</li>
+                    <li>154: Northern Europe</li>
+                    <li>039: Southern Europe</li>
+                    <li>155: Western Europe</li>
+                  </ul>
+                  <li><b>009</b>: Oceania</li>
+                  <ul>
+                    <li>053: Australia and New Zealand</li>
+                    <li>054: Melanesia</li>
+                    <li>057: Micronesia</li>
+                    <li>061: Polynesia</li>
+                  </ul>
+                </ul>
+                Use the top-level code (e.g., <b>019</b> for all Americas) or a subregion code (e.g., <b>021</b> for Northern America) as needed.
+              </Note>
           </ResponseField>
 
           <ResponseField name="priority" type="integer">
