@@ -7,7 +7,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-This guide walks through a manual Community Edition deployment using the same file layout the installer generates from `install/config/*` in the Pangolin source tree. Use it if you want the installer's defaults, but you want to create and maintain the files yourself.
+This guide walks through a manual deployment using the same file layout the installer generates from `install/config/*` in the Pangolin source tree. Use it if you want the installer's defaults, but you want to create and maintain the files yourself.
 
 This guide assumes you already have a Linux server with Docker and Docker Compose installed, plus root or sudo access.
 
@@ -20,10 +20,10 @@ Review the [quick install guide](/self-host/quick-install) and [DNS & networking
 - A dashboard hostname such as `pangolin.example.com`
 - An email address for Let's Encrypt
 - TCP ports `80` and `443` open
-- UDP ports `51820` and `21820` open if you are using Gerbil tunneling
+- UDP ports `51820` and `21820` open if you are using tunneling
 
 <Tip>
-If you do not want WireGuard tunneling, see [Without Tunneling](/self-host/advanced/without-tunneling). In that mode you will skip the `gerbil` service and expose Traefik directly.
+If you do not want tunneling, see [Without Tunneling](/self-host/advanced/without-tunneling). In that mode you will skip the `gerbil` service and expose Traefik directly.
 </Tip>
 
 <Note>
@@ -298,7 +298,7 @@ domains:
         base_domain: "example.com" # REPLACE WITH YOUR BASE DOMAIN
 
 server:
-    secret: "replace-with-a-long-random-secret"
+    secret: "replace-with-a-long-random-secret" # REPLACE WITH SECURE SECRET
     cors:
         origins: ["https://pangolin.example.com"] # REPLACE WITH YOUR DASHBOARD DOMAIN
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
