@@ -109,9 +109,20 @@ https://pangolin.example.com/auth/initial-setup
   </Check>
 </Step>
 
+<Step title="Get the setup token from the Pangolin logs">
+  Check the Pangolin container logs and copy the setup token printed to stdout:
+
+  ```bash
+  sudo docker compose logs pangolin
+  ```
+
+  You will need that token on the initial setup page to register the first admin account.
+</Step>
+
 <Step title="Create admin account">
   Complete the initial admin user setup:
   
+  - Paste the setup token from the Pangolin logs
   - Enter your admin email address
   - Set a strong password
   - Verify your email (if email is configured)
