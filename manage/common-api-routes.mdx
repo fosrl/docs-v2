@@ -9,6 +9,19 @@ All routes in this guide require an API key. See [Integration API](/manage/integ
 This guide is a **minimal** walkthrough for creating core Pangolin components (sites, resources, targets) via the API. It is not exhaustive — some elements are omitted for simplicity — but everything shown here works and illustrates patterns used elsewhere in the API. For full coverage of endpoints (get, update, delete, list, etc.), use the [Swagger docs](https://api.pangolin.net/v1/docs).
 </Note>
 
+## What is an identifier?
+
+In the Pangolin app, sites, public resources, private resources, and clients have an **Identifier**. In the API, this value is called `niceId`.
+
+The identifier is a human-readable, organization-unique value you can use when you want something more stable and memorable than a numeric ID. For example, a site might have a numeric `siteId` like `8723` and a `niceId` like `warehouse-west`.
+
+Identifiers are especially useful for automation:
+
+- In [Blueprints](/manage/blueprints), resource and site keys act as stable identifiers. A target can reference a site by its identifier, such as `site: warehouse-west`.
+- In the API, responses include both the numeric ID and `niceId` when the object supports identifiers. Some routes can also look up objects by `niceId`, such as `GET /org/{orgId}/site/{niceId}` for sites.
+
+Use the numeric ID when an endpoint asks for `siteId`, `resourceId`, or `siteResourceId`. Use `niceId` when an endpoint or blueprint field asks for an identifier.
+
 ## Create site
 
 This section assumes you're creating a **Newt** site. For all Site endpoints, see [Site API (Swagger)](https://api.pangolin.net/v1/docs/#/Site).
