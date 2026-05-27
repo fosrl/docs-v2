@@ -1,0 +1,214 @@
+---
+title: "Securing Traefik Post-Install"
+description: "Hardening steps after Traefik v3 install—split file provider rules, TLS options, security headers, HTTPS redirects, and EC384 ACME certificates."
+---
+
+The steps I would take to secure Traefik and such post install.
+
+Treat this as a template—adapt entrypoint names, paths, resolvers, and middleware references to your stack. Don't copy-paste the blocks wholesale without checking they match your setup.
+
+A few I would recommend but this assumes you won't ever be doing http traffic.. (externally)
+
+```yaml
+redirections: # Only caring for https based traffic.
+  entryPoint:
+    to: websecure # match your websecure entrypoint name.
+    scheme: https
+    permanent: true
+```
+
+Into your traefik_dynamic though I would recommend actually splitting the files and using like,
+
+```yaml
+providers:
+  file:
+    directory: "/rules" # Path inside the container; must match the mount target (e.g. ./rules:/rules:ro below).
+    watch: true
+```
+
+By default it's using a file path which makes adding more file like stuff annoying,
+
+```yaml
+  traefik:
+    image: traefik:v3
+    container_name: traefik
+    network_mode: service:gerbil
+    restart: always
+    secrets:
+      - cf_dns_api_token
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./rules:/rules:ro # This
+```
+
+Then we go in the folder relative of the compose,
+
+You will need to move your traefik dynamic into this folder. Depending how you have set it up I would also recommend to be using wildcard certs with dns validation if you aren't already.
+
+Anyways, `/rules/tls.yml`
+
+```yaml
+# yaml-language-server: $schema=https://json.schemastore.org/traefik-v3-file-provider.json
+
+tls:
+  options:
+    default:
+      minVersion: VersionTLS12
+      maxVersion: VersionTLS13
+      sniStrict: true # Clients without SNI or wrong hostname will fail; expected for strict TLS.
+#      clientAuth:
+#        # in PEM format. each file can contain multiple CAs.
+#        caFiles:
+#          - /certs/global/origin-pull-ca.pem
+#        clientAuthType: RequireAndVerifyClientCert
+      cipherSuites:
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+      curvePreferences:
+        - secp521r1
+        - secp384r1
+        - x25519
+```
+
+`/rules/middlewares.yml`
+
+Though would recommend to setup chains if you plan to have other middleware's to be aligned.. The above will score you an A+
+
+```yaml
+http:
+  middlewares:
+    middlewares-secure-headers:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - OPTIONS
+          - PUT
+        hostsProxyHeaders:
+          - "X-Forwarded-Host"
+        #sslRedirect: true # Not used in Version 2.5
+        stsSeconds: 63072000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        frameDeny: true #overwritten by customFrameOptionsValue
+        customFrameOptionsValue: "SAMEORIGIN"
+        contentTypeNosniff: true
+        browserXssFilter: false
+        customBrowserXSSValue: "0"
+        referrerPolicy: "same-origin"
+        contentSecurityPolicy: "upgrade-insecure-requests"
+        customResponseHeaders:
+          X-Robots-Tag: "none, noarchive, nosnippet, notranslate, noimageindex"
+          X-powered-by: ""
+          server: ""
+          Permissions-Policy: "camera=(), microphone=(), geolocation=()"
+
+    chain-secure:
+      chain:
+        middlewares:
+          - middlewares-secure-headers
+```
+
+In your `traefik_config.yml`
+
+```yaml
+ocsp: {} # Let Traefik check for ocsp over clients,
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections: # Only caring for https based traffic.
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+#    forwardedHeaders: # Don't need this unless you're using cloudflare infront or so
+#      trustedIPs: *trustedIPs
+  websecure:
+    address: ":443"
+    asDefault: true # Routers without an entryPoints list use websecure. Mostly useful for file entries an example shown at the very bottom.
+    http3: # If you want to have QUIC you can have these just make sure to enable in the compose - 443:443/udp but if not you can skip this.
+      advertisedPort: 443
+    # transport: # Can lead to dos attacks if you're not careful.
+    #   respondingTimeouts:
+    #     readTimeout: "30m"
+    http:
+      middlewares:
+        - middlewares-secure-headers@file # We don't include this on the web part as some stuff like HSTS and other headers aren't meant to be served on http at all and would go against spec like Fiesty duck's.
+      tls:
+         options: default # Can be named anything to align with the rules/tls.yml
+         certResolver: dns # Match to your certResolver line in /config/traefik/traefik_config.yml
+
+ #  forwardedHeaders: # Don't set this unless you know what you're doing.
+ #    trustedIPs: *trustedIPs # *trustedIPs must be a YAML anchor defined earlier in this file (e.g. Cloudflare IP ranges).
+
+ #  proxyProtocol: # Don't set this unless you know what you're doing.
+ #    trustedIPs: *InternalIPs # *InternalIPs anchor—only enable if something in front actually sends PROXY protocol.
+```
+
+Would also recommend to ask for EC384 certs which are more secure then RSA but also might limit older clients from connecting, You can do so via,
+
+```yaml
+certificatesResolvers:
+  dns:
+    acme:
+      storage: acme.json # Use a persistent volume path; file must be writable by Traefik and chmod'd to 600.
+      keyType: 'EC384' # This asks LE for ECC certs over RSA, For reference a ECC384 is like asking for a RSA 7680-bit over like the normal RSA4096 or 2048's.
+      dnsChallenge:
+        provider: cloudflare # Change if you use another DNS host; provider must match your env/secrets setup.
+        resolvers:
+          - "1.1.1.1:53"
+          - "1.0.0.1:53"
+```
+
+## Pangolin dashboard (`/rules/pangolin.yml`)
+
+Routers below use `chain-secure@file` from `/rules/middlewares.yml`.
+
+```yaml
+http:
+  routers:
+    next-router:
+      rule: >
+        (Host(`pangolin.{{ env "DOMAIN1" }}`))
+      service: next-service
+      middlewares:
+        - chain-secure@file
+      priority: 10
+
+    api-router:
+      rule: >
+        (Host(`pangolin.{{ env "DOMAIN1" }}`) && PathPrefix(`/api/v1`))
+      service: api-service
+      middlewares:
+        - chain-secure@file
+      priority: 100
+
+  services:
+    next-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3002" # Next.js server
+
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3000" # API/WebSocket server
+
+tcp:
+  serversTransports:
+    pp-transport-v1:
+      proxyProtocol:
+        version: 1
+    pp-transport-v2:
+      proxyProtocol:
+        version: 2
+```
+
+What's not shown is like DANE-443 (TLSA), RoFS which I will write later along with the apparmor/seccomp profiles.
