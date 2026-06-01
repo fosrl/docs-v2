@@ -374,11 +374,11 @@
                     },
                     {
                         "label": "Privacy",
-                        "href": "https://pangolin.net/privacy-policy.html"
+                        "href": "https://pangolin.net/privacy"
                     },
                     {
                         "label": "Terms",
-                        "href": "https://pangolin.net/terms-of-service.html"
+                        "href": "https://pangolin.net/tos"
                     }
                 ]
             },
