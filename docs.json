@@ -137,7 +137,8 @@
                                         "group": "Event Streaming",
                                         "pages": [
                                             "manage/analytics/streaming",
-                                            "manage/analytics/streaming/http"
+                                            "manage/analytics/streaming/http",
+                                            "manage/analytics/streaming/s3"
                                         ]
                                     }
                                 ]

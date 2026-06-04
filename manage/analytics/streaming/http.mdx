@@ -20,7 +20,7 @@ An HTTP destination sends **POST** requests to your endpoint. Configure:
 1. **Settings:** Name, URL, and authentication.
 2. **Headers:** Optional static headers on every request.
 3. **Body:** Default JSON shape or a custom body template, plus payload format (how batches are packaged).
-4. **Logs:** Which log types (`request`, `access`, `action`, `connection`) are forwarded.
+4. **Logs:** Which log types are forwarded.
 
 Enable **Custom body template** when your receiver expects a different JSON layout than Pangolin’s default. Leave it off to send the standard `{ event, timestamp, data }` object per log record.
 

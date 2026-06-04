@@ -33,9 +33,18 @@ Each destination type has its own configuration and payload behavior. Select **A
   <img src="/images/streaming-add-destination.png" centered />
 </Frame>
 
+<CardGroup cols={2}>
+  <Card title="HTTP webhook" icon="globe" href="/manage/analytics/streaming/http">
+    POST JSON or NDJSON to any URL. Supports custom body templates, authentication, and payload formats for SIEMs and generic webhooks.
+  </Card>
+  <Card title="Amazon S3" icon="bucket" href="/manage/analytics/streaming/s3">
+    Upload batched audit logs to S3 or S3-compatible storage. JSON array, NDJSON, or CSV with optional gzip.
+  </Card>
+</CardGroup>
+
 ### Other destinations
 
-## General behavior
+Amazon S3 and HTTP webhooks are documented above. For Datadog, Microsoft Sentinel, or other vendor-specific setups, contact [sales@pangolin.net](mailto:sales@pangolin.net).
 
 - **No backfill:** New destinations start from the current log cursor. Historical logs already in Pangolin are not replayed.
 - **Per-log-type cursors:** Each enabled log type on a destination is tracked independently.
