@@ -21,10 +21,11 @@ Some features in this documentation are marked with **(EE)**, which means they r
 
 ## Blueprint Mental Model
 
-A blueprint can contain up to three top-level sections:
+A blueprint can contain up to four top-level sections:
 
-- **`public-resources`**: Internet-facing HTTP, TCP, or UDP resources
+- **`public-resources`**: Internet-facing HTTP, TCP, UDP, SSH, RDP, or VNC resources
 - **`private-resources`**: Client-only access to hosts or CIDR ranges
+- **`public-policies`**: Reusable authentication and access policy objects
 - **`sites`**: Site-level settings such as container label discovery
 
 ```yaml
@@ -34,6 +35,10 @@ public-resources:
 
 private-resources:
   <resource_key>:
+    ...
+
+public-policies:
+  <policy_key>:
     ...
 
 sites:
@@ -142,13 +147,13 @@ Use container labels when the resource definition should live inside your Compos
 
 ## Quick Start YAML Example
 
-This example shows all three top-level sections in one file:
+This example shows three common top-level sections in one file:
 
 ```yaml
 public-resources:
   web-app:
     name: Web App
-    protocol: http
+    mode: http
     full-domain: app.example.com
     auth:
       sso-enabled: true
@@ -187,6 +192,11 @@ Public resources expose services through Pangolin.
 
 - Use **`http`** for websites, APIs, and dashboards
 - Use **`tcp`** or **`udp`** for raw public services bound to a port on the Pangolin server
+- Use **`ssh`**, **`rdp`**, or **`vnc`** for protocol-specific resources
+
+<Note>
+Use `mode` for new blueprints. `protocol` is still accepted for backward compatibility and is normalized to `mode`.
+</Note>
 
 ### HTTP Resource Example
 
@@ -194,7 +204,7 @@ Public resources expose services through Pangolin.
 public-resources:
   app:
     name: App
-    protocol: http
+    mode: http
     full-domain: app.example.com
     host-header: app.internal
     tls-server-name: app.internal
@@ -229,7 +239,7 @@ When applying a blueprint via Newt (using `--blueprint-file` or container labels
 public-resources:
   mqtt:
     name: Mosquitto MQTT
-    protocol: tcp
+    mode: tcp
     proxy-port: 1883
     targets:
       - site: my-site
@@ -261,7 +271,7 @@ public-resources:
         method: http
 ```
 
-When a resource is targets-only, `name` and `protocol` are not required.
+When a resource is targets-only, `name` and `mode` are not required.
 
 ### Authentication Example
 
@@ -271,7 +281,7 @@ Authentication is configured inside `auth` and is supported only for HTTP resour
 public-resources:
   secure-app:
     name: Secure App
-    protocol: http
+    mode: http
     full-domain: secure.example.com
     auth:
       pincode: 123456
@@ -296,7 +306,7 @@ The `maintenance` object lets you present a maintenance page for a public HTTP r
 public-resources:
   app:
     name: App
-    protocol: http
+    mode: http
     full-domain: app.example.com
     maintenance:
       enabled: true
@@ -323,6 +333,7 @@ Private resources define what Pangolin clients can reach after they connect to y
 - Use **`mode: host`** for a single host or DNS name
 - Use **`mode: cidr`** for an entire network range
 - Use **`mode: http`** to expose an internal HTTP endpoint to clients via a private domain
+- Use **`mode: ssh`** for SSH access workflows (including native auth-daemon mode)
 
 <Note>
 When applying a blueprint via Newt (using `--blueprint-file` or container labels), `sites` is optional. If omitted, the resource is assigned to the site of the Newt that applied the blueprint.
@@ -477,7 +488,7 @@ Use this section when you need the full schema. The order below mirrors the blue
 public-resources:
   app:
     name: App
-    protocol: http
+    mode: http
     full-domain: app.example.com
     targets:
       - hostname: app
@@ -492,6 +503,13 @@ private-resources:
       - my-site
     destination: 192.168.1.10
     tcp-ports: "22"
+
+public-policies:
+  default-member:
+    name: Default Member Policy
+    sso: true
+    apply-rules: false
+    rules: []
 
 sites:
   my-site:
@@ -512,6 +530,13 @@ sites:
 
     YAML: `private-resources: { internal-net: { ... } }`  
     Container label: `pangolin.private-resources.internal-net.mode=cidr`
+  </ResponseField>
+
+  <ResponseField name="public-policies" type="object">
+    Reusable policy definitions keyed by policy ID.
+
+    YAML: `public-policies: { default-member: { ... } }`  
+    Container label: `pangolin.public-policies.default-member.name=Default Member Policy`
   </ResponseField>
 
   <ResponseField name="sites" type="object">
@@ -546,7 +571,8 @@ sites:
 public-resources:
   web-app:
     name: Web App
-    protocol: http
+    mode: http
+    policy: default-member
     full-domain: app.example.com
     enabled: true
     host-header: internal.example.local
@@ -596,13 +622,29 @@ public-resources:
         Container label: `pangolin.public-resources.web-app.name=Web App`
       </ResponseField>
 
-      <ResponseField name="protocol" type="string">
-        Resource type.
+      <ResponseField name="mode" type="string">
+        Resource mode. Preferred over `protocol`.
 
-        **Options**: `http`, `tcp`, `udp`
+        **Options**: `http`, `tcp`, `udp`, `ssh`, `rdp`, `vnc`
+
+        YAML: `mode: http`  
+        Container label: `pangolin.public-resources.web-app.mode=http`
+      </ResponseField>
+
+      <ResponseField name="protocol" type="string">
+        Deprecated resource type field. Use `mode` instead.
+
+        **Options**: `http`, `tcp`, `udp`, `ssh`, `rdp`, `vnc`
 
         YAML: `protocol: http`  
         Container label: `pangolin.public-resources.web-app.protocol=http`
+      </ResponseField>
+
+      <ResponseField name="policy" type="string">
+        Policy key to attach from `public-policies`.
+
+        YAML: `policy: default-member`  
+        Container label: `pangolin.public-resources.web-app.policy=default-member`
       </ResponseField>
 
       <ResponseField name="ssl" type="boolean">
@@ -620,10 +662,25 @@ public-resources:
       </ResponseField>
 
       <ResponseField name="proxy-port" type="integer">
-        Public port for raw TCP or UDP resources. Required when `protocol` is `tcp` or `udp`.
+        Public port for raw TCP or UDP resources. Required when `mode` is `tcp` or `udp`.
 
         YAML: `proxy-port: 3000`  
         Container label: `pangolin.public-resources.raw-api.proxy-port=3000`
+      </ResponseField>
+
+      <ResponseField name="proxy-protocol" type="boolean">
+        Enables Proxy Protocol on TCP resources.
+
+        YAML: `proxy-protocol: true`  
+        Container label: `pangolin.public-resources.raw-api.proxy-protocol=true`
+      </ResponseField>
+
+      <ResponseField name="proxy-protocol-version" type="integer">
+        Proxy Protocol version when `proxy-protocol` is enabled.
+
+        **Minimum**: `1`  
+        YAML: `proxy-protocol-version: 1`  
+        Container label: `pangolin.public-resources.raw-api.proxy-protocol-version=1`
       </ResponseField>
 
       <ResponseField name="enabled" type="boolean">
@@ -755,6 +812,14 @@ public-resources:
             YAML: `priority: 10`  
             Container label: `pangolin.public-resources.web-app.rules[0].priority=10`
           </ResponseField>
+
+          <ResponseField name="enabled" type="boolean">
+            Enables or disables the rule.
+
+            **Default**: `true`  
+            YAML: `enabled: true`  
+            Container label: `pangolin.public-resources.web-app.rules[0].enabled=true`
+          </ResponseField>
         </Expandable>
       </ResponseField>
 
@@ -875,6 +940,30 @@ public-resources:
 
           <ResponseField name="estimated-time" type="string">
             Optional estimate for when the service will return.
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="auth-daemon" type="object">
+        Auth-daemon configuration for supported modes.
+
+        <Expandable title="Auth-daemon object">
+          <ResponseField name="pam" type="string">
+            PAM behavior. Passthrough will require entering the username, password, or private key when connecting. Push will sync a Pangolin user with the configuration from the roles onto the auth-daemon and not prompt a log in.
+
+            **Options**: `passthrough`, `push`  
+            **Default**: `passthrough`
+          </ResponseField>
+
+          <ResponseField name="mode" type="string">
+            Auth-daemon mode. To use the built in ssh server inside of the site connector use `native`. For external ssh servers, use `remote` or `site` depending on where the server is.
+
+            **Options**: `site`, `remote`, `native`  
+            **Default**: `site`
+          </ResponseField>
+
+          <ResponseField name="port" type="integer">
+            Remote auth-daemon port. Required when `auth-daemon.mode` is `remote`.
           </ResponseField>
         </Expandable>
       </ResponseField>
@@ -1106,11 +1195,12 @@ private-resources:
       <ResponseField name="mode" type="string" required>
         Private resource type.
 
-        **Options**: `host`, `cidr`, `http`
+        **Options**: `host`, `cidr`, `http`, `ssh`
 
         - `host`: A single host or IP. If `destination` is a domain, `alias` is required.
         - `cidr`: An entire IPv4 or IPv6 CIDR range.
         - `http`: An internal HTTP endpoint exposed to clients via `full-domain`.
+        - `ssh`: SSH access resource. `destination` may be omitted only when `auth-daemon.mode` is `native` (or when `auth-daemon` is omitted).
 
         YAML: `mode: cidr`  
         Container label: `pangolin.private-resources.internal-net.mode=cidr`
@@ -1132,15 +1222,40 @@ private-resources:
         Container label: `pangolin.private-resources.internal-net.site=my-site`
       </ResponseField>
 
-      <ResponseField name="destination" type="string" required>
+      <ResponseField name="destination" type="string">
         Host, IP, or CIDR block the client should reach. The accepted format depends on `mode`:
 
         - `host`: a valid IPv4/IPv6 address, or a hostname/domain (when using a domain, `alias` must also be set)
         - `cidr`: a valid IPv4 or IPv6 CIDR block
         - `http`: a host or IP for the upstream HTTP endpoint
+        - `ssh`: optional only for `auth-daemon.mode: native`; required otherwise
 
         YAML: `destination: 10.0.0.0/24`  
         Container label: `pangolin.private-resources.internal-net.destination=10.0.0.0/24`
+      </ResponseField>
+
+      <ResponseField name="auth-daemon" type="object">
+        Auth-daemon configuration.
+
+        <Expandable title="Auth-daemon object">
+          <ResponseField name="pam" type="string">
+            PAM behavior. Passthrough will require entering the username, password, or private key when connecting. Push will sync a Pangolin user with the configuration from the roles onto the auth-daemon and not prompt a log in.
+
+            **Options**: `passthrough`, `push`  
+            **Default**: `passthrough`
+          </ResponseField>
+
+          <ResponseField name="mode" type="string">
+            Auth-daemon mode. To use the built in ssh server inside of the site connector use `native`. For external ssh servers, use `remote` or `site` depending on where the server is.
+
+            **Options**: `site`, `remote`, `native`  
+            **Default**: `site`
+          </ResponseField>
+
+          <ResponseField name="port" type="integer">
+            Remote auth-daemon port. Required when `auth-daemon.mode` is `remote`.
+          </ResponseField>
+        </Expandable>
       </ResponseField>
 
       <ResponseField name="destination-port" type="integer">
@@ -1237,16 +1352,123 @@ private-resources:
   </ResponseField>
 </Expandable>
 
+### Resource Policy Object (`public-policies`)
+
+```yaml
+public-policies:
+  default-member:
+    name: Default Member Policy
+    sso: true
+    auto-login-idp: null
+    sso-roles:
+      - Member
+    sso-users: []
+    password: null
+    pincode: null
+    basic-auth: null
+    email-whitelist-enabled: false
+    whitelist-users:
+      - "*@example.com"
+    apply-rules: true
+    rules:
+      - action: allow
+        match: country
+        value: US
+        enabled: true
+```
+
+<Expandable title="Resource policy reference">
+  <ResponseField name="<policy_key>" type="object">
+    A reusable policy definition that can be referenced by public resources via `policy`.
+
+    <Expandable title="Policy fields">
+      <ResponseField name="name" type="string" required>
+        Display name for the policy.
+      </ResponseField>
+
+      <ResponseField name="sso" type="boolean">
+        Enables SSO for the policy.
+
+        **Default**: `true`
+      </ResponseField>
+
+      <ResponseField name="auto-login-idp" type="integer | null">
+        Identity provider ID to redirect to automatically.
+      </ResponseField>
+
+      <ResponseField name="sso-roles" type="array of strings">
+        Roles allowed by this policy. `Admin` is not allowed.
+      </ResponseField>
+
+      <ResponseField name="sso-users" type="array of strings">
+        Specific users allowed by this policy.
+      </ResponseField>
+
+      <ResponseField name="password" type="string | null">
+        Optional shared password.
+      </ResponseField>
+
+      <ResponseField name="pincode" type="string | null">
+        Optional 6-digit PIN.
+      </ResponseField>
+
+      <ResponseField name="basic-auth" type="object | null">
+        Optional basic-auth gate.
+
+        <Expandable title="Basic auth object">
+          <ResponseField name="user" type="string" required>
+            Basic auth username.
+          </ResponseField>
+
+          <ResponseField name="password" type="string" required>
+            Basic auth password.
+          </ResponseField>
+
+          <ResponseField name="extended-compatibility" type="boolean">
+            Compatibility flag for basic auth behavior.
+
+            **Default**: `true`
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="email-whitelist-enabled" type="boolean">
+        Enables email whitelist matching.
+
+        **Default**: `false`
+      </ResponseField>
+
+      <ResponseField name="whitelist-users" type="array of strings">
+        Allowed email addresses or wildcard-domain entries like `*@example.com`.
+      </ResponseField>
+
+      <ResponseField name="apply-rules" type="boolean">
+        Enables rule evaluation.
+
+        **Default**: `false`
+      </ResponseField>
+
+      <ResponseField name="rules" type="array of rule objects">
+        Policy rule list using the same rule schema as public resource rules.
+      </ResponseField>
+    </Expandable>
+  </ResponseField>
+</Expandable>
+
 ## Validation Rules And Constraints
 
 ### Core Rules
 
-1. A public resource can be **targets-only**. In that case it may contain only `targets`, and `name` plus `protocol` are not required.
-2. When `protocol` is `http`, the resource must have `full-domain` and each target must include `method`.
-3. When `protocol` is `tcp` or `udp`, the resource must have `proxy-port`, targets must not include `method`, and `auth` is not allowed.
-4. `full-domain` values must be unique across public resources.
-5. `proxy-port` values must be unique per protocol within `public-resources`. TCP `3000` and UDP `3000` can coexist, but two TCP resources cannot both use `3000`.
-6. `alias` values must be unique across private resources in the blueprint.
+1. A public resource can be **targets-only**. In that case it may contain only `targets`, and `name` plus `mode` are not required.
+2. For full public resources, `name` plus (`mode` or deprecated `protocol`) are required.
+3. When mode/protocol is `http`, the resource must have `full-domain` and each target must include `method`.
+4. When mode/protocol is `tcp` or `udp`, the resource must have `proxy-port`, targets must not include `method`, and `auth` is not allowed.
+5. `proxy-protocol` and `proxy-protocol-version` are only valid when mode/protocol is `tcp`.
+6. If `auth-daemon.mode` is `remote`, `auth-daemon.port` is required.
+7. In private resources, `destination` is required unless `mode: ssh` with native auth-daemon mode.
+8. `full-domain` values must be unique across public resources.
+9. `proxy-port` values must be unique per protocol within `public-resources`. TCP `3000` and UDP `3000` can coexist, but two TCP resources cannot both use `3000`.
+10. `alias` values must be unique across private resources in the blueprint.
 
 ### Common Validation Errors
 
@@ -1273,6 +1495,18 @@ Raw targets do not use HTTP methods.
 ### "When protocol is 'tcp' or 'udp', 'auth' must not be provided"
 
 Authentication settings apply only to HTTP public resources.
+
+### "'proxy-protocol' and 'proxy-protocol-version' can only be set when mode is 'tcp'"
+
+Only TCP public resources can define proxy protocol behavior.
+
+### "port is required when auth-daemon mode is 'remote'"
+
+Set `auth-daemon.port` whenever `auth-daemon.mode: remote` is used.
+
+### "destination is required unless mode is 'ssh' with auth-daemon mode 'native'"
+
+For private SSH resources, `destination` can be omitted only for native auth-daemon mode.
 
 ### "Resource must either be targets-only or have both 'name' and 'protocol' fields"
 
