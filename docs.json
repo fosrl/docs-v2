@@ -14,7 +14,9 @@
         }
     },
     "styling": {
-        "codeblocks": "dark"
+        "codeblocks": {
+            "theme": "github-light"
+        }
     },
     "favicon": "/favicon.png",
     "navigation": {
@@ -294,10 +296,6 @@
             {
                 "tab": "Trust Center",
                 "href": "https://trust.pangolin.net/"
-            },
-            {
-                "tab": "Careers",
-                "href": "https://pangolin.net/careers"
             }
         ],
         "global": {
@@ -373,6 +371,10 @@
                         "href": "https://docs.pangolin.net/careers/join-us"
                     },
                     {
+                        "label": "Partners",
+                        "href": "https://docs.pangolin.net/partners"
+                    },
+                    {
                         "label": "Contact",
                         "href": "mailto:contact@pangolin.net"
                     },
@@ -390,29 +392,24 @@
                         "href": "https://trust.pangolin.net/"
                     },
                     {
-                        "label": "Privacy",
+                        "label": "Privacy Policy",
                         "href": "https://pangolin.net/privacy"
                     },
                     {
-                        "label": "Terms",
+                        "label": "Terms of Service",
                         "href": "https://pangolin.net/tos"
-                    }
-                ]
-            },
-            {
-                "header": "Follow",
-                "items": [
-                    {
-                        "label": "GitHub",
-                        "href": "https://github.com/fosrl/pangolin"
                     },
                     {
-                        "label": "LinkedIn",
-                        "href": "https://linkedin.com/company/pangolin-net"
+                        "label": "Data Processing Addendum",
+                        "href": "https://pangolin.net/dpa"
                     },
                     {
-                        "label": "YouTube",
-                        "href": "https://youtube.com/@pangolin-net"
+                        "label": "Service Level Agreement",
+                        "href": "https://pangolin.net/sla"
+                    },
+                    {
+                        "label": "Commercial License",
+                        "href": "https://pangolin.net/fcl"
                     }
                 ]
             }
