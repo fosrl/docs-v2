@@ -46,11 +46,11 @@ SSH resources are configured through three decisions in the dashboard.
 
 | Option | Description |
 |--------|-------------|
-| **Pangolin SSH (Recommended)** | Executes commands directly on the host via the site connector. No network SSH server is required, and you do not enter a host or port. Newt must run as root (`sudo newt ...`). |
+| **Pangolin SSH (Recommended)** | Executes commands directly on the host via the site connector. No network SSH server is required, and you do not enter a host or port. Newt must run as the [binary](/manage/sites/install-site#binary-installation) on the host as root (`sudo newt ...`). Containerized installs are not supported—sessions may open the container shell instead of the host. |
 | **Standard SSH Server** | Routes commands over the network to an SSH server such as OpenSSH. Enter the backend host and port. To use automated provisioning (PAM) with this mode, you must configure OpenSSH to accept Pangolin certificates and connections. This mode also supports a remote auth daemon for pushing users to machines on the same network as the site connector that are not running the connector itself. |
 
 <Warning>
-**Pangolin SSH mode requires root.** Newt must run as root on the site connector host. Use `sudo newt ...` or run the Newt systemd service as root. See [Install a site](/manage/sites/install-site).
+**Pangolin SSH mode requires the Newt binary on the host.** Install Newt as a [binary on the site connector host](/manage/sites/install-site#binary-installation) and run it as root (`sudo newt ...` or a root systemd service). If Newt runs in a container, SSH sessions may drop you into the container shell rather than the host.
 </Warning>
 
 ### Authentication Method
