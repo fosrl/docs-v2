@@ -86,13 +86,19 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <ResponseField name="ping-interval" type="string">
   Interval for pinging the server.
 
-  **Default**: `3s`
+  **Default**: `15s`
 </ResponseField>
 
 <ResponseField name="ping-timeout" type="string">
   Timeout for each ping.
 
-  **Default**: `5s`
+  **Default**: `7s`
+</ResponseField>
+
+<ResponseField name="udp-proxy-idle-timeout" type="string">
+  Idle timeout for UDP proxied client flows before cleanup.
+
+  **Default**: `90s`
 </ResponseField>
 
 <ResponseField name="docker-socket" type="string">
@@ -137,6 +143,12 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
   **Default**: `false` (clients enabled)
 </ResponseField>
 
+<ResponseField name="disable-ssh" type="boolean">
+  Disable SSH auth daemon and native SSH mode (remote auth daemon integrations still work).
+
+  **Default**: `false`
+</ResponseField>
+
 <ResponseField name="interface" type="string">
   Name of the WireGuard interface.
 
@@ -146,7 +158,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 <ResponseField name="metrics" type="boolean">
   Enable Prometheus /metrics exporter.
 
-  **Default**: `true`
+  **Default**: `false`
 </ResponseField>
 
 <ResponseField name="otlp" type="boolean">
@@ -163,6 +175,12 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <ResponseField name="metrics-async-bytes" type="boolean">
   Enable async bytes counting (background flush; lower hot path overhead).
+
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="pprof" type="boolean">
+  Enable pprof debug endpoints on the admin server.
 
   **Default**: `false`
 </ResponseField>
@@ -203,6 +221,32 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
   **Example**: `/path/to/client.p12`
 </ResponseField>
 
+<ResponseField name="ad-pre-shared-key" type="string">
+  Pre-shared key for auth daemon authentication.
+</ResponseField>
+
+<ResponseField name="ad-principals-file" type="string">
+  Path to the principals file for auth daemon.
+
+  **Default**: `/var/run/auth-daemon/principals`
+</ResponseField>
+
+<ResponseField name="ad-ca-cert-path" type="string">
+  Path to the CA certificate file for auth daemon.
+
+  **Default**: `/etc/ssh/ca.pem`
+</ResponseField>
+
+<ResponseField name="ad-generate-random-password" type="boolean">
+  Generate a random password for authenticated users.
+
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="version" type="boolean">
+  Print the Newt version and exit.
+</ResponseField>
+
 <ResponseField name="prefer-endpoint" type="string">
   Prefer this endpoint for the connection (if set, will override the endpoint from the server).
 
@@ -229,14 +273,26 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   Newt secret for authentication (equivalent to `--secret`)
 </ResponseField>
 
-<ResponseField name="AUTH_DAEMON_ENABLED" type="boolean">
-  Enable Newt's built-in auth daemon mode (equivalent to `--auth-daemon`).
-
-  **Default**: `false`
-</ResponseField>
-
 <ResponseField name="AD_KEY" type="string">
   Pre-shared key used to authenticate external auth daemons to Newt (equivalent to `--ad-pre-shared-key`)
+</ResponseField>
+
+<ResponseField name="AD_PRINCIPALS_FILE" type="string">
+  Path to the principals file for auth daemon (equivalent to `--ad-principals-file`).
+
+  **Default**: `/var/run/auth-daemon/principals`
+</ResponseField>
+
+<ResponseField name="AD_CA_CERT_PATH" type="string">
+  Path to the CA certificate file for auth daemon (equivalent to `--ad-ca-cert-path`).
+
+  **Default**: `/etc/ssh/ca.pem`
+</ResponseField>
+
+<ResponseField name="AD_GENERATE_RANDOM_PASSWORD" type="boolean">
+  Generate a random password for authenticated users (equivalent to `--ad-generate-random-password`).
+
+  **Default**: `false`
 </ResponseField>
 
 <ResponseField name="NEWT_NAME" type="string">
@@ -296,13 +352,19 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 <ResponseField name="PING_INTERVAL" type="string">
   Interval for pinging the server (equivalent to `--ping-interval`)
 
-  **Default**: `3s`
+  **Default**: `15s`
 </ResponseField>
 
 <ResponseField name="PING_TIMEOUT" type="string">
   Timeout for each ping (equivalent to `--ping-timeout`)
 
-  **Default**: `5s`
+  **Default**: `7s`
+</ResponseField>
+
+<ResponseField name="NEWT_UDP_PROXY_IDLE_TIMEOUT" type="string">
+  Idle timeout for UDP proxied client flows before cleanup (equivalent to `--udp-proxy-idle-timeout`).
+
+  **Default**: `90s`
 </ResponseField>
 
 <ResponseField name="UPDOWN_SCRIPT" type="string">
@@ -325,6 +387,12 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   **Default**: `false`
 </ResponseField>
 
+<ResponseField name="DISABLE_SSH" type="boolean">
+  Disable SSH auth daemon and native SSH mode (equivalent to `--disable-ssh`).
+
+  **Default**: `false`
+</ResponseField>
+
 <ResponseField name="INTERFACE" type="string">
   Name of the WireGuard interface (equivalent to `--interface`)
 
@@ -334,7 +402,7 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 <ResponseField name="NEWT_METRICS_PROMETHEUS_ENABLED" type="boolean">
   Enable Prometheus /metrics exporter (equivalent to `--metrics`).
 
-  **Default**: `true`
+  **Default**: `false`
 </ResponseField>
 
 <ResponseField name="NEWT_METRICS_OTLP_ENABLED" type="boolean">
@@ -351,6 +419,12 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 
 <ResponseField name="NEWT_METRICS_ASYNC_BYTES" type="boolean">
   Enable async bytes counting (background flush; lower hot path overhead, equivalent to `--metrics-async-bytes`).
+
+  **Default**: `false`
+</ResponseField>
+
+<ResponseField name="NEWT_PPROF_ENABLED" type="boolean">
+  Enable pprof debug endpoints on the admin server (equivalent to `--pprof`).
 
   **Default**: `false`
 </ResponseField>
