@@ -15,7 +15,7 @@
     },
     "styling": {
         "codeblocks": {
-            "theme": "github-light"
+            "theme": "gruvbox-light-hard"
         }
     },
     "favicon": "/favicon.png",
