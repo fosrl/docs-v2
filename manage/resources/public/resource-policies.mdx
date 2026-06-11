@@ -1,0 +1,94 @@
+---
+title: "Resource Policies"
+description: "Share authentication and access rule settings across multiple public resources"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+<Note>
+Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+Resource policies let you define authentication and access rule settings once and apply them to multiple public resources. Instead of configuring the same PIN code, user assignments, or geo-blocking rules on every resource individually, you attach a shared policy and every linked resource inherits those settings.
+
+<Note>
+Resource policies currently apply to **public resources** only. Support for private resources is coming soon.
+</Note>
+
+## What a Resource Policy Contains
+
+A resource policy holds the same settings you configure on a public resource's authentication and access tabs:
+
+**Authentication**
+
+- Platform SSO and external identity providers
+- PIN and passcode
+- User and role assignments
+- Shareable links, access tokens, and email OTP
+
+**Access rules**
+
+- Ranked allow, deny, and pass-to-auth rules
+- IP and CIDR matching
+- [Geo-blocking](/manage/geoblocking) and [ASN blocking](/manage/asnblocking)
+- URL path and other context-based conditions
+
+See [Authentication](/manage/resources/public/authentication) for a full overview of these options.
+
+## Shared Policies vs. Inline Policies
+
+Each public resource uses one of two modes:
+
+| Mode | Description |
+| --- | --- |
+| **Shared policy** | The resource inherits settings from a resource policy. Multiple resources can reference the same policy. |
+| **None (inline policy)** | The resource keeps its own settings with no shared policy attached. The policy applies only to that resource. |
+
+Choose **None** when a resource needs a one-off configuration. Choose a shared policy when several resources should enforce the same baseline—for example, a standard login requirement and geo-blocking rules across every app in a team.
+
+## Additive Policies
+
+Shared policies are **additive**. A resource policy provides the base layer, and the resource itself can add settings on top.
+
+For example:
+
+1. A shared policy **denies** all countries.
+2. You attach that policy to a public HTTP resource.
+3. On the resource, you add an additional **allow** rule for a specific country.
+
+The resource-specific rule sits on top of the shared policy, so visitors from that country can pass through while everyone else remains blocked. The same pattern works for users, roles, IP allow lists, and other rule types.
+
+Use additive policies when most resources share a common baseline but individual resources need small exceptions.
+
+## Create a Resource Policy
+
+1. In the Pangolin dashboard, open the **Shared Policies** section for your organization.
+2. Start the policy wizard to define authentication and access rule settings.
+3. Save the policy with a descriptive name.
+
+You can edit a shared policy at any time from this section. Changes apply to every public resource that references the policy.
+
+## Apply a Policy to a Resource
+
+1. Open the public resource in the dashboard.
+2. Go to the **General** tab.
+3. Under **Shared Policy**, select the policy you want to attach—or choose **None** for an inline-only policy.
+
+Once a shared policy is attached, the resource inherits its settings immediately.
+
+## Editing Settings on a Resource with a Shared Policy
+
+When a shared policy is applied, settings defined on the shared policy are **read-only** on the resource. They appear grayed out or disabled, sometimes with a lock icon. You cannot change those values from the resource—you must edit the shared policy directly.
+
+You can still add settings on the resource that layer on top of the shared policy:
+
+- **Authentication** — add additional users and roles beyond what the shared policy grants
+- **Access rules** — add additional allow, deny, or pass-to-auth rules
+
+These resource-specific additions are additive. They combine with the shared policy rather than replacing it, as described in [Additive Policies](#additive-policies).
+
+<Tip>
+If a setting on a resource looks locked, open the linked shared policy to change it. To make the resource fully self-contained again, set **Shared Policy** to **None** on the General tab.
+</Tip>

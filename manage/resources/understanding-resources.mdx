@@ -7,69 +7,115 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-
-
 Resources represent the applications, hosts, or ranges you make available for remote access to users. Resources exist on the remote networks of your sites. Users only ever think about connecting to resources and not specific sites.
 
 By default, no resources are made available on sites. Admins must define resources with backend targets, and assign specific access policies before any users can gain access.
 
-## Resources Types
+## Resource Types
 
-There are two types of resources: public resources and private resources.
+There are two categories of resources: **public resources** and **private resources**. Each category supports different protocol types suited to how users connect.
 
 <CardGroup cols={2}>
 <Card title="Public Resources">
-  - Reverse proxies to backend services
-  - Optionally have authentication
-  - Anyone with web browser can access
+  - Protocol-aware reverse proxies on the public internet
+  - Browser-based access for most types (no client required)
+  - Authentication and access rules on protocol-aware types
 </Card>
 
 <Card title="Private Resources">
-  - Zero-trust VPN
-  - Access to every resource requires authentication
-  - Users and machines access when connected with a client
+  - Zero-trust VPN access over the Pangolin client
+  - Every resource requires authentication
+  - Not browser-rendered; requires a connected client
 </Card>
 </CardGroup>
 
-### Public Resources
+### Public Resource Types
+
+Public resources create a public proxy on the Pangolin server. The protocol changes per type, but the overall model is the same: traffic enters through Pangolin and is forwarded to your backend on a remote site.
+
+HTTP/HTTPS, SSH, RDP, and VNC are all **browser-based**. You assign a fully qualified domain name (FQDN) to each resource and users open it in a web browser—no client-side software is required. Pangolin authentication and access rules protect all of these types the same way. You can configure those rules inline on each resource or share them through a [resource policy](/manage/resources/public/resource-policies).
+
+SSH, RDP, and VNC require a **Newt site**. HTTP/HTTPS and TCP/UDP resources can also run on local and basic WireGuard sites.
+
+TCP and UDP are the exception. They do not receive a FQDN. Instead, they bind to a port on the Pangolin server host and act as simple protocol-agnostic pipes to the downstream resource. Because they are not protocol-aware, they do not enforce Pangolin authentication or access rules.
+
+<CardGroup cols={3}>
+<Card title="HTTP / HTTPS" icon="globe" href="/manage/resources/public/http-https" arrow="true">
+  Websites, APIs, and dashboards behind an authenticated reverse proxy.
+</Card>
+
+<Card title="SSH" icon="terminal" href="/manage/resources/public/ssh" arrow="true">
+  Full terminal in the browser with password, key, or Pangolin identity (PAM).
+</Card>
+
+<Card title="RDP" icon="desktop" href="/manage/resources/public/rdp" arrow="true">
+  Full remote desktop in the browser, including file transfer and clipboard.
+</Card>
+
+<Card title="VNC" icon="display" href="/manage/resources/public/vnc" arrow="true">
+  Remote display session rendered entirely in the browser.
+</Card>
+
+<Card title="TCP" icon="network-wired" href="/manage/resources/public/raw-resources" arrow="true">
+  Raw TCP proxy on a Pangolin server port. No authentication.
+</Card>
+
+<Card title="UDP" icon="network-wired" href="/manage/resources/public/raw-resources" arrow="true">
+  Raw UDP proxy on a Pangolin server port. No authentication.
+</Card>
+</CardGroup>
+
+#### Site Compatibility
 
 <CardGroup cols={3}>
 <Card title="Newt Site" icon="plug" href="/manage/sites/understanding-sites#newt-site-recommended">
-  Supported.
+  All public resource types supported.
 
-  Best option for most deployments.
+  Required for SSH, RDP, and VNC.
 </Card>
 
 <Card title="Local Site" icon="server" href="/manage/sites/understanding-sites#local-site">
-  Supported.
+  HTTP/HTTPS and TCP/UDP only.
 
-  Use when the resource runs on the same host as your Pangolin server.
+  SSH, RDP, and VNC are not supported.
 </Card>
 
 <Card title="Basic WireGuard Site" icon="shield" href="/manage/sites/understanding-sites#basic-wireguard-site">
-  Limited support.
+  HTTP/HTTPS and TCP/UDP only.
 
-  Intended for more manual and advanced setups with feature limitations.
+  SSH, RDP, and VNC are not supported.
 </Card>
 </CardGroup>
 
-Public resources are protocol-aware and TCP/UDP proxies to services that are made available to the public internet. 
+### Private Resource Types
 
-#### HTTPS Resources
+Private resources require users to connect with the Pangolin client before any traffic can flow. Nothing is exposed on the public internet. Users gain access to all resources their account is permitted to use once connected.
 
-Examples of HTTP resources include, APIs, websites, and dashboards. These are served with a fully qualified domain name and HTTPS with a valid SSL certificate.
+<CardGroup cols={2}>
+<Card title="Host" icon="server" href="/manage/resources/private/host" arrow="true">
+  Route traffic to a single IP address or FQDN on the remote network.
+</Card>
 
-All requests go through an authenticated reverse proxy. **Thus, public resources do not require client-side software to be installed on user devices for access. Anyone with a web browser can access public resources.**
+<Card title="CIDR" icon="sitemap" href="/manage/resources/private/cidr" arrow="true">
+  Route traffic to an entire IP range, such as a subnet.
+</Card>
 
-HTTP resources are also identity and context aware, meaning you can create policies and rules to only let certain users, roles, countries, IPs, CIDRs, etc have access. When users visit an authenticated public resource, they are greeted with a Pangolin login page where they must complete authentication in order to get to the underlying resource. Therefore, Pangolin acts as a frontdoor barrier to these resources.
+<Card title="HTTP / HTTPS" icon="globe" href="/manage/resources/private/private-http" arrow="true">
+  Private reverse proxy with optional TLS termination at the site edge.
+</Card>
 
-#### Raw TCP/UDP Resources
+<Card title="SSH" icon="terminal" href="/manage/resources/private/ssh" arrow="true">
+  Traditional terminal SSH over the tunnel via `pangolin ssh`.
+</Card>
+</CardGroup>
 
-Raw resources are a way to proxy any TCP and UDP traffic through the Pangolin reverse proxy. Instead of a fully qualified domain name and certificate, these resources are bound to one or more ports on the Pangolin host. 
+Private resources can only be created on Newt sites.
 
-Since these resources are not protocol aware and are publicly proxied, they do not support identity and context policies and rules.
+**Private resources function like a zero-trust virtual private network (VPN).** Explicit access to resources must be granted for users and roles to be able to access them. For raw TCP/UDP traffic that does not need a public proxy, prefer a private host or CIDR resource over public TCP/UDP resources.
 
-### Private Resources
+Private resources support [aliases](/manage/resources/private/alias) for human-readable internal hostnames. When multiple sites can reach the same destination, Pangolin [intelligently routes](/manage/resources/private/multi-site-routing) traffic through the healthiest path.
+
+#### Site Compatibility
 
 <CardGroup cols={3}>
 <Card title="Newt Site" icon="plug" href="/manage/sites/understanding-sites#newt-site-recommended">
@@ -90,11 +136,3 @@ Since these resources are not protocol aware and are publicly proxied, they do n
   Basic WireGuard sites can only host public resources.
 </Card>
 </CardGroup>
-
-Private resources require users to be connected with Pangolin client in order for them to be accessed. Any TCP and UDP traffic can be made available.
-
-Private resources can only be created on Newt sites.
-
-**Private resources function like a zero-trust virtual private network (VPN).** Explicit access to resources must be granted for users and roles to be able to access them. For this reason, we recommend using private resources for all raw TCP/UDP traffic that doesn't need a public proxy, instead of relying on raw TCP/UDP public resources (as discussed above).
-
-Private resources support single hosts or entire network ranges (CIDR). Private resources can also have internal DNS alias hostnames assigned for easy, human-readable naming. Users don't choose to connect to specific resources; rather, when they connect via a client to your organization, they can access all resources their account has access to at once.

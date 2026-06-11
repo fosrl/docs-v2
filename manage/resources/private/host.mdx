@@ -1,0 +1,38 @@
+---
+title: "Host"
+description: "Route client traffic to a single IP address or FQDN on the remote network"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+A host private resource exposes a single machine on your remote network to connected Pangolin clients. When a user connects with the Pangolin client and has access to the resource, traffic destined for that host is carried over the tunnel to the site, which delivers it on the remote network.
+
+Host resources are the most common private resource type. They do not render in a browser—you use native applications (a database client, `curl`, an RDP client, etc.) against the destination address while the Pangolin client is connected.
+
+## Destination
+
+Every host resource has a [destination](/manage/resources/private/destinations): a single IP address or fully qualified domain name (FQDN).
+
+| Destination type | Example | When to use |
+|------------------|---------|-------------|
+| IP address | `10.1.0.35` | A host with a stable IP on the remote network |
+| FQDN | `db.autoco.internal` | A host identified by DNS that may change IP |
+| Loopback | `127.0.0.1` | A service running on the site connector host itself |
+
+### Loopback on the Site Host
+
+If the service runs on the same machine as the site connector, set the destination to `127.0.0.1` or `localhost`. On the user's machine, `localhost` always refers to their own computer—not the remote site. You must add an [alias](/manage/resources/private/alias) (for example `metrics.site-internal.example`) so users connect to a name that Pangolin resolves over the tunnel.
+
+## Port Restrictions
+
+By default, all TCP and UDP ports on the destination are reachable. Tighten access with [port restrictions](/manage/resources/private/port-restrictions) to allow only the ports your application needs.
+
+## Multi-Site Routing
+
+Attach multiple sites to a host resource when the same destination is reachable from more than one connector. Pangolin [routes traffic through the best available site](/manage/resources/private/multi-site-routing) and fails over automatically when a site goes offline.
+
+## Aliases
+
+Optionally assign an [alias](/manage/resources/private/alias) so users connect with a memorable hostname instead of a raw IP. Aliases are required for loopback destinations and recommended when the same IP exists on overlapping networks across sites.

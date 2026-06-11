@@ -1,0 +1,41 @@
+---
+title: "HTTP / HTTPS"
+description: "Publish websites, APIs, and dashboards as authenticated public reverse proxies"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+HTTP and HTTPS public resources are the most common public resource type. They expose a web application or API on a fully qualified domain name with a valid TLS certificate, fronted by Pangolin's authenticated reverse proxy.
+
+Users open the resource URL in any web browser. No Pangolin client is required.
+
+## How It Works
+
+1. You assign a FQDN on a domain managed in Pangolin.
+2. Pangolin terminates TLS and applies [authentication and access rules](/manage/resources/public/authentication).
+3. Authenticated requests are proxied through a site connector to your backend target.
+
+Pangolin acts as a front-door barrier: unauthenticated visitors are redirected to a Pangolin login page before traffic reaches your application.
+
+## Target Configuration
+
+HTTP/HTTPS resources use **[targets](/manage/resources/public/targets)** to define where traffic is sent on your remote network.
+
+- Add one or more targets, each with an upstream address and port.
+- Assign each target to a site. Targets on different sites enable [round-robin load balancing](/manage/resources/public/targets#multi-site-targets) and [automatic failover](/manage/resources/public/healthchecks-failover).
+- Optionally configure path-based routing, path rewriting, custom host headers, and other proxy settings.
+
+This multi-target model differs from SSH, RDP, and VNC public resources, which use site selection and a single host/port instead of discrete targets.
+
+## Authentication and Access Rules
+
+HTTP/HTTPS resources are protocol-aware and fully support Pangolin's identity and context policies:
+
+- Platform SSO and external identity providers
+- User, role, and machine access assignments
+- PIN, passcode, shareable links, and email OTP
+- Ranked allow/deny rules for IP, geolocation, URL paths, and more
+
+See [Authentication](/manage/resources/public/authentication) for the full list of options. To share the same settings across multiple resources, use a [resource policy](/manage/resources/public/resource-policies).

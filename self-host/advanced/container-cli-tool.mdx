@@ -39,6 +39,29 @@ docker exec -it pangolin pangctl set-admin-credentials --email "admin@example.co
 Use a strong password and keep your admin credentials secure.
 </Warning>
 
+## Set Server Admin
+
+Add or remove server admin status for a user by email address:
+
+```bash
+docker exec -it pangolin pangctl set-server-admin --email "admin@example.com"
+```
+
+To remove server admin status:
+
+```bash
+docker exec -it pangolin pangctl set-server-admin --email "admin@example.com" --remove
+```
+
+### Options
+
+- `--email` (required): User email address
+- `--remove` (optional, default: `false`): Remove server admin status from the user
+
+<Warning>
+At least one server admin must always exist. The command fails if you try to remove server admin status from the last remaining server admin.
+</Warning>
+
 ## Clear Exit Nodes
 
 Clear all exit nodes from the database:
@@ -61,6 +84,22 @@ docker exec -it pangolin pangctl reset-user-security-keys --email "user@example.
 
 <Warning>
 This command permanently deletes all security keys for the specified user. The user will need to re-register their security keys to use passkey authentication again.
+</Warning>
+
+## Disable User 2FA
+
+Disable two-factor authentication for a user by email address. Sets `twoFactorEnabled` to false and clears the user's 2FA secret:
+
+```bash
+docker exec -it pangolin pangctl disable-user-2fa --email "user@example.com"
+```
+
+### Options
+
+- `--email` (required): User email address
+
+<Warning>
+This command disables 2FA for the specified user and clears their stored 2FA secret. The user can re-enable 2FA from their account settings after signing in.
 </Warning>
 
 ## Rotate Server Secret
@@ -133,7 +172,7 @@ Generate an SSH CA public/private key pair for an organization and store them in
 docker exec -it pangolin pangctl generate-org-ca-keys --orgId "org-123"
 ```
 
-## Clear certificates
+## Clear Certificates
 
 Clear all certificates from the database to be reinserted by the server when syncing from acme.json files or using Pangolin DNS.
 

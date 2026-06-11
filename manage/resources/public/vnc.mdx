@@ -1,0 +1,37 @@
+---
+title: "VNC"
+description: "View and control a remote display through a VNC client rendered in the browser"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+<Note>
+Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+VNC public resources render a full VNC client in the browser. Users visit a FQDN, complete Pangolin authentication, and get an interactive remote display session without installing a VNC viewer.
+
+## How It Works
+
+1. You assign a FQDN on a domain managed in Pangolin.
+2. The user completes [authentication and access rules](/manage/resources/public/authentication) in the browser.
+3. Pangolin renders the VNC session and proxies traffic to the VNC server through a site connector.
+
+No Pangolin client is required.
+
+## Site and Host Configuration
+
+VNC public resources do **not** use [targets](/manage/resources/public/targets). Instead, you:
+
+1. Select which sites can route to the resource.
+2. Enter the backend VNC server host and port (commonly `5900` or `5900 + display number`).
+
+Pangolin routes through the site that is online and healthiest, using the same intelligent multi-site routing model as [private resources](/manage/resources/private/multi-site-routing).
+
+## Authentication and Access Rules
+
+VNC public resources are protocol-aware and support the full set of Pangolin [authentication and access rules](/manage/resources/public/authentication), including platform SSO, identity providers, user/role assignments, and context-based allow/deny rules. You can share these settings across resources with a [resource policy](/manage/resources/public/resource-policies).
+
+VNC session credentials (if configured on the VNC server) are entered in the browser-rendered client after Pangolin authentication succeeds.

@@ -1,13 +1,26 @@
 ---
-title: "TCP & UDP"
-description: "Configure raw TCP and UDP traffic through Pangolin tunnels"
+title: "TCP / UDP"
+description: "Expose raw TCP and UDP services on a Pangolin server port without authentication"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
+TCP and UDP public resources are protocol-agnostic proxies. Unlike HTTP/HTTPS, SSH, RDP, and VNC, they do **not** receive a fully qualified domain name or TLS certificate. Instead, each resource binds to a port on the Pangolin server host. Clients connect to `<pangolin-server>:<port>` and traffic is forwarded to the downstream service through a site connector.
 
+Because TCP and UDP resources are not protocol-aware, they do **not** enforce Pangolin authentication or access rules. They are simple pipes—use them only when you need a raw public proxy and accept that traffic is unauthenticated at the Pangolin layer.
+
+For workloads that do not need a public proxy, prefer a [private host or CIDR resource](/manage/resources/understanding-resources#private-resource-types) so traffic stays on the zero-trust tunnel with full access control.
+
+## Target Configuration
+
+TCP and UDP resources use **[targets](/manage/resources/public/targets)** like HTTP/HTTPS resources:
+
+- Add one or more targets with an upstream address and port.
+- Assign targets to different sites for round-robin routing and failover.
+
+## Self-Hosted Setup
 
 <Note>
 This feature is only available in self-hosted Pangolin instances. If you're using Pangolin Cloud, you will need to deploy a remote node.
@@ -15,7 +28,7 @@ This feature is only available in self-hosted Pangolin instances. If you're usin
 
 Pangolin supports raw TCP and UDP traffic because Newt can pass anything through the tunnel.
 
-In Pangolin Community Edition, ensure you have the flag enabled in the config file:
+In Community Edition or Enterprise Edition, ensure you have the flag enabled in the config file:
 
 ```
 flags:

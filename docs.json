@@ -40,6 +40,7 @@
                                     "manage/sites/install-site",
                                     "manage/sites/configure-site",
                                     "manage/sites/update-site",
+                                    "manage/sites/auto-update",
                                     "manage/sites/credentials",
                                     "manage/sites/site-provisioning"
                                 ]
@@ -52,22 +53,30 @@
                                     {
                                         "group": "Public Resources",
                                         "pages": [
+                                            "manage/resources/public/http-https",
+                                            "manage/resources/public/ssh",
+                                            "manage/resources/public/rdp",
+                                            "manage/resources/public/vnc",
+                                            "manage/resources/public/raw-resources",
                                             "manage/resources/public/authentication",
+                                            "manage/resources/public/resource-policies",
                                             "manage/resources/public/targets",
                                             "manage/resources/public/wildcard-resources",
                                             "manage/resources/public/healthchecks-failover",
-                                            "manage/resources/public/raw-resources",
                                             "manage/resources/public/maintenance"
                                         ]
                                     },
                                     {
                                         "group": "Private Resources",
                                         "pages": [
+                                            "manage/resources/private/host",
+                                            "manage/resources/private/cidr",
+                                            "manage/resources/private/private-http",
+                                            "manage/resources/private/ssh",
                                             "manage/resources/private/authentication",
                                             "manage/resources/private/destinations",
                                             "manage/resources/private/port-restrictions",
                                             "manage/resources/private/alias",
-                                            "manage/resources/private/private-http",
                                             "manage/resources/private/multi-site-routing"
                                         ]
                                     }
@@ -91,7 +100,8 @@
                                 "group": "Organizations",
                                 "icon": "building",
                                 "pages": [
-                                    "manage/organizations/org-id"
+                                    "manage/organizations/org-id",
+                                    "manage/labels"
                                 ]
                             },
                             {

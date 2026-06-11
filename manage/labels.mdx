@@ -1,0 +1,65 @@
+---
+title: "Labels"
+description: "Attach reusable string labels to sites, clients, and resources for metadata, search, and filtering"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+<Note>
+Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+Labels are string-based values you can assign to sites, machine clients, and resources. Use them to attach metadata, group related entities, and quickly find what you need across your organization.
+
+## Supported Entities
+
+You can attach labels to:
+
+- **Sites**
+- **Machine clients**
+- **Resources**
+
+Labels are shared across all three entity types. The same label can be applied to a site, a client, and a resource in the same organization. There is no limit to how many labels you can attach to a single entity.
+
+## Organization Label Store
+
+Each organization maintains a central store of all labels. The organization-wide labels page shows every label available in that organization in one place, so you can see what is in use before assigning labels to new entities.
+
+## Search and Filtering
+
+Once a label is attached to an entity, that entity becomes searchable by the label string. You can also filter by label in the table view for sites, clients, and resources.
+
+For example, filtering resources by `warehouse-1` shows only resources tagged with that label. The same label on a site or client makes those entities searchable and filterable the same way.
+
+## Use Labels for Metadata
+
+Labels are flexible metadata. Because they are plain strings, you can use any naming convention that fits your workflow. Common examples include:
+
+| Category | Example labels |
+| --- | --- |
+| Environment | `prod`, `staging`, `dev` |
+| Operating system | `linux`, `mac`, `windows` |
+| Customer | `customer-1`, `customer-2` |
+| Location | `us-east`, `warehouse-1`, `eu-west` |
+
+These are only examples. You can define labels for teams, cost centers, compliance tiers, or anything else that helps you organize your infrastructure.
+
+## Group Entities Across Types
+
+Labels work across entity types, which makes them useful for grouping things that belong together but are not the same kind of object.
+
+Want to see everything related to `warehouse-1`? Tag the site, the machine clients, and the resources for that location with the same label. You can then search and filter each table by that label to find the related entities quickly.
+
+## Managing Labels
+
+You can manage labels in two ways:
+
+### Inline on Entity Tables
+
+When viewing sites, clients, or resources, add labels directly from the entity table. If a label does not exist yet, you can create it on the spot and attach it immediately.
+
+### Organization-wide Labels Page
+
+Go to the organization labels page to see all labels in one place. From there you can create, edit, and delete labels across the organization. Changes to a label are reflected everywhere that label is used.

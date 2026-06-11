@@ -13,7 +13,7 @@ Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [En
 
 With a wildcard public resource, one resource owns an entire subdomain level: every hostname under that level is proxied through the same Pangolin resource and tunnel so downstream systems can route further (for example another reverse proxy or Kubernetes ingress).
 
-Access rules and authentication you set on that resource apply to all hostnames matched by the wildcard. If you enable a PIN code, every hostname under the wildcard requires that PIN.
+Access rules and authentication you set on that resource apply to all hostnames matched by the wildcard. If you enable a PIN code, every hostname under the wildcard requires that PIN. You can also attach a [resource policy](/manage/resources/public/resource-policies) so the same shared settings apply to the wildcard and any other linked public resources.
 
 ## Creating a Wildcard Resource
 

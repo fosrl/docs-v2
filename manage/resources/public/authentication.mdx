@@ -11,6 +11,8 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 Though public resources are public and accessible to via a web browser, admins can create rules to enable a layer of authenticated protection in front of public resources. By default, all public resources have Pangolin auth (Platform SSO) enabled, but a number of other authentication methods are available.
 
+You can configure these settings directly on each resource or share them across multiple resources with a [resource policy](/manage/resources/public/resource-policies). A resource either uses an inline policy (no shared policy attached) or inherits a shared policy and can add resource-specific overrides on top.
+
 When an unauthenticated user visits a resource in their web browser, they will be redirected to a Pangolin-controlled authentication page where they must complete authentication.
 
 ## User Login
@@ -39,4 +41,4 @@ Define ranked rules to either block or allow access from specific IPs, geolocati
 
 ## More
 
-Read about more authentication options and specific settings in [Access Control](/manage/access-control/) and [Identity Providers](/manage/identity-providers/).
+Read about more authentication options and specific settings in [Access Control](/manage/access-control/) and [Identity Providers](/manage/identity-providers/). To reuse the same authentication and access rule settings across many public resources, see [Resource Policies](/manage/resources/public/resource-policies).

@@ -1,0 +1,70 @@
+---
+title: "SSH"
+description: "Connect to remote hosts over the Pangolin tunnel using the Pangolin CLI"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+<Note>
+Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+Private SSH resources let users connect to remote hosts from their terminal over the Pangolin tunnel. Unlike [public SSH resources](/manage/resources/public/ssh), private SSH is **not** browser-rendered.
+
+## How It Works
+
+1. The user connects with the Pangolin client (GUI or CLI).
+2. They run `pangolin ssh <alias>` where the alias matches the private resource.
+3. Pangolin checks the user's identity from the active client connection and enforces [private resource access rules](/manage/resources/private/authentication) (users, roles, machines).
+4. Depending on the SSH [configuration](/manage/ssh#configuration-options), Pangolin generates a short-lived certificate and provisions the user on the host, or the user authenticates with existing host credentials.
+5. An SSH session opens through the tunnel.
+
+The Pangolin client provides the tunnel; the CLI handles certificate generation, user provisioning, and the SSH session itself. No manual SSH key distribution is required when using automated provisioning.
+
+```bash
+pangolin ssh <resource-alias>
+```
+
+The tunnel can be provided by the CLI or by another Pangolin client (for example the macOS app). You can run the GUI for the tunnel and use the CLI only for SSH.
+
+## Destination and Access
+
+Create a private resource with a [destination](/manage/resources/private/destinations) (IP or FQDN) for the host you want to SSH into. Assign an [alias](/manage/resources/private/alias) so users have a friendly name to pass to `pangolin ssh`.
+
+Grant access to users or roles and ensure **TCP 22** is allowed in [port restrictions](/manage/resources/private/port-restrictions).
+
+<Warning>
+If TCP 22 is not allowed in the resource's port restrictions, users will not be able to establish SSH sessions to that resource even when the rest of the setup is correct.
+</Warning>
+
+## Site and Host Configuration
+
+SSH private resources do **not** use discrete targets. Instead, you:
+
+1. Select which sites can route to the resource.
+2. Enter the backend host and port—unless you selected **Pangolin SSH** mode, which executes sessions on the site connector host and does not require a host or port.
+
+<Warning>
+**Pangolin SSH mode requires root.** Newt must run as root on the site connector host. Use `sudo newt ...` or run the Newt systemd service as root. See [Install a site](/manage/sites/install-site).
+</Warning>
+
+Pangolin routes through the site that is online and healthiest. See [Multi-site Routing](/manage/resources/private/multi-site-routing).
+
+## SSH Configuration
+
+The SSH settings on a private resource use the same options as [public SSH resources](/manage/resources/public/ssh). Mode, authentication method, and auth daemon location are configured identically in the dashboard.
+
+See [SSH Access](/manage/ssh) for a full explanation of each option, setup instructions, and an example for every configuration combination.
+
+## How Private SSH Differs from Public SSH
+
+| | Private SSH | [Public SSH](/manage/resources/public/ssh) |
+|---|-------------|--------------------------------------------|
+| **Access** | Pangolin CLI: `pangolin ssh <alias>` | Web browser at a public FQDN |
+| **Client required** | Yes — user must be connected with the Pangolin client | No |
+| **Auth layer** | Identity from the active client connection; [private resource access rules](/manage/resources/private/authentication) | [Public resource authentication](/manage/resources/public/authentication) — login page, SSO, access rules |
+| **Manual auth step** | Credentials handled by the SSH client or certificate flow | Username/password or private key entered in a browser form after the public auth layer |
+| **Hostname** | [Alias](/manage/resources/private/alias) on the private resource | Public FQDN on your Pangolin domain |
+| **Port restrictions** | TCP 22 must be allowed in [port restrictions](/manage/resources/private/port-restrictions) | Not applicable |

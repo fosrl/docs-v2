@@ -1,0 +1,34 @@
+---
+title: "CIDR"
+description: "Route client traffic to an entire IP range on the remote network"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+A CIDR private resource exposes an entire IP range on your remote network to connected Pangolin clients. When a user connects with the Pangolin client and has access to the resource, the client installs a route for that prefix and all traffic to addresses within the range is carried over the tunnel.
+
+CIDR resources are the usual choice for whole subnets or network segments instead of creating a separate host resource for every machine.
+
+## Destination
+
+A CIDR resource destination is an IP range in CIDR notation—for example `10.1.0.0/16`. Any address inside the range is covered for users who have been granted access.
+
+The site connector must have routable access to the entire prefix. Confirm from the site's network that it can reach hosts across the range before creating the resource.
+
+## Port Restrictions
+
+[Port restrictions](/manage/resources/private/port-restrictions) apply to the entire CIDR range. Use Custom mode to allow only specific ports (for example `443` for HTTPS workloads across the subnet) or Blocked to disable a protocol entirely.
+
+## Multi-Site Routing
+
+When the same CIDR is reachable from multiple site connectors, attach all applicable sites. Pangolin [routes through the best available path](/manage/resources/private/multi-site-routing) and fails over when a site goes offline.
+
+<Warning>
+Only attach sites that can actually reach the configured CIDR. Mixing sites on unrelated networks where some cannot reach the range leads to unpredictable routing.
+</Warning>
+
+## Overlapping Networks
+
+If the same IP range exists on multiple sites, Pangolin resolves the conflict automatically. CIDR resources cannot use [aliases](/manage/resources/private/alias)—aliases apply to individual hosts only. If you need predictable routing to a specific site, create separate [host resources](/manage/resources/private/host) for the machines you care about instead of relying on a shared CIDR range.
