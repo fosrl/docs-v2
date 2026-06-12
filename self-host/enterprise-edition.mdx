@@ -1,66 +1,74 @@
 ---
 title: "Enterprise Edition"
-description: "Learn about Enterprise Edition features, licensing, and how to get started"
+description: "Learn about Enterprise Edition licensing, plans, and how to get started"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-<Card title="Get a License" icon="server" href="https://pangolin.net/pricing#Self-Hosted">
-	Get a license for Pangolin Enterprise Edition.
+When self-hosting Pangolin, you can run the **Community Edition** or the **Enterprise Edition**. Both editions provide the same core functionality. Enterprise Edition unlocks additional features with a license key on the `ee` Docker image.
+
+<Check>
+Enterprise Edition is **free** for personal use and organizations with **less than $100,000 USD** gross annual revenue. You still need a valid license key to activate it.
+</Check>
+
+<Warning>
+Organizations with **$100,000+ USD** gross annual revenue require a **paid commercial license** to use Enterprise Edition.
+</Warning>
+
+<CardGroup cols={3}>
+<Card title="Get a free license" icon="user" href="#get-a-free-license-personal-use">
+  Personal use and small organizations under the revenue threshold.
 </Card>
 
-When self-hosting Pangolin, you can choose to run the **Community Edition** or the **Enterprise Edition**. Both editions provide the same core functionality, but the Enterprise Edition unlocks additional features for qualifying users.
+<Card title="Compare features and plans" icon="table-list" href="https://pangolin.net/pricing#Self-Hosted-identity-and-access-management">
+  Full feature comparison and plan tiers for self-hosted Pangolin.
+</Card>
 
-## Edition Comparison
-
-### Community Edition
-
-- Fully compliant with AGPL-3 license  
-- All core Pangolin features included  
-
-### Enterprise Edition
-
-- Distributed under Fossorial Commercial License  
-- Includes all Community Edition features  
-- Unlocks "Paid Features" for qualifying users (see below)
-- Requires valid license key for activation
+<Card title="Purchase a license" icon="credit-card" href="/self-host/purchase-license-key">
+  Paid commercial licenses for businesses above the revenue threshold.
+</Card>
+</CardGroup>
 
 ## Licensing Overview
 
-The Enterprise Edition is distributed under the **Fossorial Commercial License**, which provides different terms based on your organization's revenue:
+Enterprise Edition is distributed under the **Fossorial Commercial License**. Your organization's gross annual revenue determines whether you qualify for a free license or need a paid one.
 
-<Tabs>
-<Tab title="Business Use">
-  **Larger businesses require a paid license**
-  
-  - **Revenue threshold**: $100,000+ USD gross annual revenue
-  - **License cost**: Paid license required
-  - **Features**: Full access to all "Paid Features"
-  - **Usage**: Business use with commercial terms
-  
-  <Warning>
-  Businesses exceeding the revenue threshold must purchase a commercial license to use Enterprise Edition features.
-  </Warning>
-</Tab>
-<Tab title="Personal Use">
-  **Free for individuals and small businesses**
-  
-  - **Revenue threshold**: Less than $100,000 USD gross annual revenue
-  - **License cost**: Free
-  - **Features**: Full access to all "Paid Features"
-  - **Usage**: Personal and small business use allowed
-  
-  <Check>
-  You still need to acquire a valid license key to unlock Enterprise features, even with free licensing.
-  </Check>
-</Tab>
-</Tabs>
+### Personal Use
 
-To see pricing tiers for the self-hosted Enterprise Edition for businesses, [click here](https://pangolin.net/pricing#Self-Hosted). For more on how to purchase a key, see [Purchase a license key](/self-host/purchase-license-key).
+Free for individuals and small businesses:
 
-## Getting Your License Key
+- **Revenue threshold**: Less than $100,000 USD gross annual revenue
+- **License cost**: Free
+- **Usage**: Personal and small business use allowed
+
+You still need to apply for a valid license key to unlock Enterprise features, even with free licensing.
+
+### Business Use
+
+Larger businesses require a paid license:
+
+- **Revenue threshold**: $100,000+ USD gross annual revenue
+- **License cost**: Paid license required — see [Self-Hosted pricing](https://pangolin.net/pricing#Self-Hosted) for tiers
+- **Usage**: Business use with commercial terms
+- **Trial**: Want to evaluate Enterprise Edition before buying? Contact [sales@pangolin.net](mailto:sales@pangolin.net) to request a free limited trial license.
+
+Businesses exceeding the revenue threshold must purchase a commercial license to use Enterprise Edition.
+
+## Enterprise Features and Plans
+
+Enterprise Edition unlocks capabilities beyond Community Edition. Your license tier determines which features and limits apply.
+
+<Card title="View full feature comparison" icon="table-list" href="https://pangolin.net/pricing#Self-Hosted-identity-and-access-management">
+  The Self-Hosted pricing page is the source of truth for features, limits, and plan tiers.
+</Card>
+
+<Tip>
+For setup instructions on a specific feature, search the docs or browse from the pricing page. Individual doc pages mark Enterprise-only features with notes linking back to this page.
+</Tip>
+
+## Get a Free License (Personal Use)
 
 <Steps>
 <Step title="Create an account">
@@ -68,86 +76,104 @@ To see pricing tiers for the self-hosted Enterprise Edition for businesses, [cli
 </Step>
 
 <Step title="Create an organization">
-  After signing up you will be prompted to create an organization. This is required to apply for a license key. You can use the default organization name or create a custom one.
+  After signing up you will be prompted to create an organization. This is required to apply for a license key.
 </Step>
 
-<Step title="Navigate to licenses">
-  After logging in, go to the **Licenses** section in your account dashboard.
-</Step>
+<Step title="Complete the license application">
+  Go to the **Licenses** section in your account dashboard and complete the license application form.
 
-<Step title="Fill out the application">
-  Complete the license application form.
-  
-  <Tip>
+  <Warning>
   Inaccurate representation is a violation of the license and will result in the license being revoked.
-  </Tip>
+  </Warning>
 </Step>
 
 <Step title="Receive your key">
-  Once approved, you'll receive your license key immediately. You can then activate it in your Pangolin instance in the Server Admin panel.
+  Once approved, you'll receive your license key immediately. Continue to [Activate Enterprise Edition](#activating-enterprise-edition) to use it on your server.
 </Step>
 </Steps>
 
-## License Requirements
+Organizations above the revenue threshold should [purchase a commercial license](/self-host/purchase-license-key) instead. See [Self-Hosted pricing](https://pangolin.net/pricing#Self-Hosted) for paid tiers.
 
-<AccordionGroup>
-<Accordion title="How many license keys do I need?">
-  **One key per Pangolin server instance**
-  
-  Each host (server) running Pangolin requires its own license key. You cannot share a single key across multiple servers.
-  
-  <Info>
-  If you're running multiple Pangolin instances for high availability, each database needs its own license key.
-  </Info>
-</Accordion>
+## Purchase a License (Business Use)
 
-<Accordion title="Can I get a trial license?">
-  
-  Businesses that don't qualify for free personal licensing can reach out to support@pangolin.net for a trial license key to test Enterprise features before purchasing.
-  
-  <Warning>
-  Trial keys are only available for organizations that exceed the personal license revenue threshold.
-  </Warning>
-</Accordion>
+Businesses with $100,000+ USD gross annual revenue need a paid commercial license.
 
-<Accordion title="What if I'm unsure about my license type?">
-  **Contact us for guidance**
-  
-  If you're uncertain whether you qualify for free licensing or need a commercial license, reach out to [sales@pangolin.net](mailto:sales@pangolin.net) with your organization details.
-  
-  We'll help determine the appropriate license type and pricing for your use case.
-</Accordion>
-</AccordionGroup>
+### Self-serve Purchase
 
-## Activating Enterprise Edition
+You can buy a **Starter** or **Scale** license online at any time through [app.pangolin.net](https://app.pangolin.net). Follow the steps in [Purchase a license key](/self-host/purchase-license-key) to choose your tier, complete checkout, and receive your key immediately. Compare features and limits on the [Self-Hosted pricing page](https://pangolin.net/pricing#Self-Hosted-identity-and-access-management), then activate your key — see [Activate Enterprise Edition](#activating-enterprise-edition).
+
+### Custom Licensing
+
+Need more users, more sites, or special add-ons — such as compliance packages, SLA support, pay-by-invoice, or bank transfer? Contact [sales@pangolin.net](mailto:sales@pangolin.net) for a custom quote.
+
+<Info>
+Not ready to purchase? Businesses can request a **free limited trial** of Enterprise Edition by emailing [sales@pangolin.net](mailto:sales@pangolin.net). Include your organization details and what you'd like to evaluate.
+</Info>
+
+## Upgrade from Community Edition
+
+If you're already running Community Edition and want Enterprise features:
 
 <Steps>
-<Step title="Use Enterprise Edition image">
-  Update your Docker Compose configuration to use the Enterprise Edition image:
-  
+<Step title="Get a license key">
+  Apply for a [free license](#get-a-free-license-personal-use) or [purchase a commercial license](/self-host/purchase-license-key), depending on your organization's revenue.
+</Step>
+
+<Step title="Switch to the Enterprise image">
+  Update your Docker Compose configuration:
+
   ```yaml
   services:
     pangolin:
       image: fosrl/pangolin:ee-latest  # Enterprise Edition
       # ... rest of configuration
   ```
-  
+
   <Warning>
-  The Enterprise Edition image is tagged with `ee` (e.g., `fosrl/pangolin:ee-latest`) and is different from the Community Edition (`fosrl/pangolin:latest`). Make sure to use the correct image.
+  The Enterprise Edition image is tagged with `ee` (e.g., `fosrl/pangolin:ee-latest`) and is different from the Community Edition (`fosrl/pangolin:latest`).
   </Warning>
 </Step>
 
 <Step title="Restart the stack">
-  Bring down and restart your Pangolin stack to use the new image:
+  ```bash
+  sudo docker compose down && sudo docker compose up -d
+  ```
+</Step>
 
+<Step title="Activate your license key">
+  Log in with server admin credentials, open the Server Admin panel, and go to the License section at `/admin/license`. Enter and activate your key.
+</Step>
+
+<Step title="Verify activation">
+  Confirm Enterprise Edition features are unlocked in your dashboard.
+</Step>
+</Steps>
+
+## Activating Enterprise Edition
+
+Use these steps if you're setting up Enterprise Edition for the first time (including after a fresh install with the `ee` image).
+
+<Steps>
+<Step title="Use Enterprise Edition image">
+  Your Docker Compose configuration must use the Enterprise Edition image:
+
+  ```yaml
+  services:
+    pangolin:
+      image: fosrl/pangolin:ee-latest  # Enterprise Edition
+      # ... rest of configuration
+  ```
+</Step>
+
+<Step title="Restart the stack">
   ```bash
   sudo docker compose down && sudo docker compose up -d
   ```
 </Step>
 
 <Step title="Add license key to instance">
-  Log in to the Pangolin instance via the server admin credentials. Visit the Server Admin panel and naviage to the License section (`/admin/license`). Enter and activate the license key.
-  
+  Log in to the Pangolin instance via the server admin credentials. Visit the Server Admin panel and navigate to the License section (`/admin/license`). Enter and activate the license key.
+
   <Info>
   The license key should be provided exactly as received in your email confirmation.
   </Info>
@@ -158,57 +184,127 @@ To see pricing tiers for the self-hosted Enterprise Edition for businesses, [cli
 </Step>
 </Steps>
 
-## Support and Contact
-
-For licensing questions and quotes, email: [sales@pangolin.net](mailto:sales@pangolin.net)
-  
-Include your organization details and use case for faster assistance.
-
-## Frequently Asked Questions
+### Troubleshooting Activation
 
 <AccordionGroup>
-<Accordion title="Can I switch between editions?">
-  You can switch from Community to Enterprise Edition by:
-  
-  1. Updating your Docker image to `fosrl/ee-<version>`
-  2. Adding your license key to the configuration
-  3. Restarting the services
-  
-  <Warning>
-  Switching back to Community Edition will disable Enterprise features and may require data migration.
-  </Warning>
+<Accordion title="Admin panel still shows Community Edition">
+  You're likely running the Community Edition Docker image. Confirm your `docker-compose.yml` uses `fosrl/pangolin:ee-latest` (or a pinned version like `fosrl/pangolin:ee-1.14.1`), not `fosrl/pangolin:latest`. Restart the stack after changing the image:
+
+  ```bash
+  sudo docker compose down && sudo docker compose up -d
+  ```
+
+  Check container logs if the issue persists:
+
+  ```bash
+  sudo docker compose logs pangolin
+  ```
+</Accordion>
+
+<Accordion title="No License section in the admin panel">
+  The License section only appears when the Enterprise Edition image is running. Switch to the `ee` image and restart the stack — see the accordion above.
+</Accordion>
+
+<Accordion title="Enterprise settings are missing after activation">
+  Some features require a valid activated license **and** additional configuration. For example, branding and certain identity provider settings need a [`privateConfig.yml`](/self-host/advanced/private-config-file) file mounted in your container. Verify your license is active and check the docs for the specific feature you're enabling.
+</Accordion>
+</AccordionGroup>
+
+## License Requirements
+
+<AccordionGroup>
+<Accordion title="How many license keys do I need?">
+  **One key per Pangolin server instance**
+
+  Each host (server) running Pangolin requires its own license key. You cannot share a single key across multiple servers. A server is considered to be a single database instance.
+</Accordion>
+
+<Accordion title="Can I get a trial license?">
+  Yes. Businesses that require a paid commercial license can request a **free limited trial** of Enterprise Edition by contacting [sales@pangolin.net](mailto:sales@pangolin.net). Include your organization details and which features you want to evaluate.
+
+  Trial licenses are intended for organizations above the personal-use revenue threshold that want to test Enterprise Edition before purchasing.
+</Accordion>
+
+<Accordion title="What if I'm unsure about my license type?">
+  If you're uncertain whether you qualify for free licensing or need a commercial license, reach out to [sales@pangolin.net](mailto:sales@pangolin.net) with your organization details.
+</Accordion>
+</AccordionGroup>
+
+## FAQ
+
+<AccordionGroup>
+<Accordion title="What features does Enterprise Edition include?">
+  Enterprise Edition unlocks advanced features beyond Community Edition.
+
+  See the [Self-Hosted pricing page](https://pangolin.net/pricing#Self-Hosted-identity-and-access-management) for the full feature comparison — it is the source of truth for what each plan includes.
+</Accordion>
+
+<Accordion title="What are Paid Features?">
+  "Paid Features" refers to the advanced capabilities unlocked by Enterprise Edition with a valid license key. Personal and small-business users get a free license. Larger organizations purchase a paid license.
+
+  For the complete list, see [Self-Hosted pricing](https://pangolin.net/pricing#Self-Hosted).
+</Accordion>
+
+<Accordion title="Can I use Enterprise Edition for personal projects?">
+  Yes. Individuals and small businesses under the $100,000 USD revenue threshold can use Enterprise Edition for personal projects at no cost. [Apply for a free license](#get-a-free-license-personal-use) to get started.
+</Accordion>
+
+<Accordion title="Why would a business pay for self-hosted Enterprise Edition?">
+  Paid tiers unlock features most organizations need at scale: external identity providers and RBAC, multi-organization support and branding, and custom limits with SIEM streaming and SLA support.
+
+  Compare tiers on the [Self-Hosted pricing page](https://pangolin.net/pricing#Self-Hosted) to find the right fit.
+</Accordion>
+
+<Accordion title="Is self-hosted Enterprise Edition the same as Pangolin Cloud?">
+  No. Self-hosted Enterprise Edition runs on your own infrastructure with a license key on the `ee` Docker image. [Pangolin Cloud](https://app.pangolin.net/auth/signup) is a managed hosting option with its own pricing tab on the [pricing page](https://pangolin.net/pricing#Self-Hosted). Both offer advanced features, but the deployment model is different.
 </Accordion>
 
 <Accordion title="Is Enterprise Edition opt-in?">
-  Enterprise Edition is fully opt-in. You can continue using the Community Edition.
-  
-  <Check>
-  The Community Edition will always remain free and open source with full AGPL-3 compliance.
-  </Check>
+  Yes. You can continue using the Community Edition indefinitely. Enterprise Edition requires switching to the `ee` Docker image and activating a license key.
+</Accordion>
+
+<Accordion title="Can I switch between editions?">
+  Yes. Switching between Community and Enterprise Edition is a **container swap** — update the Docker image in your `docker-compose.yml` and restart the stack:
+
+  - **To Enterprise:** `fosrl/pangolin:ee-latest` (or a pinned `ee-<version>` tag), then activate your license key at `/admin/license`
+  - **To Community:** `fosrl/pangolin:latest` (or a pinned community tag)
+
+  Community and Enterprise Edition share the same database schema, so there should be no data migration issues. You can freely switch between versions to test. Enterprise-only features are disabled when running the Community image.
+
+  <Tip>
+  Always back up your database and configuration before switching editions, just in case.
+  </Tip>
+</Accordion>
+
+<Accordion title="Can I downgrade from Enterprise to Community Edition?">
+  Yes. Downgrading is a simple container swap:
+
+  1. Change your Docker image from `fosrl/pangolin:ee-latest` to `fosrl/pangolin:latest` (or the matching community version tag)
+  2. Restart the stack: `sudo docker compose down && sudo docker compose up -d`
+
+  Community and Enterprise Edition use the **same database schema**, so you should not run into data migration issues. You can freely switch between editions to test. Enterprise-only features will be disabled on the Community image, but your existing data remains intact.
+
+  <Tip>
+  Always make a backup of your database and configuration before switching, just in case.
+  </Tip>
 </Accordion>
 
 <Accordion title="What happens if my license expires?">
   If your license expires or becomes invalid:
-  
+
   - Enterprise features will be disabled
   - You can renew your license to restore Enterprise features
 </Accordion>
 
-<Accordion title="Can I use Enterprise Edition for personal projects?">
-  Individuals and small businesses under the revenue threshold can use Enterprise Edition for personal projects at no cost.
-  
-  <Info>
-  Personal use is explicitly allowed under the free license terms.
-  </Info>
-</Accordion>
-
 <Accordion title="Are there special license terms for educational institutions, non-profits, or government organizations?">
-  **No exceptions - same license terms apply**
-  
-  Educational institutions, non-profit organizations, and government entities are subject to the same license terms as all other organizations. There are no special exceptions or discounts for these groups.
-  
+  No. Educational institutions, non-profit organizations, and government entities are subject to the same license terms as all other organizations. There are no special exceptions or discounts.
+
   <Info>
   If you have questions about how your organization's revenue is calculated for licensing purposes, contact [sales@pangolin.net](mailto:sales@pangolin.net).
   </Info>
 </Accordion>
 </AccordionGroup>
+
+## Support and Contact
+
+For licensing questions and quotes, email [sales@pangolin.net](mailto:sales@pangolin.net). Include your organization details and use case for faster assistance.
