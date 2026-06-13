@@ -59,20 +59,6 @@ Machine clients authenticate with an ID and secret string. These credentials are
 
 ## Client Modalities
 
-Clients have two major operation modalities. A client will first attempt to hole punch before falling back to relaying.
+Clients connect to sites using NAT hole punching or relaying. A client first attempts a direct peer-to-peer tunnel, then falls back to relaying through your Pangolin server if hole punching fails.
 
-### Relaying
-
-Clients can relay traffic through a Pangolin server - through Gerbil specifically. Gerbil listens on UDP port 21820 for new WireGuard connections and forwards the packets down the Newt site tunnels to the right peers. This means your connections back to your site do not require firewall config and uses the existing NAT holepunching capabilities of Newt.
-
-### NAT Hole Punching
-
-NAT hole punching establishes a direct peer-to-peer connection between the client and site, bypassing the need to route traffic through the Pangolin server. The server coordinates the initial connection by helping both peers discover each other's network addresses, allowing them to establish a direct tunnel through their respective NATs and firewalls.
-
-If the site and client are unable to hole punch, they fall back to relaying through your Pangolin server.
-
-Take a look at [some things you can do to improve reliability](/manage/sites/configure-site#nat-traversal-tweaks) if you are not getting reliable hole punching.
-
-This should help to:
-- Increase performance (speed/bandwidth)
-- Reduce VPS transit costs
+See [NAT Traversal](/manage/clients/nat-traversal) for how each modality works, how to check whether a site is relayed, and tips for improving hole punching reliability.

@@ -610,11 +610,3 @@ newt \
 --tls-client-key ./client.key \
 --tls-client-ca ./ca.crt
 ```
-
-## NAT Traversal Tweaks
-
-Newt supports NAT traversal to allow clients to connect directly to Newt sites without relaying through the Pangolin server, improving performance and reducing latency.
-
-In some environment depending on the NAT type and firewall, you may need to tweak some settings to get optimal connectivity in the firewall itself. Take a look at [these docs](https://tailscale.com/kb/1361/firewall) for some firewall changes you might be able to make.
-
-Another option is to keep newt listening for client connections on a static port. This allows you to open a specific port in your firewall for Newt client connections instead of random high ports. You can do this by setting the `--port` flag or `PORT` environment variable and then opening this port in the your firewall to DNAT to Newt.

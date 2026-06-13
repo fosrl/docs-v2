@@ -89,6 +89,7 @@
                                 "icon": "desktop",
                                 "pages": [
                                     "manage/clients/understanding-clients",
+                                    "manage/clients/nat-traversal",
                                     "manage/clients/install-client",
                                     "manage/clients/configure-client",
                                     "manage/clients/update-client",
@@ -469,6 +470,10 @@
             "source": "/manage/sites/install-kubernetes",
             "destination": "/self-host/manual/kubernetes/newt/helm",
             "permanent": true
+        },
+        {
+            "source": "/manage/sites/configure-site#nat-traversal-tweaks",
+            "destination": "/manage/clients/nat-traversal"
         }
     ],
     "seo": {
