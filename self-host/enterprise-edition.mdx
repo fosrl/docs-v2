@@ -68,6 +68,17 @@ Enterprise Edition unlocks capabilities beyond Community Edition. Your license t
 For setup instructions on a specific feature, search the docs or browse from the pricing page. Individual doc pages mark Enterprise-only features with notes linking back to this page.
 </Tip>
 
+## Hiding Enterprise Features on Community Edition
+
+On Community Edition, Enterprise-only capabilities may still appear in the dashboard but remain locked without the `ee` Docker image and a valid license key. To hide those UI elements entirely, set `disable_enterprise_features` under `flags` in your [`config.yml`](/self-host/advanced/config-file):
+
+```yaml
+flags:
+  disable_enterprise_features: true
+```
+
+When enabled, Enterprise-only features are hidden from the UI. Restart the stack after updating the configuration file.
+
 ## Get a Free License (Personal Use)
 
 <Steps>
