@@ -421,6 +421,12 @@ See [Enable Geo-blocking](/self-host/advanced/enable-geoblocking) for the full p
   ```
 </Step>
 
+<Step title="Enable lingering so that services stay up after you log out">
+  ```bash
+  loginctl enable-linger $USER
+  ```
+</Step>
+
 <Step title="Watch the logs">
   ```bash
   podman logs -f pangolin traefik gerbil
