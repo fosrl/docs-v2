@@ -1,0 +1,489 @@
+---
+title: "Podman Quadlets (Rootless)"
+description: "Deploy Pangolin manually using Podman Quadlets (rootless) without the automated installer"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+This guide walks through a manual deployment using the same file layout the installer generates from `install/config/*` in the Pangolin source tree. Use it if you want the installer's defaults, but you want to create and maintain the files yourself.
+
+This guide assumes you already have a Linux server with Podman installed.
+
+## Prerequisites
+
+Review the [quick install guide](/self-host/quick-install) and [DNS & networking](/self-host/dns-and-networking) first. At minimum you need:
+
+- A public Linux server
+- A base domain such as `example.com`
+- A dashboard hostname such as `pangolin.example.com`
+- An email address for Let's Encrypt
+- TCP ports `80` and `443` open
+- UDP ports `51820` and `21820` open if you are using tunneling
+
+<Tip>
+If you do not want tunneling, see [Without Tunneling](/self-host/advanced/without-tunneling). In that mode you will skip the `gerbil` service and expose Traefik directly.
+</Tip>
+
+<Note>
+`base domain` is the parent domain you will attach resources to, such as `example.com`. `dashboard hostname` is the specific hostname for the Pangolin UI and API, such as `pangolin.example.com`.
+</Note>
+
+<Warning>
+## Note about ports 80 and 443
+By default, unprivileged users cannot bind to privileged ports (< 1024). Some workarounds for this include:
+1. Changing the unprivileged start port to 80
+2. Using `iptables` / `nftables` to redirect 80 and 443 to ports above 1023 (such as 8080 and 8443, respectively)
+
+Configuring this is out of the scope of this guide, but many guides exist online for this exact situation.
+
+**This guide assumes you use option 1.**
+</Warning>
+
+
+## File Layout
+
+Create the following project structure:
+
+```text
+~/.config/
+  └── containers/
+      └── systemd
+          ├── gerbil.container
+          ├── pangolin.container
+          ├── traefik.container
+          ├── services.pod
+          └── config/
+              ├── config.yml
+              ├── db/
+              ├── letsencrypt/
+              └── traefik/
+                  ├── dynamic_config.yml
+                  ├── logs/
+                  └── traefik_config.yml
+```
+
+The following files are created later by the running services or added only when you enable optional features:
+
+- `config/db/db.sqlite` is created by Pangolin on first startup.
+- `config/key` is created by Gerbil when tunneling is enabled.
+- `config/GeoLite2-Country.mmdb` is optional and only needed for [geo-blocking](/self-host/advanced/enable-geoblocking). It is not downloaded by the running services in a manual install; download it manually before enabling geo-blocking.
+
+## Create the Directories
+
+Create the project folders:
+
+```bash
+mkdir -p ~/.config/containers/systemd # only needed if this is the first time you're running rootless Podman containers
+cd ~/.config/containers/systemd
+mkdir -p config/db config/letsencrypt config/traefik/logs
+```
+
+## Create the Configuration Files
+
+<Steps>
+<Step title="Create container and pod files">
+  This section defines the Pangolin, Gerbil, and Traefik containers, the pod, their shared volumes, and the ports exposed on the host.
+
+```ini title="pangolin.container"
+[Container]
+ContainerName=pangolin
+Image=docker.io/fosrl/pangolin:ee-latest
+
+Pod=services.pod
+
+HealthCmd=["curl","-f","http://localhost:3001/api/v1/"]
+HealthInterval=10s
+HealthRetries=15
+HealthTimeout=10s
+Notify=healthy
+
+Volume=./config:/app/config
+Volume=./config/letsencrypt:/app/config/letsencrypt:ro
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+```ini title="gerbil.container"
+[Unit]
+After=pangolin.service
+Requires=pangolin.service
+
+[Container]
+ContainerName=gerbil
+Image=docker.io/fosrl/gerbil:latest
+
+Pod=services.pod
+
+AddCapability=NET_ADMIN SYS_MODULE
+Exec='--reachableAt=http://localhost:3004' '--generateAndSaveKeyTo=/var/config/key' '--remoteConfig=http://localhost:3001/api/v1/'
+
+Volume=./config/:/var/config
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+```ini title="traefik.container"
+[Unit]
+After=pangolin.service
+Requires=pangolin.service
+
+[Container]
+ContainerName=traefik
+Image=docker.io/traefik:latest
+
+Pod=services.pod
+
+Exec='--configFile=/etc/traefik/traefik_config.yml'
+
+Volume=./config/traefik:/etc/traefik:ro
+Volume=./config/letsencrypt:/letsencrypt
+Volume=./config/traefik/logs:/var/log/traefik
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+```ini title="services.pod"
+[Unit]
+Description=Pangolin Pod
+Wants=network-online.target
+After=network-online.target
+
+[Pod]
+PodName=services
+
+Network=pasta
+
+PublishPort=51820:51820/udp
+PublishPort=21820:21820/udp
+PublishPort=443:443
+# Uncomment the line below if you enable HTTP/3 in Traefik.
+# PublishPort=443:443/udp
+PublishPort=80:80
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+<Note>
+This is the installer's default community layout with Gerbil enabled. If you want to pin releases instead of using `latest`, replace the image tags with the versions you intend to run.
+</Note>
+</Step>
+
+<Step title="Create config/traefik/traefik_config.yml">
+  This file configures Traefik's providers, Badger plugin, Let's Encrypt resolver, entry points, logs, and health check endpoint.
+
+```yaml title="config/traefik/traefik_config.yml"
+api:
+  insecure: true
+  dashboard: true
+
+providers:
+  http:
+    endpoint: "http://localhost:3001/api/v1/traefik-config"
+    pollInterval: "5s"
+  file:
+    filename: "/etc/traefik/dynamic_config.yml"
+
+experimental:
+  plugins:
+    badger:
+      moduleName: "github.com/fosrl/badger"
+      version: "v1.4.0" # Check github.com/fosrl/badger for the latest release.
+
+log:
+  level: "INFO"
+  format: "common"
+  maxSize: 100
+  maxBackups: 3
+  maxAge: 3
+  compress: true
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      httpChallenge:
+        entryPoint: web
+      email: "admin@example.com" # REPLACE
+      storage: "/letsencrypt/acme.json"
+      caServer: "https://acme-v02.api.letsencrypt.org/directory"
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+    transport:
+      respondingTimeouts:
+        readTimeout: "30m"
+    # Uncomment to enable HTTP/3. You must also expose 443/udp in services.pod.
+    # http3:
+    #   advertisedPort: 443
+    http:
+      tls:
+        certResolver: "letsencrypt"
+      encodedCharacters:
+        allowEncodedSlash: true
+        allowEncodedQuestionMark: true
+
+serversTransport:
+  insecureSkipVerify: true
+
+ping:
+  entryPoint: "web"
+```
+
+  <Note>
+  Traefik stores Let's Encrypt certificates at `/letsencrypt/acme.json` inside the container. The container file mounts that path from `./config/letsencrypt`, so Traefik will create `config/letsencrypt/acme.json` when it needs certificate storage.
+  </Note>
+</Step>
+
+<Step title="Create config/traefik/dynamic_config.yml">
+  This file defines the routers, middleware, and services that send dashboard, API, and WebSocket traffic to Pangolin.
+
+```yaml title="config/traefik/dynamic_config.yml"
+http:
+  middlewares:
+    badger:
+      plugin:
+        badger:
+          disableForwardAuth: true
+    redirect-to-https:
+      redirectScheme:
+        scheme: https
+
+  routers:
+    main-app-router-redirect:
+      rule: "Host(`pangolin.example.com`)" # REPLACE
+      service: next-service
+      entryPoints:
+        - web
+      middlewares:
+        - redirect-to-https
+        - badger
+
+    next-router:
+      rule: "Host(`pangolin.example.com`) && !PathPrefix(`/api/v1`)" # REPLACE
+      service: next-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+    api-router:
+      rule: "Host(`pangolin.example.com`) && PathPrefix(`/api/v1`)" # REPLACE
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+    ws-router:
+      rule: "Host(`pangolin.example.com`)" # REPLACE
+      service: api-service
+      entryPoints:
+        - websecure
+      middlewares:
+        - badger
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    next-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:3002"
+
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://localhost:3000"
+
+tcp:
+  serversTransports:
+    pp-transport-v1:
+      proxyProtocol:
+        version: 1
+    pp-transport-v2:
+      proxyProtocol:
+        version: 2
+```
+</Step>
+
+<Step title="Create config/config.yml">
+  This file contains Pangolin's application settings, dashboard domain, base domain, CORS origin, and server secret.
+
+```yaml title="config/config.yml"
+# To see all available options, please visit the docs:
+# https://docs.pangolin.net/
+
+gerbil:
+    start_port: 51820
+    base_endpoint: "pangolin.example.com" # REPLACE WITH YOUR DASHBOARD DOMAIN
+
+app:
+    dashboard_url: "https://pangolin.example.com" # REPLACE WITH YOUR DASHBOARD DOMAIN
+    log_level: "info"
+    telemetry:
+        anonymous_usage: true
+
+domains:
+    domain1:
+        base_domain: "example.com" # REPLACE WITH YOUR BASE DOMAIN
+
+server:
+    secret: "replace-with-a-long-random-secret" # REPLACE WITH SECURE SECRET
+    cors:
+        origins: ["https://pangolin.example.com"] # REPLACE WITH YOUR DASHBOARD DOMAIN
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        allowed_headers: ["X-CSRF-Token", "Content-Type"]
+        credentials: false
+
+flags:
+    require_email_verification: false
+    disable_signup_without_invite: true
+    disable_user_create_org: false
+    allow_raw_resources: true
+```
+
+Replace these values before starting the stack:
+
+- `pangolin.example.com` with your dashboard hostname
+- `example.com` with your base domain
+- `replace-with-a-long-random-secret` with a strong random secret
+- `admin@example.com` in `traefik_config.yml` with your Let's Encrypt email
+
+Generate a secret with:
+
+```bash
+openssl rand -hex 32
+```
+
+<Warning>
+Do not reuse a weak or short `server.secret`. If you need to rotate it later, use `pangctl rotate-server-secret`. See the [container CLI tool guide](/self-host/advanced/container-cli-tool#rotate-server-secret).
+Please note you will need to run `podman exec ...` instead of `docker exec ...`.
+</Warning>
+
+</Step>
+</Steps>
+
+### Optional Email Configuration
+
+If you want Pangolin to send email, add this block to `config/config.yml` and set `flags.require_email_verification` to `true`:
+
+```yaml title="config/config.yml"
+email:
+    smtp_host: "smtp.example.com"
+    smtp_port: 587
+    smtp_user: "smtp-user"
+    smtp_pass: "smtp-password"
+    no_reply: "noreply@example.com"
+```
+
+### Optional Geo-blocking Configuration
+
+If you want geo-blocking, download the MaxMind database and add this line under `server`:
+
+```yaml title="config/config.yml"
+server:
+    maxmind_db_path: "./config/GeoLite2-Country.mmdb"
+```
+
+See [Enable Geo-blocking](/self-host/advanced/enable-geoblocking) for the full process.
+
+## Start the Stack
+
+<Steps>
+<Step title="Reload and start the services">
+  ```bash
+  systemctl --user daemon-reload
+  systemctl --user start services-pod
+  ```
+</Step>
+
+<Step title="Watch the logs">
+  ```bash
+  podman logs -f pangolin traefik gerbil
+  ```
+</Step>
+
+<Step title="Verify the containers are healthy">
+  ```bash
+  podman ps -a
+  ```
+
+  `pangolin`, `traefik`, and `gerbil` should all report as running after the first startup finishes.
+</Step>
+
+<Step title="Get the setup token from the Pangolin logs">
+  Check the Pangolin container logs:
+
+  ```bash
+  podman logs pangolin
+  ```
+
+  Pangolin prints a setup token to stdout on first boot. Copy that token before continuing.
+</Step>
+
+<Step title="Open the initial setup page">
+  Visit:
+
+  ```text
+  https://pangolin.example.com/auth/initial-setup
+  ```
+
+  Replace the hostname with your real dashboard domain, then use the setup token from the Pangolin logs to register the first admin account.
+</Step>
+</Steps>
+
+## Verify the Setup
+
+You should expect the following on a healthy first install:
+
+- `podman ps -a` shows `pangolin`, `traefik`, and `gerbil` as running.
+- `podman logs pangolin` includes the one-time setup token for the first admin account.
+- Visiting `https://<your-dashboard-domain>/auth/initial-setup` loads the setup page.
+- `config/db/db.sqlite` exists after Pangolin starts.
+- `config/key` exists after Gerbil starts.
+
+<Tip>
+The first Let's Encrypt certificate request can take a short while. If the page initially shows a certificate warning, wait a minute and refresh.
+</Tip>
+
+## If Something Fails
+
+- If the setup page does not load, confirm your DNS record points to the server and ports `80` and `443` are reachable.
+- If you cannot complete first-time signup, check `podman logs pangolin` and copy the setup token printed by Pangolin.
+- If certificates are not issued, confirm `admin@example.com` was replaced and that nothing else is already bound to ports `80` or `443` (or whatever alternate ports you selected on the host).
+- If `pangolin` never becomes healthy, inspect `podman logs -f pangolin`.
+- If tunneling does not work, inspect `podman logs -f gerbil` and confirm UDP ports `51820` and `21820` are open.
+- If Traefik serves the wrong host, re-check every `pangolin.example.com` replacement in both Traefik files and `config/config.yml`.
+
+## Without Tunneling
+
+If you do not want Gerbil:
+
+- Remove the gerbil service.
+- Remove the `gerbil` block from `config/config.yml`.
+
+That mode is covered in more detail in [Without Tunneling](/self-host/advanced/without-tunneling).
