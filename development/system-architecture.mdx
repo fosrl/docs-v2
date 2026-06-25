@@ -1,70 +1,181 @@
 ---
-"title": "System Architecture"
-"description": "Learn how the components of the system interact to form Pangolin"
+title: "System Architecture"
+description: "A technical overview of how Pangolin's control plane, nodes, connectors, and clients fit together"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 <PangolinCloudTocCta />
 
-### Pangolin (Control Plane)
+## Open Source
 
-Pangolin is the main control center that orchestrates the entire system:
+Every layer of Pangolin is open source, from the control plane server through site connectors and end-user clients. Each component has its own repository under [fosrl on GitHub](https://github.com/fosrl); the [component reference](#component-reference) at the bottom of this page lists them.
 
-- **Web Interface**: Management dashboard for configuring sites, users, and access policies
-- **REST API**: External API for automation and integration
-- **WebSocket Server**: Manages real-time connections to edge network clients
-- **Authentication System**: Handles user authentication and authorization
-- **Database**: Stores configuration, user data, and system state
+The software that powers [Pangolin Cloud](https://app.pangolin.net) is open source as well. The SaaS control plane runs the same codebase as self-hosted Pangolin, and that code lives in the main [fosrl/pangolin](https://github.com/fosrl/pangolin) repository. Nothing described here is proprietary or hidden behind the managed service.
 
-<Info>
-Pangolin acts as the brain of the system, coordinating all other components and managing user access.
-</Info>
+Pangolin is split into a **control plane** (configuration, identity, and orchestration) and a **data plane** (encrypted tunnels, ingress, and relay). Sites and clients both initiate **outbound** connections to a Pangolin node, which keeps remote networks behind firewalls reachable without opening inbound ports on those networks.
 
-### Gerbil (Tunnel Manager)
+For a product-level walkthrough of sites, resources, and clients, see [How Pangolin Works](/about/how-pangolin-works). This page focuses on how those pieces are implemented and how traffic moves through the system.
 
-Gerbil manages the secure WireGuard tunnels between your edge networks and the central server:
-
-- **Peer Management**: Creates and maintains WireGuard connections
-- **Tunnel Orchestration**: Handles tunnel creation, updates, and cleanup
-- **Security**: Ensures all traffic is encrypted using WireGuard's cryptographic protocols
-
-<Check>
-WireGuard provides fast, secure, and reliable tunneling with minimal overhead.
-</Check>
-
-### Newt (Edge Client)
-
-Newt is a lightweight client that runs on your edge networks (servers, VMs, or containers):
-
-- **Automatic Discovery**: Finds the optimal node for best performance
-- **Dual Connection**: Connects to Pangolin via WebSocket and Gerbil via WireGuard
-- **Resource Proxy**: Creates TCP/UDP proxies to expose your applications securely
-
-<Tip>
-Newt is designed to be resource-efficient and can run on minimal hardware or in containers.
-</Tip>
-
-### Reverse Proxy (Router)
-
-The reverse proxy handles incoming requests and routes them to your applications:
-
-- **Request Routing**: Directs traffic to the correct backend services
-- **SSL Termination**: Manages HTTPS certificates and encryption
-- **Middleware Support**: Integrates with security and monitoring plugins
-
-### Badger (Authentication Middleware)
-
-Badger is Pangolin's middleware that enforces access control:
-
-- **Request Interception**: Catches all incoming requests before they reach your applications
-- **Authentication Check**: Verifies user identity and permissions
-- **Secure Redirects**: Sends unauthenticated users to Pangolin's login system
-
-<Warning>
-Badger ensures that only authenticated and authorized users can access your applications, even if they bypass other security measures.
-</Warning>
-
-<Frame caption="System architecture showing Pangolin components">
+<Frame caption="High-level Pangolin architecture">
 <img src="/images/system-diagram.png" alt="Pangolin system architecture diagram"/>
 </Frame>
+
+## Control Plane
+
+The control plane is the Pangolin server application. It stores organization state in a database, exposes the dashboard and REST API, handles authentication and authorization, and pushes configuration to every node, site connector, and client in real time over WebSocket.
+
+Responsibilities include:
+
+- **Policy and identity** — users, roles, clients, machines, and access rules that determine which resources each principal can reach
+- **Resource and site definitions** — targets, destinations, routing preferences, certificates, and health-check configuration
+- **Orchestration** — coordinates tunnel peers, DNS records, and ingress routes as you create or change resources
+- **Telemetry** — connection state, relay status, and operational signals surfaced in the dashboard
+
+You can run the control plane yourself ([self-hosted](/self-host/quick-install)) or use [Pangolin Cloud](https://app.pangolin.net/auth/signup), where the control plane is fully managed. In both cases, the same orchestration model applies: connectors and nodes pull config from the control plane rather than accepting inbound management connections.
+
+## Nodes
+
+A **node** is the networking edge of your Pangolin deployment. It terminates inbound traffic from the public internet, manages WireGuard tunnels, and relays client traffic when a direct peer path is unavailable.
+
+On a self-hosted deployment, your Pangolin server runs as a single node by default. [Enterprise clustering](/self-host/advanced/clustering) spreads multiple nodes behind a load balancer with shared database state. On [Pangolin Cloud](/manage/remote-node/understanding-nodes), you can add **remote nodes**: infrastructure you operate that still receives configuration from the cloud control plane.
+
+Each node runs several cooperating processes:
+
+| Role | Engineering codename | What it does |
+| --- | --- | --- |
+| Ingress / reverse proxy | Traefik | Terminates TLS, routes HTTP(S) and protocol-aware public resources, and forwards authenticated requests into the tunnel fabric |
+| Tunnel manager | Gerbil | Maintains WireGuard peers for site connectors and clients, performs SNI-based routing, and relays UDP when hole punching fails |
+| Auth middleware | Badger | Traefik plugin that enforces Pangolin authentication on public resources via forward auth |
+
+The control plane writes certificates, Traefik router definitions, and WireGuard peer lists that these processes consume. Nodes do not need direct database access from site connectors; they only need reachability to the control plane and open listener ports on the public side.
+
+<CardGroup cols={2}>
+<Card title="DNS and port requirements" icon="network-wired" href="/self-host/dns-and-networking">
+  Required listener ports, firewall rules, and DNS records for a node.
+</Card>
+
+<Card title="Clustering for high availability" icon="server" href="/self-host/advanced/clustering">
+  Multi-node Enterprise deployments with shared state and failover.
+</Card>
+
+<Card title="Remote nodes on Pangolin Cloud" icon="circle-nodes" href="/manage/remote-node/understanding-nodes">
+  Run your own node while using the cloud control plane for management.
+</Card>
+</CardGroup>
+
+## Site Connectors
+
+A **site connector** runs on a remote network (server, VM, container, or appliance) and maintains persistent **outbound** connections to a Pangolin node. It is the bridge between your private LAN and the platform.
+
+The primary connector implementation is **Newt** (codename). Newt opens:
+
+1. A **WebSocket** to the control plane for configuration, health, and coordination
+2. A **WireGuard** tunnel to the node's tunnel manager (Gerbil) for encrypted data traffic
+
+Site connectors are deny-by-default proxies. Deploying one does not expose hosts on the network; traffic is forwarded only for [resources](/manage/resources/understanding-resources) you define and grant access to. The connector resolves backend targets on the remote network and delivers packets there.
+
+Newt sites support the full feature set: public and private resources, protocol-aware proxies, multi-site routing, health checks, and edge TLS for private HTTP. Other connector types ([local](/manage/sites/understanding-sites#local-site) and [basic WireGuard](/manage/sites/understanding-sites#basic-wireguard-site)) exist for specialized self-hosted cases.
+
+<Card title="Understanding sites" icon="plug" href="/manage/sites/understanding-sites">
+  Site types, deployment models, and connector capabilities.
+</Card>
+
+## Clients
+
+**Clients** are endpoint agents on user devices or machines. They authenticate to the control plane, receive an access control list, and establish WireGuard tunnels so users can reach [private resources](/manage/resources/understanding-resources#private-resource-types).
+
+Two client classes share the same tunnel stack:
+
+- **User devices** — GUI apps on desktop and mobile; users sign in with their Pangolin identity or SSO
+- **Machines** — CLI clients for servers and automation; authenticate with an ID and secret
+
+### Shared client stack (Olm)
+
+Every Pangolin client shares a common networking core called **Olm** (engineering codename). Olm holds the WireGuard tunnel logic, hole punching and relay negotiation, route installation, and DNS overrides that all clients rely on. Platform apps embed or invoke Olm rather than reimplementing that stack themselves.
+
+How Olm is hosted depends on the client:
+
+- **macOS and iOS** — Olm runs inside the platform's network extension
+- **Windows and Android** — Olm runs as the tunnel service behind the native app
+- **Pangolin CLI** — spawns Olm as a subprocess and manages it over a local API
+- **Olm CLI** — exposes Olm directly for minimal machine-client deployments
+
+Olm is an internal building block, not a product surface. Use the [native clients](/manage/clients/install-client) built for each operating system for the best experience, support, and integration with OS networking APIs. Direct Olm usage is limited to advanced machine-client and automation scenarios; see [Olm (Advanced)](/manage/clients/install-client#olm-advanced) if you need that path.
+
+Once connected, the client installs routes for each authorized destination. Pangolin selects the correct site connector automatically; users connect to resources, not to sites directly. See [multi-site routing](/manage/resources/private/multi-site-routing) for how failover works when a resource spans multiple connectors.
+
+<CardGroup cols={2}>
+<Card title="Understanding clients" icon="desktop" href="/manage/clients/understanding-clients">
+  User devices, machine clients, and how access is granted.
+</Card>
+
+<Card title="Install clients" icon="download" href="/manage/clients/install-client">
+  Downloads for Mac, Windows, Linux, iOS, iPadOS, and Android.
+</Card>
+</CardGroup>
+
+## Peer-to-Peer and Relay Paths
+
+Client-to-site traffic does not always traverse your node. Pangolin negotiates the best available path for each tunnel.
+
+### Direct peer-to-peer (hole punching)
+
+By default, the control plane coordinates **NAT hole punching** so a client and site connector can form a direct WireGuard peer connection. Traffic then flows client ↔ site without passing through the node's relay layer. This path typically offers lower latency and less bandwidth use on the node.
+
+### Relay through the node
+
+When hole punching fails (restrictive NAT, symmetric NAT, or blocked UDP), the client and site fall back to **relaying** through the node's tunnel manager (Gerbil). Gerbil listens on UDP port 21820 by default, accepts the client's WireGuard packets, and forwards them into the site connector's existing tunnel. The connection stays encrypted end to end; only the network path changes.
+
+Site connectors use a separate default port (51820 UDP) for their outbound tunnels to the node. Relay is optional and can be disabled per client if you require direct paths only.
+
+<Card title="NAT traversal" icon="route" href="/manage/clients/nat-traversal">
+  Hole punching vs relay, how to check `isRelay` status, and tuning options.
+</Card>
+
+## Traffic Paths
+
+Two dominant flows cover most deployments.
+
+### Inbound: public resources
+
+Public resources accept traffic from the internet on your node's ingress layer.
+
+```
+Internet → Node ingress (Traefik) → Auth (Badger) → Tunnel (Gerbil) → Site connector (Newt) → Backend target
+```
+
+HTTP, HTTPS, SSH, RDP, and VNC public resources terminate authentication at the node before traffic enters the tunnel. TCP and UDP public resources bind to node ports and proxy raw traffic without an auth layer. Certificate issuance, router config, and access rules are all driven by the control plane.
+
+<Card title="Public resources" icon="globe" href="/manage/resources/understanding-resources#public-resource-types">
+  Protocol types, targets, and how ingress maps to backends.
+</Card>
+
+### Outbound: private resources via client
+
+Private resources are reachable only when a client is connected and authorized.
+
+```
+Client ↔ (direct peer or relay via Gerbil) ↔ Site connector (Newt) → Destination on remote network
+```
+
+The client installs routes for IP, CIDR, or FQDN destinations. The site connector resolves and delivers traffic on the remote LAN. For private HTTP, TLS can terminate at the connector so applications stay off the public internet entirely.
+
+<Card title="Private destinations" icon="lock" href="/manage/resources/private/destinations">
+  How IP, CIDR, FQDN, and alias destinations are resolved and routed.
+</Card>
+
+## Component Reference
+
+Pangolin's open-source repositories map to the roles above. Codenames are used throughout the codebase and deployment tooling.
+
+| Component | Repository | Role |
+| --- | --- | --- |
+| Pangolin | [fosrl/pangolin](https://github.com/fosrl/pangolin) | Control plane server |
+| Newt | [fosrl/newt](https://github.com/fosrl/newt) | Site connector |
+| Gerbil | [fosrl/gerbil](https://github.com/fosrl/gerbil) | Node tunnel manager and relay |
+| Badger | [fosrl/badger](https://github.com/fosrl/badger) | Traefik forward-auth middleware |
+| Olm | [fosrl/olm](https://github.com/fosrl/olm) | Shared client networking stack (tunnels, NAT traversal, DNS) |
+| Clients | [fosrl/cli](https://github.com/fosrl/cli), [fosrl/windows](https://github.com/fosrl/windows), [fosrl/apple](https://github.com/fosrl/apple), [fosrl/android](https://github.com/fosrl/android) | Endpoint agents |
+
+For local development setup and how these repositories interact in a dev environment, see [Contributing](/development/contributing).
