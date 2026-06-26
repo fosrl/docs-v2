@@ -35,6 +35,10 @@ Wildcards allow you to define aliases that match multiple hostnames using specia
 
 If you use a wildcard such as `*.proxy.internal`, it will match any hostname that ends with `.proxy.internal` and has something before the dot—such as `host.proxy.internal`, `longerhost.proxy.internal`, or even `sub.host.proxy.internal`. However, the wildcard will not match the base domain itself (`autoco.internal` without anything before the dot).
 
+### .local TLD
+
+The `.local` TLD is reserved for local networking and multicast DNS (mDNS). mDNS is commonly used by Apple Bonjour, Linux zeroconf, and limited Windows features. Because of this, aliases that use `.local` may not resolve reliably across many devices. We recommend using a subdomain you control (for example, `alias.mywebsite.com`) or a private/internal domain such as `alias.internal` or `alias.corp`.
+
 ## Custom Upstream DNS
 
 Aliases work by overriding the DNS of your computer running the client so that all DNS requests are sent to the Pangolin client for resolution. That behavior is controlled by the Enable Aliases (Override DNS) preference; see [Configure Clients](/manage/clients/configure-client#enable-aliases-override-dns). The DNS server on your computer is typically `100.96.128.1` (the first address inside of your utility subnet on the org) when connected to the tunnel, which forwards requests to an upstream server. By default, we use `1.1.1.1`, but this upstream address can be configured in the CLI or in the client settings.

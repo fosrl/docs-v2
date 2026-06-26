@@ -182,6 +182,7 @@
                                     "manage/remote-node/config-file"
                                 ]
                             },
+                            "manage/endpoints-and-pops",
                             "manage/integration-api",
                             "manage/branding"
                         ]
@@ -232,7 +233,8 @@
                                                 ]
                                             }
                                         ]
-                                    }
+                                    },
+                                    "self-host/manual/podman-quadlets"
                                 ]
                             },
                             "self-host/dns-and-networking",
