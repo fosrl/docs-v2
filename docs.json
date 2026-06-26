@@ -90,6 +90,15 @@
                                 "pages": [
                                     "manage/clients/understanding-clients",
                                     "manage/clients/nat-traversal",
+                                    {
+                                        "group": "Firewall Integrations",
+                                        "pages": [
+                                            "manage/clients/firewalls/overview",
+                                            "manage/clients/firewalls/opnsense",
+                                            "manage/clients/firewalls/pfsense",
+                                            "manage/clients/firewalls/palo-alto"
+                                        ]
+                                    },
                                     "manage/clients/install-client",
                                     "manage/clients/configure-client",
                                     "manage/clients/update-client",

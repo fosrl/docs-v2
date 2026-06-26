@@ -1,0 +1,64 @@
+---
+title: "Palo Alto Networks"
+description: "Use PAN-OS NAT translation modes that improve Pangolin direct connectivity"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+Palo Alto firewalls often default to dynamic source-port translation, which can make UDP hole punching less predictable. This guide focuses on NAT translation settings that improve direct Pangolin paths.
+
+## How this affects Pangolin
+
+When translated source ports change unpredictably per destination, peers cannot reliably discover return paths for direct UDP sessions.
+
+In those cases, clients may connect through relay more often.
+
+## PAN-OS 11.1.x and later
+
+Prefer **Persistent Dynamic IP and Port** for NAT policies handling Pangolin traffic.
+
+1. Open the relevant **NAT Policy Rule**.
+2. Go to **Translated Packet**.
+3. Set **Translation Type** to **Persistent Dynamic IP and Port**.
+4. Commit changes.
+
+This keeps NAT behavior more consistent per client flow and improves direct-connect success.
+
+<Note>
+Image description from the source references: NAT Policy Rule editor on the Translated Packet tab, with Translation Type set to Persistent Dynamic IP and Port.
+</Note>
+
+## Selective policy approach
+
+If you cannot apply persistent translation globally, scope it to Pangolin UDP traffic only.
+
+1. Create a custom service object for Pangolin UDP flow matching.
+2. Use that service as match criteria in the NAT rule's **Original Packet** tab.
+3. Apply persistent translation only for matching traffic.
+4. Commit and test.
+
+<Note>
+Image description from the source references: one screen shows a custom UDP service definition with timeout tuning; another shows that service selected in NAT policy match criteria.
+</Note>
+
+## Earlier PAN-OS releases
+
+If your version does not support persistent dynamic translation, a **Static IP** NAT policy can improve direct connectivity for selected high-value nodes (for example, a frequently used subnet or gateway host).
+
+- Create a dedicated NAT policy for the target traffic
+- Set Translation Type to Static IP
+- Scope rules tightly and test
+
+<Note>
+Image description from the source references: older NAT policy editor where Translation Type is set to Static IP instead of Dynamic IP and Port.
+</Note>
+
+## Validate the result
+
+1. Reconnect Pangolin clients and sites.
+2. Check whether previously relayed sessions now establish direct paths.
+3. Keep monitoring for policy side effects or unintended exposure.

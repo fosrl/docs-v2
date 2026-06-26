@@ -1,0 +1,62 @@
+---
+title: "OPNsense"
+description: "Tune OPNsense for better Pangolin direct connectivity"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+Use this guide if clients behind OPNsense are frequently relayed instead of connecting directly.
+
+## Prerequisites
+
+- OPNsense access with admin rights
+- Ability to edit NAT and service settings
+- A way to verify Pangolin connection mode after changes
+
+## Option 1: Static outbound UDP mapping
+
+This approach keeps outbound source ports predictable so UDP hole punching succeeds more often.
+
+1. In OPNsense, open **Firewall > NAT > Outbound**.
+2. Switch to **Hybrid Outbound NAT rule generation**.
+3. Add a new outbound rule near the top of the list.
+4. Configure the rule for UDP traffic used by Pangolin clients/sites.
+5. Enable **Static Port** in the translation section.
+6. Save and apply changes.
+
+<Note>
+Image description from the source references: the Outbound NAT page showing a UDP rule with static-port translation enabled, created in hybrid mode and applied at the top of the outbound rules list.
+</Note>
+
+## Option 2: NAT-PMP
+
+If your environment allows it, NAT-PMP can let clients request temporary UDP mappings dynamically.
+
+1. Open **Services > Universal Plug and Play**.
+2. Enable NAT-PMP support.
+3. Keep the scope as narrow as your policy allows.
+4. Apply changes.
+
+<Warning>
+NAT-PMP can improve connectivity, but may broaden mapping behavior. Use restricted ACLs and network segmentation where possible.
+</Warning>
+
+<Note>
+Image description from the source references: the UPnP/NAT-PMP settings panel with NAT-PMP allowed, indicating dynamic mapping is enabled for LAN clients.
+</Note>
+
+## Optional: Running Tailscale plugin on OPNsense
+
+Source material notes that recent OPNsense releases include an `os-tailscale` community plugin. That workflow is specific to Tailscale installations on the firewall itself and is separate from Pangolin client/site tuning.
+
+For Pangolin, prioritize the NAT behavior changes above.
+
+## Validate the result
+
+1. Reconnect a Pangolin client.
+2. Check the site entry in client status (`isRelay` in JSON view or `RELAY` column in CLI).
+3. Compare before/after to confirm improved direct connectivity.

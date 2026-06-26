@@ -1,0 +1,57 @@
+---
+title: "Firewall Integrations"
+description: "Improve Pangolin direct-connect success behind restrictive firewalls"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+Most Pangolin deployments work without special firewall tuning. In stricter NAT environments, direct client-to-site paths can fail and sessions fall back to relay.
+
+This section covers firewall-side changes that can improve direct connectivity for common enterprise and appliance firewalls.
+
+## Why this matters
+
+Pangolin clients try direct UDP paths first and relay only when needed. If your firewall rewrites UDP source ports aggressively (or blocks port mapping protocols), hole punching becomes less reliable.
+
+Direct paths usually mean:
+
+- Lower latency
+- Better throughput
+- Less relay traffic on your Pangolin infrastructure
+
+## Security and performance trade-off
+
+Some changes that improve direct connectivity can also widen inbound mapping behavior. Review each setting with your security team before enabling it globally.
+
+- NAT-PMP or UPnP can increase exposure if left broad
+- Static or persistent port translation can improve predictability, but should be scoped to known traffic when possible
+
+## Connection behavior quick guide
+
+| Firewall platform | Typical default behavior | Common fix |
+| --- | --- | --- |
+| OPNsense | Often relayed in hard-NAT setups | Static outbound UDP mapping or NAT-PMP |
+| pfSense | Often relayed in hard-NAT setups | Static outbound UDP mapping or NAT-PMP |
+| Palo Alto Networks | Often relayed with random UDP source translation | Persistent Dynamic IP and Port NAT translation |
+
+## Choose your platform
+
+- [OPNsense guide](/manage/clients/firewalls/opnsense)
+- [pfSense guide](/manage/clients/firewalls/pfsense)
+- [Palo Alto Networks guide](/manage/clients/firewalls/palo-alto)
+
+## Verifying impact
+
+After applying changes:
+
+1. Reconnect the client and site.
+2. Check connection status in the Pangolin client JSON view or `pangolin status`.
+3. Confirm more sessions are direct and fewer are relayed.
+
+<Note>
+Image description from the source references: a summary banner showing that direct peer-to-peer is preferred, with relay as fallback when NAT policies prevent direct UDP paths.
+</Note>

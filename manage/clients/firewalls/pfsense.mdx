@@ -1,0 +1,60 @@
+---
+title: "pfSense"
+description: "Tune pfSense for better Pangolin direct connectivity"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+Use this guide if clients behind pfSense regularly fall back to relay.
+
+## Prerequisites
+
+- pfSense admin access
+- Permission to change outbound NAT and service settings
+- A test client/site pair to validate results
+
+## Option 1: Static outbound UDP mapping
+
+Static outbound mapping improves source-port consistency, which helps UDP hole punching.
+
+1. Open **Firewall > NAT > Outbound**.
+2. Choose **Hybrid Outbound NAT** mode.
+3. Add a new UDP outbound NAT rule and place it near the top.
+4. Set matching for Pangolin-relevant source traffic.
+5. Enable **Static Port** translation.
+6. Save and apply.
+
+<Note>
+Image description from the source references: pfSense outbound NAT screen with a UDP rule in hybrid mode and static-port translation enabled.
+</Note>
+
+## Option 2: NAT-PMP
+
+For compatible environments, NAT-PMP can allow temporary port mappings for clients.
+
+1. Open **Services > UPnP & NAT-PMP**.
+2. Enable NAT-PMP mapping.
+3. Limit allowed interfaces and clients where possible.
+4. Save and apply changes.
+
+<Warning>
+NAT-PMP and UPnP can reduce relay usage but should be scoped carefully to avoid opening unnecessary mapping paths.
+</Warning>
+
+<Note>
+Image description from the source references: the pfSense UPnP & NAT-PMP settings page with NAT-PMP enabled.
+</Note>
+
+## Newer pfSense behavior
+
+The source references newer pfSense builds adding endpoint-independent style outbound NAT options. If available in your version, test these features in a controlled environment before broad rollout.
+
+## Validate the result
+
+1. Reconnect Pangolin clients.
+2. Inspect connection mode in client status.
+3. Confirm direct sessions increase and relay sessions decrease.
