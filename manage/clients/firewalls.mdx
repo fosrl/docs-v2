@@ -1,0 +1,137 @@
+---
+title: "Firewall Quirks"
+description: "Improve Pangolin direct-connect success behind restrictive firewalls"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Most of the time, Pangolin works with existing firewall policies without any special tuning. Newt and Pangolin clients attempt NAT traversal first so traffic can flow directly between client and site. When direct connectivity cannot be established, traffic falls back to relaying through Gerbil. You can [learn more about how holepunching works here](https://pangolin.net/news/nat-holepunching).
+
+For background on direct vs relayed paths and how to verify connection type, see [NAT Traversal](/manage/clients/nat-traversal).
+
+## Firewall compatibility and workarounds
+
+The table below summarizes common behavior and practical mitigations reported by users.
+
+| Firewall platform | Typical behavior with Pangolin | Practical workaround |
+| --- | --- | --- |
+| Barracuda | Often relayed | Increase available UDP session capacity; optionally allow a dedicated inbound Newt port |
+| Check Point | Usually direct | No workaround typically required |
+| Cisco | Often relayed | Allow required UDP flows and, if needed, open a fixed Newt listening port |
+| Cisco Umbrella Endpoint Security | Usually relayed | Endpoint filtering commonly prevents direct paths |
+| Fortinet | Often connects directly | No workaround typically required |
+| OPNsense | Often relayed by default | Disable hard NAT |
+| pfSense | Often relayed by default | Disable hard NAT |
+| Palo Alto Networks | Mixed; may relay without NAT tuning | Use persistent NAT behavior to stabilize UDP mappings |
+| Sophos | Commonly direct | No workaround typically required |
+| UniFi Gateways (threat detection on) | Often relayed when threat detection is on | Allow peer-to-peer traffic categories |
+
+If your firewall is not listed and connections are consistently relayed, start with:
+
+1. Confirm current path with `pangolin status` (CLI) or client status JSON (`isRelay`).
+2. Keep relaying enabled for reliability while testing firewall adjustments.
+3. If needed, pin Newt to a fixed listening port with `--port` / `PORT` and forward that port to the Newt host.
+
+## Platform notes
+
+### Barracuda
+
+Barracuda environments commonly struggle with simultaneous UDP flows from multiple clients, which can push connections to relay mode.
+
+What helps:
+
+- Increase the firewall's maximum UDP session capacity [by increasing the max udp parameter](https://campus.barracuda.com/product/cloudgenfirewall/doc/95258827/general-firewall-configuration/?sl=AX5zwzvyOBUvMAhoTe4U&so=2) 
+- If direct connectivity is still inconsistent, use a fixed Newt listening port and forward it explicitly.
+
+### Check Point
+
+Check Point deployments generally allow Pangolin direct connectivity without extra configuration.
+
+### Cisco
+
+Cisco firewalls often require additional policy tuning before direct paths become stable.
+
+#### Cisco Umbrella Endpoint Security
+
+When Cisco Umbrella Endpoint Security is in-path, direct peer connectivity is frequently blocked and relay becomes the normal outcome.
+
+### Fortinet
+
+Fortinet environments are often stable for smaller deployments but may shift heavily to relay as concurrent client count grows.
+
+###  pfSense
+
+pfSense frequently land in relay mode unless inbound UDP mapping behavior is made explicit. Try the following changes: 
+
+By default, pfSense software rewrites the source port on all outgoing connections to enhance security and prevent direct exposure of internal port numbers.
+
+Static port mapping in pfSense involves creating a fixed association between a specific external port number and an internal IP address and port, allowing incoming traffic to be directed to the correct destination within the local network.
+
+Locate the Firewall > NAT, Outbound tab. Select Hybrid Outbound NAT rule generation. Select Save. Select ↑ Add to create a new NAT rule to the top of the list.
+
+Configure the rule: IPv4+IPv6, for Protocol UDP, source address Any. Check Static Port in the Translation section of the page.
+
+Select Save. Select Apply Changes.
+
+### OPNsense
+
+OPNsense frequently land in relay mode unless inbound UDP mapping behavior is made explicit. Try the following changes: 
+
+By default, OPNsense software rewrites the source port on all outgoing connections to enhance security and prevent direct exposure of internal port numbers.
+
+Static port mapping in OPNsense involves creating a fixed association between a specific external port number and an internal IP address and port, allowing incoming traffic to be directed to the correct destination within the local network.
+
+Go to Firewall > NAT, Outbound tab. Select Hybrid Outbound NAT rule generation. Select Save. Select ↑ Add to create a new NAT rule to the top of the list.
+
+Configure the rule to match UDP traffic. Note, for each rule, select the appropriate Address Family (IP version), IPv4 for one and IPv6 for the other.
+
+Here is the Markdown table based on the image provided:
+
+| Interface | Source | Source Port | Destination | Destination Port | NAT Address | NAT Port | Static Port | Description |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| WAN | LAN net | udp/ * | * | udp/ * | Interface address | * | YES | Pangolin IPv4 |
+| WAN | LAN net | udp/ * | * | udp/ * | Interface address | * | YES | Pangolin IPv6 |
+
+Check Static Port in the Translation section of the page. Select Save. Select Apply Changes.
+
+### Palo Alto Networks
+
+Palo Alto deployments can improve direct path reliability by using persistent NAT translation behavior (dynamic IP and port persistence) so UDP mappings do not churn between destinations. [Take a look at the documentation here](https://docs.paloaltonetworks.com/pan-os/10-1/pan-os-new-features/networking-features/persistent-nat-for-dipp).
+
+PAN-OS 11.1.x and later: Persistent Dynamic IP and Port
+Ensure stability and performance by referring to the list of preferred releases for PAN-OS.
+
+PAN-OS 11.1.1 contains the translation type for NAT policies, Persistent Dynamic IP and Port. In this translation type, once a client has sent a packet with a particular source port, the same NAT translated port number will be used for all destinations. This lets Tailscale to predict the port number and establish a direct connection.
+
+To use this translation type, go to NAT Policy Rule, select the Translated Packet tab, then select the Translation Type option Persistent Dynamic IP and Port.
+
+Earlier PAN-OS releases: Static IP
+With older PAN-OS releases and the Dynamic IP and Port translation type, every UDP stream will translate to a random UDP port. Opening a specific port will not allow traffic through, and Tailscale cannot predict what port number to try for a direct connection.
+
+With older PAN-OS releases it is possible to use the Static IP NAT Policy to enable one device within the protected zone to make direct connections. One might choose a subnet router or other high-traffic node to optimize. In the PAN-OS software create a NAT policy rule with Translation Type set to Static IP, instead of the default setting Dynamic IP And Port. This helps Tailscale figure out how to get packets through the NAT and establish direct connections.
+
+### Sophos
+
+Sophos gateways usually work well with Pangolin's direct-connect flow under default NAT behavior.
+
+If relay usage rises unexpectedly, verify no extra IPS/inspection rule set is rewriting UDP sessions.
+
+### UniFi Gateways
+
+On UniFi networks with threat detection enabled, peer-to-peer categories can interfere with hole punching.
+
+In UniFi Network version 9.0.107 and earlier, select to Settings, Firewall & Security, Edit threat categories, and uncheck P2P.
+
+In UniFi Network version 9.0.108 and later, select to Network, Security, Protection, Peer to Peer and Dark Web, and uncheck P2P.
+
+## Verify improvements
+
+After each firewall change, validate results from a client:
+
+1. Reconnect the site/client pair.
+2. Run `pangolin status` (or check JSON status in GUI clients).
+3. Confirm `RELAY=false` / `isRelay: false` for sessions expected to be direct.
+
+If direct paths still fail, keep relay enabled and continue iterating with narrower firewall adjustments rather than broad allow-all rules.

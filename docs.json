@@ -95,7 +95,8 @@
                                     "manage/clients/update-client",
                                     "manage/clients/credentials",
                                     "manage/clients/fingerprinting",
-                                    "manage/clients/archiving-blocking"
+                                    "manage/clients/archiving-blocking",
+                                    "manage/clients/firewalls"
                                 ]
                             },
                             "manage/domains",

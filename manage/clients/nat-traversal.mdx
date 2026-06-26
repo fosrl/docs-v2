@@ -95,7 +95,7 @@ Use either view when troubleshooting hole punching or verifying that configurati
 
 Newt supports NAT traversal to allow clients to connect directly to Newt sites without relaying through the Pangolin server, improving performance and reducing latency.
 
-In some environments, depending on the NAT type and firewall, you may need to tweak settings to get optimal connectivity in the firewall itself. Take a look at [these docs](https://tailscale.com/kb/1361/firewall) for some firewall changes you might be able to make.
+In some environments, depending on the NAT type and firewall, you may need to tweak settings to get optimal connectivity in the firewall itself. See [Firewall Integrations](/manage/clients/firewalls) for Pangolin-specific guidance for common platforms.
 
 Another option is to keep Newt listening for client connections on a static port. This allows you to open a specific port in your firewall for Newt client connections instead of random high ports. You can do this by setting the `--port` flag or `PORT` environment variable and then opening this port in your firewall to DNAT to Newt. See [Configure Sites](/manage/sites/configure-site) for the full list of Newt flags and environment variables.
 
@@ -135,6 +135,6 @@ Another option is to keep Newt listening for client connections on a static port
 </Accordion>
 
 <Accordion title="Do I need to open firewall ports for hole punching?">
-  Not always. Many networks hole punch successfully without inbound rules. If punching is unreliable, try firewall tweaks from [Tailscale's firewall guide](https://tailscale.com/kb/1361/firewall) or pin Newt to a static port with `--port` / `PORT` and DNAT that port to Newt on the site host.
+  Not always. Many networks hole punch successfully without inbound rules. If punching is unreliable, try [Firewall Integrations](/manage/clients/firewalls) guidance or pin Newt to a static port with `--port` / `PORT` and DNAT that port to Newt on the site host.
 </Accordion>
 </AccordionGroup>
