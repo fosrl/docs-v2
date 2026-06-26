@@ -28,10 +28,6 @@ Prefer **Persistent Dynamic IP and Port** for NAT policies handling Pangolin tra
 
 This keeps NAT behavior more consistent per client flow and improves direct-connect success.
 
-<Note>
-Image description from the source references: NAT Policy Rule editor on the Translated Packet tab, with Translation Type set to Persistent Dynamic IP and Port.
-</Note>
-
 ## Selective policy approach
 
 If you cannot apply persistent translation globally, scope it to Pangolin UDP traffic only.
@@ -41,10 +37,6 @@ If you cannot apply persistent translation globally, scope it to Pangolin UDP tr
 3. Apply persistent translation only for matching traffic.
 4. Commit and test.
 
-<Note>
-Image description from the source references: one screen shows a custom UDP service definition with timeout tuning; another shows that service selected in NAT policy match criteria.
-</Note>
-
 ## Earlier PAN-OS releases
 
 If your version does not support persistent dynamic translation, a **Static IP** NAT policy can improve direct connectivity for selected high-value nodes (for example, a frequently used subnet or gateway host).
@@ -53,12 +45,9 @@ If your version does not support persistent dynamic translation, a **Static IP**
 - Set Translation Type to Static IP
 - Scope rules tightly and test
 
-<Note>
-Image description from the source references: older NAT policy editor where Translation Type is set to Static IP instead of Dynamic IP and Port.
-</Note>
-
 ## Validate the result
 
-1. Reconnect Pangolin clients and sites.
-2. Check whether previously relayed sessions now establish direct paths.
-3. Keep monitoring for policy side effects or unintended exposure.
+1. Reconnect a Pangolin client.
+2. Check the site entry in client status (`isRelay` in JSON view or `RELAY` column in CLI).
+3. Compare before/after to confirm improved direct connectivity.
+

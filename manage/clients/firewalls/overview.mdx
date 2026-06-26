@@ -23,12 +23,7 @@ Direct paths usually mean:
 - Better throughput
 - Less relay traffic on your Pangolin infrastructure
 
-## Security and performance trade-off
-
-Some changes that improve direct connectivity can also widen inbound mapping behavior. Review each setting with your security team before enabling it globally.
-
-- NAT-PMP or UPnP can increase exposure if left broad
-- Static or persistent port translation can improve predictability, but should be scoped to known traffic when possible
+Learn more about how [Pangolin NAT hole punching works](https://pangolin.net/news/nat-holepunching).
 
 ## Connection behavior quick guide
 
@@ -43,15 +38,3 @@ Some changes that improve direct connectivity can also widen inbound mapping beh
 - [OPNsense guide](/manage/clients/firewalls/opnsense)
 - [pfSense guide](/manage/clients/firewalls/pfsense)
 - [Palo Alto Networks guide](/manage/clients/firewalls/palo-alto)
-
-## Verifying impact
-
-After applying changes:
-
-1. Reconnect the client and site.
-2. Check connection status in the Pangolin client JSON view or `pangolin status`.
-3. Confirm more sessions are direct and fewer are relayed.
-
-<Note>
-Image description from the source references: a summary banner showing that direct peer-to-peer is preferred, with relay as fallback when NAT policies prevent direct UDP paths.
-</Note>
