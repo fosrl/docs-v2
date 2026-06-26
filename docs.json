@@ -181,6 +181,7 @@
                                     "manage/remote-node/config-file"
                                 ]
                             },
+                            "manage/endpoints-and-pops",
                             "manage/integration-api",
                             "manage/branding"
                         ]
