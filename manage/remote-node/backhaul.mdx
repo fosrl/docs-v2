@@ -1,0 +1,143 @@
+https://docs.docker.com/engine/network/packet-filtering-firewalls/#docker-on-a-router
+/etc/docker/daemon.json
+{
+	"ip-forward-no-drop": true
+} 
+
+Docker will also enabling forwarding by default but if not sudo sysctl -w net.ipv4.ip_forward=1 and make perminate with 
+
+docker-compose-host.yml
+name: pangolin
+services:
+  pangolin:
+    image: docker.io/fosrl/pangolin-node:1.4.0
+    # image: 537824365807.dkr.ecr.us-west-1.amazonaws.com/pangolin_node_owen
+    container_name: pangolin
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./config:/app/config
+      - pangolin-data-certificates:/var/certificates
+      - pangolin-data-dynamic:/var/dynamic
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: "10s"
+      timeout: "10s"
+      retries: 15
+
+  gerbil:
+    image: docker.io/fosrl/gerbil:1.4.2
+    container_name: gerbil
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --reachableAt=http://localhost:3003
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://localhost:3001/api/v1/
+    volumes:
+      - ./config/:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+
+  traefik:
+    image: docker.io/traefik:v3.5
+    container_name: traefik
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    volumes:
+      - ./config/traefik:/etc/traefik:ro
+      - ./config/traefik/logs:/var/log/traefik
+      - pangolin-data-certificates:/var/certificates:ro
+      - pangolin-data-dynamic:/var/dynamic:ro
+
+volumes:
+  pangolin-data-dynamic:
+  pangolin-data-certificates:
+
+config/config.yml
+app:
+    log_level: debug
+server:
+    internal_port: 3001
+    internal_hostname: localhost
+gerbil:
+    start_port: 51820
+    base_endpoint: "54.176.101.5"
+    reachable_at: http://localhost:3003
+managed:
+    endpoint: https://app.pangolin.dev.fosrl.io
+    id: "owjiufga6mdj94k"
+    secret: "iicbif2oxlqzkx13eb501h586h1gtxiwpr7nu52tr1rpbcqi"
+
+
+config/traefik/traefik_config.yml
+api:
+  insecure: true
+  dashboard: true
+
+providers:
+  file:
+    directory: "/var/dynamic"
+    watch: true
+
+experimental:
+  plugins:
+    badger:
+      moduleName: "github.com/fosrl/badger"
+      version: "v1.3.1"
+
+log:
+  level: "INFO"
+  format: "common"
+  maxSize: 100
+  maxBackups: 3
+  maxAge: 3
+  compress: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+    proxyProtocol:
+      trustedIPs:
+        - 0.0.0.0/0 # This is coming from gerbil
+        - ::1/128
+    transport:
+      respondingTimeouts:
+        readTimeout: "30m"
+
+serversTransport:
+  insecureSkipVerify: true
+
+ping:
+  entryPoint: "web"
+
+
+Use <niceId>.site.pangolin.net to resolve the site between multiple exit nodes in the same cloud
+
+
+You must allow all traffic into the node from the network so it can act as a concentrator otherwise the security group will block this inbounc traffic.
+images/security_group_inbound_to_node.png
+
+Add the subnet to the route tables so that the data in the VPC knows to route to the node. Use the node as the instance id.
+images/subnet_in_route_table.png
+
+Disable source destination check or the VPC will block VPN traffic from entering the node
+images/source_destination_check_menu.png
+images/source_destination_check_box.png
+
+Put the VPC subnet into the routes on the remote node to be pushed to the sites
+images/subnet_programmed_on_node.png
+
+Run the site with --native-main to create the routes and network interface on the host
+sudo newt --id 34s48my8iba5wsl --secret ts1v7480qqw01j7ba4uiw5y7l58skw7anpji2ndludhgzloh --endpoint https://app.pangolin.net --native-main
