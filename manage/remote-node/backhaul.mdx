@@ -123,7 +123,7 @@ ping:
   entryPoint: "web"
 
 
-Use <niceId>.site.pangolin.net to resolve the site between multiple exit nodes in the same cloud
+Use <newtId>.site.pangolin.net to resolve the site between multiple exit nodes in the same cloud. this will return the routable address of the site that we can route to and if the site moves between nods because they are down or something this will follow the site but you can expect a little downtime when it moves
 
 
 You must allow all traffic into the node from the network so it can act as a concentrator otherwise the security group will block this inbounc traffic.
@@ -141,3 +141,15 @@ images/subnet_programmed_on_node.png
 
 Run the site with --native-main to create the routes and network interface on the host
 sudo newt --id 34s48my8iba5wsl --secret ts1v7480qqw01j7ba4uiw5y7l58skw7anpji2ndludhgzloh --endpoint https://app.pangolin.net --native-main
+
+
+if running on windows sometimes windows does not respond to pings: 
+Enable-NetFirewallRule -DisplayName "File and Printer Sharing (Echo Request - ICMPv4-In)"
+
+%PROGRAMDATA%/newt/newt-client/config.json
+{
+	 "id": "34s48my8iba5wsl",
+	 "secret": "ts1v7480qqw01j7ba4uiw5y7l58skw7anpji2ndludhgzloh",
+	 "endpoint": "https://app.pangolin.net",
+	 "nativeMain": true 
+}
