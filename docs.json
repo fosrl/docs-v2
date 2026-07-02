@@ -179,7 +179,8 @@
                                 "pages": [
                                     "manage/remote-node/understanding-nodes",
                                     "manage/remote-node/quick-install-remote",
-                                    "manage/remote-node/config-file"
+                                    "manage/remote-node/config-file",
+                                    "manage/remote-node/backhaul"
                                 ]
                             },
                             "manage/endpoints-and-pops",
