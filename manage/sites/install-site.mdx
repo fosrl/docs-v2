@@ -199,6 +199,22 @@ services:
       - --endpoint https://app.pangolin.net
 ```
 
+#### Docker healthcheck
+The newt cliens suports healthchecks as described in [Configure Sites](/manage/sites/configure-site#param-health-file). This file can be used to do a
+healthcheck from within docker (compose file).
+
+We need to define the `HEALTH_FILE` environment variable as well as the healthcheck itself:
+```bash
+    environment:
+      - HEALTH_FILE=/tmp/healthy
+    healthcheck:
+      test: ["CMD-SHELL", "[ -f /tmp/healthy ]"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+```
+
 Start the service:
 
 ```bash
