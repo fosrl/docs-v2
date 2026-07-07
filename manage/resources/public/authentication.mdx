@@ -25,6 +25,17 @@ When an unauthenticated user visits a resource in their web browser, they will b
 
 Add simple PIN or passcode authentication to resources. Similarly to user login, users will need to first enter a PIN or passcode before they can gain access to the resource.
 
+## Header Auth
+
+Add header auth to authenticate with a `Authorization` header or with a username and password challenge in the browser. When making a machine to machine request to this resource include the username and password in one of the following ways: 
+
+1. `Authorization: Basic dXNlcm5hbWU6cGFzc3dvcmQ=` where the payload is username:password -> dXNlcm5hbWU6cGFzc3dvcmQ=
+2. In the url as `username:password@example.domain.com`
+
+[Read more about the standard here.](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Authorization)
+
+To challenge the browser to prompt for a username and password to log in, ensure the "Extended Compatibility" checkbox is toggled on. This will ensure a 401 response occurs which will trigger the prompt.
+
 ## Shareable Links and Access Tokens
 
 Generate temporary self-destructing links that provide authenticated access to resources. Set specific expiration times for when all users who used the link will lose access and when the link becomes invalid. Links can optionally grant more permanent access with no expiration. Delete links when you want to revoke access.
