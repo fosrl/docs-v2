@@ -281,7 +281,8 @@
                         "pages": [
                             "development/system-architecture",
                             "development/contributing",
-                            "development/feature-requests-and-bug-reports"
+                            "development/feature-requests-and-bug-reports",
+                            "/manage/common-api-routes.mdx"
                         ]
                     }
                 ]
