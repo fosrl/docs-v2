@@ -9,7 +9,7 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-Pangolin generally requires minimal resources to run effectively. A basic VPS with **1 vCPU, 1.5GB RAM, and 8GB SSD** is sufficient for most deployments.
+Pangolin generally requires minimal resources to run effectively. A basic VPS with **1 vCPU, 2GB RAM, and 8GB SSD** is sufficient for most deployments.
 
 <Note>
 If you choose a VPS with only 1GB RAM, you may need to create swap space to avoid memory pressure during installation, updates, or periods of higher traffic.
@@ -21,48 +21,25 @@ If you choose a VPS with only 1GB RAM, you may need to create swap space to avoi
   - **RAM**: 2GB
   - **Storage**: 20GB SSD
 </Card>
-</CardGroup>
-
-## Choosing a Plan
-
-Start with the recommended specs unless you already know your deployment will be very small. Pangolin does not need a large server, but having 2GB RAM and a little extra disk space gives Docker, logs, updates, and future services room to operate.
-
-<CardGroup cols={3}>
-<Card title="Small Deployment">
-  - Personal or lab use
-  - A few connected sites
-  - Low traffic
-  - Start with the minimum specs
+<Card title="More Users or Sites">
+  - **CPU**: 4 vCPU
+  - **RAM**: 4GB
+  - **Storage**: 40GB SSD
 </Card>
-
-<Card title="Typical Deployment">
-  - Multiple users or sites
-  - Regular dashboard use
-  - Moderate traffic
-  - Use the recommended specs
-</Card>
-
-<Card title="High Traffic Deployment">
-  - Many sites or users
-  - Large file transfers
-  - Public-facing services
-  - Scale CPU, RAM, and bandwidth as needed
+<Card title="Large Deployment">
+  - **CPU**: 8 vCPU
+  - **RAM**: 8GB
+  - **Storage**: 80GB SSD
 </Card>
 </CardGroup>
 
 ## Provider Options
 
-Most general-purpose VPS providers will work well for Pangolin. Look for a provider with reliable uptime, a data center near your users, clear bandwidth limits, snapshots or backups, and the ability to open inbound TCP ports 80 and 443 plus the WireGuard UDP port configured during installation.
-
-The providers listed below are examples to help you compare availability by region, not an exhaustive list. Pangolin does not endorse any specific VPS provider, so we recommend doing your own research and choosing the provider that best fits your location, support expectations, and budget.
+Most general-purpose VPS providers will work well for Pangolin. Look for a provider with reliable uptime, a data center near your users, clear bandwidth limits, snapshots or backups, and the ability to open inbound TCP ports 80 and 443 plus the WireGuard UDP ports configured during installation.
 
 <Info>
 If you prefer a guided deployment, Pangolin is also available on the <a href="https://marketplace.digitalocean.com/apps/pangolin-ce-1?refcode=edf0480eeb81">DigitalOcean Marketplace</a>. The marketplace image can create a droplet with Pangolin pre-installed and firewall rules configured.
 </Info>
-
-## Selection Criteria
-
-When choosing your VPS provider, consider these factors:
 
 <AccordionGroup>
 <Accordion title="Performance Requirements">
