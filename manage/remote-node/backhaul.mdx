@@ -194,7 +194,7 @@ This section uses AWS as an example, but the same steps apply to any VPC-style n
 	The node is acting as a concentrator for the whole network, not just serving its own ports, so its security group must accept all traffic from the VPC's CIDR. Otherwise the security group blocks the inbound traffic it's meant to forward.
 
 	<Frame>
-		<img src="/images/security_group_inbound_to_node.png" />
+		<img src="/images/security_group_inbound_to_node.png" alt="AWS security group inbound rule allowing all VPC traffic" />
 	</Frame>
 </Step>
 
@@ -202,7 +202,7 @@ This section uses AWS as an example, but the same steps apply to any VPC-style n
 	Add a route in the VPC's route table for the WireGuard overlay subnet assigned to your node (shown as the node's **Address** on its page in the [Pangolin dashboard](https://app.pangolin.net)), targeting the node's instance or network interface. This tells the rest of the VPC to send anything destined for the Pangolin overlay — other sites and clients — to the node.
 
 	<Frame>
-		<img src="/images/subnet_in_route_table.png" />
+		<img src="/images/subnet_in_route_table.png" alt="AWS route table entry routing the overlay subnet to the node" />
 	</Frame>
 </Step>
 
@@ -210,11 +210,11 @@ This section uses AWS as an example, but the same steps apply to any VPC-style n
 	By default, AWS drops any packet where an instance isn't the source or destination, which would silently break a node that's forwarding traffic on behalf of others. Disable the source/destination check on the node's instance so it's allowed to route traffic that isn't addressed to itself.
 
 	<Frame>
-		<img src="/images/source_destination_check_menu.png" />
+		<img src="/images/source_destination_check_menu.png" alt="AWS instance menu option to change source/destination check" />
 	</Frame>
 
 	<Frame>
-		<img src="/images/source_destination_check_box.png" />
+		<img src="/images/source_destination_check_box.png" alt="AWS dialog checkbox disabling the source/destination check" />
 	</Frame>
 </Step>
 
@@ -224,7 +224,7 @@ This section uses AWS as an example, but the same steps apply to any VPC-style n
 	You can also set **Preference Labels** on the node and apply matching labels to sites, which enforces that those sites connect through this remote node specifically. This is useful once you have more than one node or point of presence and want particular sites to always backhaul through this one.
 
 	<Frame>
-		<img src="/images/subnet_programmed_on_node.png" />
+		<img src="/images/subnet_programmed_on_node.png" alt="Pangolin dashboard remote subnets setting with VPC CIDR added" />
 	</Frame>
 </Step>
 </Steps>
