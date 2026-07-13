@@ -38,7 +38,7 @@ Configure:
 Pangolin uses static access keys only. There is no IAM role, instance profile, or OIDC picker in the UI.
 
 <Frame>
-  <img src="/images/streaming-s3-settings.png" centered />
+  <img src="/images/streaming-s3-settings.png" alt="S3 destination settings with credentials, region, and bucket" centered />
 </Frame>
 
 Uploads time out after 60 seconds per object.
@@ -56,7 +56,7 @@ Uploads time out after 60 seconds per object.
 | **CSV** | RFC-4180 CSV with a header row; see [CSV format](#csv-format) |
 
 <Frame>
-  <img src="/images/streaming-s3-format.png" centered />
+  <img src="/images/streaming-s3-format.png" alt="Format tab with file format and gzip options" centered />
 </Frame>
 
 ## Logs tab
@@ -64,7 +64,7 @@ Uploads time out after 60 seconds per object.
 Choose which log categories are uploaded. Each enabled type is written to its own key prefix (`request/`, `action/`, etc.). Only log types enabled for your organization can be streamed.
 
 <Frame>
-  <img src="/images/streaming-s3-logs.png" centered />
+  <img src="/images/streaming-s3-logs.png" alt="Logs tab for selecting streamed log types" centered />
 </Frame>
 
 ## Object key layout

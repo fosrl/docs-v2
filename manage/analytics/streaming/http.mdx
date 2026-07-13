@@ -36,7 +36,7 @@ On the **Settings** tab, set a display name, the endpoint URL, and authenticatio
 | Custom header | A single header name and value (for example an API key header) |
 
 <Frame>
-  <img src="/images/streaming-http-settings.png" centered />
+  <img src="/images/streaming-http-settings.png" alt="HTTP destination settings with URL and authentication options" centered />
 </Frame>
 
 All delivery uses **POST**. Requests time out after 30 seconds.
@@ -46,7 +46,7 @@ All delivery uses **POST**. Requests time out after 30 seconds.
 On the **Headers** tab, add optional static headers sent with every request, for example a vendor-specific API key or a non-default `Content-Type`. When you do not override it, Pangolin sends `Content-Type: application/json` (or `application/x-ndjson` when using the NDJSON payload format).
 
 <Frame>
-  <img src="/images/streaming-http-headers.png" centered />
+  <img src="/images/streaming-http-headers.png" alt="Headers tab for adding static HTTP headers" centered />
 </Frame>
 
 ## Default payload (template off)
@@ -83,7 +83,7 @@ Some columns are stored as JSON strings in the database (`headers`, `query`, and
 On the **Body** tab, enable **Custom body template** and provide a JSON template string. Pangolin performs simple placeholder substitution, **not** a full templating language like Handlebars.
 
 <Frame>
-  <img src="/images/streaming-http-body.png" centered />
+  <img src="/images/streaming-http-body.png" alt="Body tab with custom body template editor" centered />
 </Frame>
 
 ### Template variables
