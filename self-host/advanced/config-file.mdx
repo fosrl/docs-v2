@@ -502,16 +502,6 @@ This section contains the complete reference for all configuration options in `c
       **Example**: `21820`
     </ResponseField>
 
-    <ResponseField name="use_subdomain" type="boolean">
-      Whether to assign unique subdomains to Gerbil exit nodes.
-
-      **Default**: `false`
-
-      <Warning>
-        Keep this set to `false` for most deployments.
-      </Warning>
-    </ResponseField>
-
     <ResponseField name="subnet_group" type="string">
       IP address CIDR range for Gerbil exit node subnets.
 
@@ -520,6 +510,10 @@ This section contains the complete reference for all configuration options in `c
       <Note>
         The default uses the CGNAT range to avoid conflicts with typical private networks.
       </Note>
+
+      <Tip>
+        If you change this on an existing install you will need to delete the exit node to refresh it in the database which is best practice. Use the [pangctl command to clear the exit nodes](https://docs.pangolin.net/self-host/advanced/container-cli-tool#clear-exit-nodes).
+      </Tip>
     </ResponseField>
 
     <ResponseField name="block_size" type="integer">
@@ -530,6 +524,9 @@ This section contains the complete reference for all configuration options in `c
       <Note>
         A /24 block provides 256 IP addresses for the Gerbil network.
       </Note>
+      <Tip>
+        If you change this on an existing install you will need to delete the exit node to refresh it in the database which is best practice. Use the [pangctl command to clear the exit nodes](https://docs.pangolin.net/self-host/advanced/container-cli-tool#clear-exit-nodes).
+      </Tip>
     </ResponseField>
 
     <ResponseField name="site_block_size" type="integer">
@@ -540,6 +537,9 @@ This section contains the complete reference for all configuration options in `c
       <Note>
         A /30 block provides 4 IP addresses per site. Consider using /29 (8 IPs) or /28 (16 IPs) for sites with heavy WireGuard usage.
       </Note>
+      <Tip>
+        If you change this on an existing install you will need to delete the exit node to refresh it in the database which is best practice. Use the [pangctl command to clear the exit nodes](https://docs.pangolin.net/self-host/advanced/container-cli-tool#clear-exit-nodes).
+      </Tip>
     </ResponseField>
   </Expandable>
 </ResponseField>
