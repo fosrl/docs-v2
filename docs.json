@@ -92,6 +92,7 @@
                                     "manage/clients/nat-traversal",
                                     "manage/clients/install-client",
                                     "manage/clients/configure-client",
+                                    "manage/clients/client-logs",
                                     "manage/clients/update-client",
                                     "manage/clients/credentials",
                                     "manage/clients/fingerprinting",

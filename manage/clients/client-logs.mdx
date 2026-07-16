@@ -1,0 +1,72 @@
+---
+title: "Client Logs"
+description: "View Pangolin client logs on Windows, Mac, Linux, Android, and iOS"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+
+
+How you access client logs depends on the platform. Use the section for your client type below.
+
+## Windows
+
+You can view logs in the Pangolin client GUI under **Preferences > Logs**.
+
+You can also open the log file directly. The default location is:
+
+```
+C:\ProgramData\pangolin\logs\pangolin.log
+```
+
+To tail the log in PowerShell:
+
+```powershell
+Get-Content "C:\ProgramData\pangolin\logs\pangolin.log" -Tail 0 -Wait
+```
+
+## Mac
+
+Mac uses the Apple system logger. To stream Pangolin logs:
+
+```bash
+log stream --predicate 'subsystem == "net.pangolin.Pangolin" OR subsystem == "net.pangolin.Pangolin.PacketTunnel"' --level debug --style compact
+```
+
+## CLI / Linux
+
+The default log file location is:
+
+```
+~/.config/pangolin/logs/client.log
+```
+
+If you run `pangolin up` in detached mode, you can tail logs with:
+
+```bash
+pangolin logs client -f -n 10
+```
+
+This example follows new log lines and shows the last 10 rows.
+
+Alternatively, run in attached mode to see logs in the current terminal session:
+
+```bash
+sudo pangolin up --attach
+```
+
+## Android
+
+View logs within the app under **Preferences > Logs**.
+
+## iOS
+
+Because of how iOS handles system logging, attach the iPhone to a Mac and use Console.app to view logs.
+
+In Console.app, add a **Subsystem** filter for:
+
+```
+net.pangolin.Pangolin
+```
