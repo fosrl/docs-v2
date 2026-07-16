@@ -16,7 +16,7 @@ You will be able to programmatically decide the roles and organizations for new 
 Toggle the "Auth Provision Users" switch when creating or editing an identity provider.
 
 <Frame>
-  <img src="/images/mapping-builder.png" />
+  <img src="/images/mapping-builder.png" alt="Auto provision users setting in the Pangolin dashboard" />
 </Frame>
 
 ## What if Auto Provisioning is Disabled?
@@ -24,7 +24,7 @@ Toggle the "Auth Provision Users" switch when creating or editing an identity pr
 If auto provision is disabled, organization admins will need to manually create the user accounts and select the role for each user. When creating a user, you can select the identity provider that the user will be associated with. A user will not be able to log in using the identity provider if a user is not pre-provisioned in the system.
 
 <Frame>
-  <img src="/images/create-idp-user.png" />
+  <img src="/images/create-idp-user.png" alt="Creating an identity provider user in the Pangolin dashboard" />
 </Frame>
 
 ## Role Mappings
@@ -40,7 +40,7 @@ When you configure role mappings in auto provisioning settings, you use one of t
 Fixed roles is the simplest option. Every user who signs in through the identity provider receives the same set of roles. The roles you select must already exist in Pangolin, and you must choose them by their exact names in that organization. Use this when you do not need dynamic mapping and a single role assignment for everyone is enough. You can still change roles on individual users after they have been auto-provisioned. This is the easiest way to get started.
 
 <Frame>
-  <img src="/images/fixed-roles.png" />
+  <img src="/images/fixed-roles.png" alt="Fixed roles mapping option in the Pangolin dashboard" />
 </Frame>
 
 ### Role Mapping: Mapping Builder
@@ -50,7 +50,7 @@ The mapping builder lets you map roles from your identity provider to Pangolin r
 First, choose the claim in the OIDC token where roles or groups are provided such as `groups`. Then define a one-to-one mapping for each role: on one side, the role or group ID from the identity provider; on the other, the Pangolin role name that already exists in the organization. The Pangolin side must match that role’s name exactly (same spelling, spacing, and casing).
 
 <Frame>
-  <img src="/images/mapping-builder.png" />
+  <img src="/images/mapping-builder.png" alt="Role mapping builder in the Pangolin dashboard" />
 </Frame>
 
 ### Role Mapping: Raw Expression
@@ -63,7 +63,7 @@ The expression is evaluated against the token from the identity provider on each
 - If no matching role is found for the resolved names, the user is not added to the organization.
 
 <Frame>
-  <img src="/images/raw-expression.png" />
+  <img src="/images/raw-expression.png" alt="Raw expression role mapping in the Pangolin dashboard" />
 </Frame>
 
 #### Raw Expression Example: JMESPath role selection
