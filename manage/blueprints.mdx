@@ -1157,6 +1157,7 @@ private-resources:
     sites:
       - my-site
     destination: 10.0.0.0/24
+    enabled: true
     tcp-ports: "22,443"
     udp-ports: "53"
     disable-icmp: false
@@ -1178,6 +1179,7 @@ private-resources:
     full-domain: app.internal.example.com
     ssl: true
     scheme: https
+    enabled: true
 ```
 
 <Expandable title="Private resource reference">
@@ -1286,6 +1288,13 @@ private-resources:
 
         YAML: `scheme: https`  
         Container label: `pangolin.private-resources.internal-app.scheme=https`
+      </ResponseField>
+
+      <ResponseField name="enabled" type="boolean">
+        Disables the resource without removing it.
+
+        YAML: `enabled: true`  
+        Container label: `pangolin.private-resources.internal-net.enabled=true`
       </ResponseField>
 
       <ResponseField name="tcp-ports" type="string">
