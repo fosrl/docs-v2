@@ -49,6 +49,14 @@ This is the DNS server that will be used if Override DNS is enabled or DNS Over 
 
 This is a fallback DNS server that the system can use if the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution. Not used when override DNS (aliases) are disabled.
 
+#### Match Domains
+
+By default, when match domains are not set, all DNS queries are sent to the configured upstream DNS server. Match domains let you whitelist which domains should be sent to the upstream DNS server. When match domains are set, only matching queries go to upstream DNS; all other requests use the system's DNS servers.
+
+**When to use it**: When you have a private or corporate DNS server for specific domains (for example, `*.proxy.internal` or `corp.example.com`) and want everything else resolved by the system DNS as usual.
+
+**How it works**: With no match domains configured, every query is forwarded to your Upstream DNS Server. With match domains set, only queries that match the list are forwarded upstream; the rest use the system's default DNS servers.
+
 #### MTU
 
 You can set the maximum transmission unit (MTU) for the client’s internal WireGuard interface. This value is client-wide: every site the client connects to must use the same MTU on the site (Newt) side, or you can see fragmentation, failed handshakes, or unstable tunnels. See the **mtu** option on [Configure Sites](/manage/sites/configure-site) and set the same value on each of those sites.
@@ -84,6 +92,10 @@ All config keys in the `Config` object below can be set in either file. If the s
 
     <ResponseField name="secondaryDNS" type="string">
       Optional secondary upstream DNS server used as a fallback when the primary is unavailable.
+    </ResponseField>
+
+    <ResponseField name="dnsMatchDomains" type="array of strings">
+      Optional whitelist of domains sent to the configured upstream DNS server. When unset, all queries go to upstream DNS. When set, only matching queries use your Upstream DNS Server; all other requests use the system's DNS servers. Supports wildcards such as `*.proxy.internal`.
     </ResponseField>
 
     <ResponseField name="defaultServerURL" type="string">
@@ -124,6 +136,40 @@ As a system administrator, you can script placing `pangolin.json` in `%ProgramDa
 
 The default log level is `info`.
 
+## Mac Client (Advanced)
+
+On Mac, the Pangolin GUI reads configuration from `~/Library/Application Support/Pangolin/pangolin.json`.
+
+<ResponseField name="Config" type="object">
+  JSON configuration for the Mac Pangolin client stored in `pangolin.json`.
+
+  <Expandable title="Config">
+    <ResponseField name="dnsOverrideEnabled" type="boolean">
+      When true, matches the **Enable Aliases (Override DNS)** preference and lets the client take over DNS resolution for Pangolin resources.
+    </ResponseField>
+
+    <ResponseField name="dnsTunnelEnabled" type="boolean">
+      When true, matches the **DNS Over Tunnel** preference and sends DNS queries through the Pangolin tunnel.
+    </ResponseField>
+
+    <ResponseField name="primaryDNSServer" type="string">
+      Primary upstream DNS server used when override/tunnel DNS is enabled.
+    </ResponseField>
+
+    <ResponseField name="secondaryDNSServer" type="string">
+      Optional secondary upstream DNS server used as a fallback when the primary is unavailable.
+    </ResponseField>
+
+    <ResponseField name="dnsMatchDomains" type="array of strings">
+      Optional whitelist of domains sent to the configured upstream DNS server. When unset, all queries go to upstream DNS. When set, only matching queries use your Upstream DNS Server; all other requests use the system's DNS servers. Supports wildcards such as `*.proxy.internal`.
+    </ResponseField>
+
+    <ResponseField name="tunnelMTU" type="integer">
+      MTU for the internal WireGuard interface. Changing this is advanced and not recommended unless you have a clear reason; if you set a non-default value, configure the same MTU on every site this client connects to. See [Configure Sites](/manage/sites/configure-site).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
 ## Android Battery Optimization
 
 To ensure Pangolin functions correctly in the background on Android devices, it's recommended to disable battery optimization for the app. This prevents the operating system from restricting its background activities, which could lead to disconnections.
@@ -143,7 +189,7 @@ To ensure Pangolin functions correctly in the background on Android devices, it'
 
 Refer to the [documentation in the official repository](https://github.com/fosrl/cli/blob/main/docs/pangolin.md) for the available commands, default values, and more.
 
-## Olm (Advanced)
+## Olm (Advanced, Deprecated)
 
 <Accordion title="Olm CLI (advanced use only)">
 
@@ -267,6 +313,10 @@ Olm is a command-line client for connecting machine clients in Pangolin. You can
   **Default**: `false`
 </ResponseField>
 
+<ResponseField name="match-domains-dns" type="string">
+  Optional comma-separated whitelist of domains sent to the configured upstream DNS server. When unset, all queries go to upstream DNS. When set, only matching queries use your Upstream DNS Server; all other requests use the system's DNS servers. Supports wildcards such as `*.proxy.internal`.
+</ResponseField>
+
 <ResponseField name="disable-relay" type="boolean">
   Disable relay connections.
 
@@ -379,6 +429,10 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   **Default**: `false`
 </ResponseField>
 
+<ResponseField name="MATCH_DOMAINS_DNS" type="string">
+  Optional whitelist of domains sent to the configured upstream DNS server (equivalent to `--match_domains_dns`). When unset, all queries go to upstream DNS.
+</ResponseField>
+
 <ResponseField name="DISABLE_RELAY" type="boolean">
   Disable relay connections (equivalent to `--disable-relay`)
 
@@ -415,6 +469,7 @@ $ cat ~/.config/olm-client/config.json
   "pingTimeout": "5s",
   "disableHolepunch": false,
   "overrideDNS": false,
+  "matchDomainsDNS": [],
   "disableRelay": false,
   "tlsClientCert": ""
 }
