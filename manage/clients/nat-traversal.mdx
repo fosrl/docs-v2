@@ -1,6 +1,6 @@
 ---
 title: "NAT Traversal"
-description: "How clients connect directly to sites or relay through Pangolin, and how to improve reliability"
+description: "How clients connect on the same network, hole punch through NAT, or relay through Pangolin"
 ---
 
 import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
@@ -9,7 +9,13 @@ import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
 
 
-When a client connects to a site, Pangolin tries to establish the most direct path possible. Clients have two major operation modalities: NAT hole punching and relaying. A client will first attempt to hole punch before falling back to relaying.
+When a client connects to a site, Pangolin tries to establish the most direct path possible. If the client and site are on the same local network, they form a direct peer-to-peer connection on that network. Otherwise, the client attempts NAT hole punching before falling back to relaying.
+
+## Same Network Detection
+
+When a client and site share the same local network, they detect this and connect peer-to-peer over the LAN. Packets stay on the local network and are not routed out through the internet or your Pangolin server. The connection does not use the relay path when both peers are on the same network.
+
+Same-network connections typically offer the lowest latency because traffic never leaves the LAN.
 
 ## NAT Hole Punching
 
@@ -102,6 +108,10 @@ Another option is to keep Newt listening for client connections on a static port
 ## FAQ
 
 <AccordionGroup>
+<Accordion title="What happens when the client and site are on the same network?">
+  The client and site detect that they share a local network and form a direct peer-to-peer connection on the LAN. Packets are not routed out of the network, and the connection does not use the relay path.
+</Accordion>
+
 <Accordion title="Why is my connection relayed instead of direct?">
   Hole punching can fail when either side sits behind a restrictive NAT, symmetric NAT, or a firewall that blocks the UDP ports needed for peer discovery. When that happens, the client and site fall back to relaying through your Pangolin server so the tunnel still comes up reliably.
 </Accordion>
