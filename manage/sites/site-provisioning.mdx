@@ -141,6 +141,12 @@ In the Pangolin admin UI, create a provisioning key from the provisioning settin
 
 Optionally, sites provisioned with a key can be placed into a pending state. They appear under the Pending Sites tab on the provisioning page so administrators can review new sites and approve them before they are treated as fully active in production.
 
+When a site is pending, any resources created for that site from a blueprint are pending as well. Pending resources are hidden from the main resources table and disabled by default, so end users cannot access them. That keeps the provisioned site and its blueprint resources in a staging setup until an admin confirms everything looks correct.
+
+Admins can still inspect pending resources from the site: open **Resources** on the site row in the sites table, or go to the site’s edit page. Pending resources can be edited like any other resource. You can review configuration, enable a resource temporarily, and connect to verify that access works before promoting the site.
+
+Approving a pending site marks all of its associated pending resources as not pending and enables them, moving the staged setup into production. Rejecting a pending site deletes all associated pending resources along with the site.
+
 <Frame>
   <img src="/images/pending-sites.png" alt="Pending sites listed for admin review" centered />
 </Frame>
