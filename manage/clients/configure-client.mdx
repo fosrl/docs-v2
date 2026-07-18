@@ -203,6 +203,12 @@ Olm is a command-line client for connecting machine clients in Pangolin. You can
   **Default**: `8.8.8.8:53`
 </ResponseField>
 
+<ResponseField name="match-domains-dns" type="string">
+  FQDN wildcard patterns (using `*` and `?` wildcards, comma-separated, e.g. `*.proxy.internal,*.host-0?.autoco.internal`) to check against local records/upstream DNS. Queries for domains that don't match any pattern are sent directly to the host's own system DNS servers instead of being resolved as Pangolin resources.
+
+  **Default**: (empty, matches every domain)
+</ResponseField>
+
 <ResponseField name="log-level" type="string">
   The log level to use for Olm output.
 
@@ -236,9 +242,9 @@ Olm is a command-line client for connecting machine clients in Pangolin. You can
 </ResponseField>
 
 <ResponseField name="http-addr" type="string">
-  HTTP server address (e.g., ':9452').
+  HTTP server address (e.g., ':9452'). When unset, the HTTP API is not started and the socket API (see `socket-path`) is used instead.
 
-  **Default**: `:9452`
+  **Default**: (not set)
 </ResponseField>
 
 <ResponseField name="socket-path" type="string">
@@ -254,9 +260,9 @@ Olm is a command-line client for connecting machine clients in Pangolin. You can
 </ResponseField>
 
 <ResponseField name="override-dns" type="boolean">
-	When enabled, the client uses custom DNS servers to resolve internal resources and aliases. This overrides your system's default DNS settings. Queries that cannot be resolved as a Pangolin resource will be forwarded to your configured Upstream DNS Server. (default true)
+	When enabled, the client uses custom DNS servers to resolve internal resources and aliases. This overrides your system's default DNS settings. Queries that cannot be resolved as a Pangolin resource will be forwarded to your configured Upstream DNS Server.
 
-  **Default**: `false`
+  **Default**: `true`
 </ResponseField>
 
 <ResponseField name="tunnel-dns" type="boolean">
@@ -317,6 +323,12 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   **Default**: `8.8.8.8:53`
 </ResponseField>
 
+<ResponseField name="MATCH_DOMAINS_DNS" type="string">
+  FQDN wildcard patterns, comma-separated (equivalent to `--match-domains-dns`)
+
+  **Default**: (empty, matches every domain)
+</ResponseField>
+
 <ResponseField name="LOG_LEVEL" type="string">
   Log level (equivalent to `--log-level`)
 
@@ -352,7 +364,7 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 <ResponseField name="HTTP_ADDR" type="string">
   HTTP server address (equivalent to `--http-addr`)
 
-  **Default**: `:9452`
+  **Default**: (not set)
 </ResponseField>
 
 <ResponseField name="SOCKET_PATH" type="string">
@@ -371,6 +383,14 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
 
 <ResponseField name="OVERRIDE_DNS" type="boolean">
   Override system DNS settings (equivalent to `--override-dns`)
+
+  Set to "true" to enable
+
+  **Default**: `true`
+</ResponseField>
+
+<ResponseField name="TUNNEL_DNS" type="boolean">
+  Route DNS queries through the tunnel (equivalent to `--tunnel-dns`)
 
   Set to "true" to enable
 
@@ -404,6 +424,7 @@ $ cat ~/.config/olm-client/config.json
   "mtu": 1280,
   "dns": "8.8.8.8",
   "upstreamDNS": ["8.8.8.8:53"],
+  "matchDomainsDNS": [],
   "interface": "olm",
   "logLevel": "INFO",
   "enableApi": false,
@@ -412,7 +433,8 @@ $ cat ~/.config/olm-client/config.json
   "pingInterval": "3s",
   "pingTimeout": "5s",
   "disableHolepunch": false,
-  "overrideDNS": false,
+  "overrideDNS": true,
+  "tunnelDNS": false,
   "disableRelay": false,
   "tlsClientCert": ""
 }
