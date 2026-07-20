@@ -53,3 +53,15 @@ Another pattern is routing traffic destined for a public SaaS hostname through a
 Pangolin smooths away overlapping networks and arbitrarily chooses a single site to resolve the IP address or range to. This is because we want connection requests to any Resource to be as simple as possible for the end users: when they connect to a particular IP address or FQDN, Pangolin figures out which site to send it to and the end user never needs to figure this out.
 
 It is recommended that you create overlapping resources only if absolutely required. If you do, use [Aliases](/manage/resources/private/alias) to explicitly define which host should be used for a given FQDN or IP address and use the alias to connect.
+
+### Overlapping destinations with local routes
+
+The Pangolin client uses split tunneling: it only routes traffic for the private resources you've defined, and leaves everything else—public websites, local printers, other network devices—on the device's normal network path.
+
+If a resource's destination overlaps with the user's local subnet, the client can end up capturing traffic that should have stayed local. For example, if a resource is defined as `192.168.1.0/24` (or a specific IP inside that range) and the user's home network is also on `192.168.1.0/24`, the client will route their local traffic—like printer or NAS access—over the tunnel instead, where it fails.
+
+**Symptoms** include a user losing access to a local printer, file server, or another VPN client once connected to Pangolin.
+
+**To fix it**, have the user check their local IP and subnet (`ipconfig` on Windows, `ifconfig`/`ip addr` on macOS/Linux), then compare it against your resource destinations. The recommended solution is to use more specific routes for your resources to prevent routing conflicts. For example instead of using a whole CIDR, use only host resources, or use more specific CIDRs like a /30 instead of a /24. Clients will always route to more specific routes over less specific ones. This way resource access is still controlled by Pangolin while the user's local and internet traffic is undisturbed.
+
+If the above does not work, on Windows and Linux you can update the Pangolin client configuration to add a `prefer local routes` entry for the user's local subnet. This will tell the client to leave that traffic on the local network instead of routing it over the tunnel. See the [Configure Clients](/manage/clients/configure-client) page.
