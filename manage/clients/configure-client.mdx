@@ -117,6 +117,10 @@ All config keys in the `Config` object below can be set in either file. If the s
     <ResponseField name="mtu" type="integer">
       MTU for the internal WireGuard interface. Changing this is advanced and not recommended unless you have a clear reason; if you set a non-default value, configure the same MTU on every site this client connects to—see [Configure Sites](/manage/sites/configure-site).
     </ResponseField>
+
+    <ResponseField name="preferLocalRoutes" type="boolean">
+      When true, prioritizes local routes over remote ones by adding an arbitrary metric to the WireGuard routes. This is useful when you want to ensure that local network traffic (for example, to a printer or NAS) is not routed through the Pangolin tunnel.
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -329,6 +333,12 @@ Olm is a command-line client for connecting machine clients in Pangolin. You can
   **Default**: `false`
 </ResponseField>
 
+<ResponseField name="prefer-local-routes" type="boolean">
+  When true, prioritizes local routes over remote ones by adding an arbitrary metric to the WireGuard routes. This is useful when you want to ensure that local network traffic (for example, to a printer or NAS) is not routed through the Pangolin tunnel.
+
+  **Default**: `false`
+</ResponseField>
+
 ### Environment Variables
 
 All CLI arguments can be set using environment variables as an alternative to command line flags. Environment variables are particularly useful when running Olm in containerized environments.
@@ -453,6 +463,12 @@ When both environment variables and CLI arguments are provided, CLI arguments ta
   Optional whitelist of domains sent to the configured upstream DNS server (equivalent to `--match_domains_dns`). When unset, all queries go to upstream DNS.
 </ResponseField>
 
+<ResponseField name="PREFER_LOCAL_ROUTES" type="boolean">
+  When true, prioritizes local routes over remote ones by adding an arbitrary metric to the WireGuard routes. This is useful when you want to ensure that local network traffic (for example, to a printer or NAS) is not routed through the Pangolin tunnel.
+
+  **Default**: `false`
+</ResponseField>
+
 <ResponseField name="DISABLE_RELAY" type="boolean">
   Disable relay connections (equivalent to `--disable-relay`)
 
@@ -492,7 +508,8 @@ $ cat ~/.config/olm-client/config.json
   "overrideDNS": true,
   "tunnelDNS": false,
   "disableRelay": false,
-  "tlsClientCert": ""
+  "tlsClientCert": "",
+  "preferLocalRoutes": false
 }
 ```
 
