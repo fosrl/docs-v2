@@ -35,6 +35,12 @@ Right now you can match on the following items:
 
 Path match rules allow URL patterns defined with plain text and wildcards (`*`) that match any characters. Patterns and URLs are split into segments (using `/`), and **each segment is matched individually**.
 
+<Warning>                                                                                                                                                                                                                           
+Pangolin matches on the **exact path** and does not account for query parameters. If a path may include query parameters, append a wildcard `*` to the pattern.
+                                                                                                                                                                                                                                    
+For example, allowing `blog/posts` will **not** match `blog/posts?token=123`. Use `blog/posts?token=*` instead.
+</Warning>
+
 #### Examples:
 
 - `blog/posts`
@@ -54,6 +60,9 @@ Path match rules allow URL patterns defined with plain text and wildcards (`*`) 
 
 - `personal-*/*`
   Matches paths where the first segment starts with `personal-` and is followed by any segment (e.g., `/personal-blog/post`).
+
+ - `blog/posts?token=*`
+    Matches `blog/posts` with any token query parameter (e.g., `/blog/posts?token=abc123`).
 
 #### Segment-by-Segment Matching
 
