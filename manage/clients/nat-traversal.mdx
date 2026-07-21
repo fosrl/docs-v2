@@ -17,6 +17,8 @@ When a client and site share the same local network, they detect this and connec
 
 Same-network connections typically offer the lowest latency because traffic never leaves the LAN.
 
+Newt collects IP addresses from the host's network interfaces and uses them to send UDP test packets to the client. If Newt runs inside a Docker container, it only sees the container's internal network, so run it on the host itself to ensure it can detect the host's real IP addresses. This detection also works across VLANs—if a client and site are on different VLANs but routing between them is configured correctly, the connection should still succeed.
+
 ## NAT Hole Punching
 
 NAT hole punching establishes a direct peer-to-peer connection between the client and site, bypassing the need to route traffic through the Pangolin server. The server coordinates the initial connection by helping both peers discover each other's network addresses, allowing them to establish a direct tunnel through their respective NATs and firewalls.
@@ -46,10 +48,12 @@ You can confirm whether a connection is direct or relayed from the client.
 
 ### GUI clients
 
-In a GUI client (Mac, Windows, Android, or iOS/iPadOS), open **Preferences**, go to the **Status** tab, and switch to the **JSON** view. Under each connected site in the `peers` object, check `isRelay`:
+In a GUI client (Mac, Windows, Android, or iOS/iPadOS), open **Preferences**, go to the **Status** tab, and switch to the **JSON** view. Under each connected site in the `peers` object, check `isRelay` and `isLocal`:
 
 - `isRelay: false` — direct hole-punched connection to the site
 - `isRelay: true` — traffic is relayed through your Pangolin server
+- `isLocal: true` — the site is on the same local network as the client
+- `isLocal: false` — the site is on a different network
 
 Example (values obfuscated):
 
@@ -63,6 +67,7 @@ Example (values obfuscated):
       "connected": true,
       "endpoint": "203.0.113.10:51820",
       "isRelay": false,
+      "isLocal": true,
       "name": "Office Network",
       "siteId": 1001
     },
@@ -70,6 +75,7 @@ Example (values obfuscated):
       "connected": true,
       "endpoint": "198.51.100.5:21820",
       "isRelay": true,
+      "isLocal": false,
       "name": "Remote Lab",
       "siteId": 1002
     }
@@ -83,16 +89,17 @@ In this example, **Office Network** is connected directly (`isRelay: false`) and
 
 ### CLI
 
-On Linux or when using [Pangolin CLI](/manage/clients/install-client), run `pangolin status`. The **RELAY** column shows whether each site is relayed (`true`) or directly connected (`false`):
+On Linux or when using [Pangolin CLI](/manage/clients/install-client), run `pangolin status`. The **CONNECTION** column shows whether each site is connected directly (`Direct`) or via relay (`Relay`):
 
 ```bash
 pangolin status
 AGENT         VERSION  STATUS     ORG
 Pangolin CLI  0.10.1   Connected  org_example123
 
-SITE            ENDPOINT               STATUS     LAST SEEN  RELAY
-Office Network  203.0.113.10:51820     Connected  1s ago     false
-Remote Lab      198.51.100.5:21820     Connected  1s ago     true
+SITE            ENDPOINT               STATUS     LAST SEEN  CONNECTION
+Office Network  203.0.113.10:51820     Connected  1s ago     Direct
+Remote Lab      198.51.100.5:21820     Connected  1s ago     Relay
+Worklab Lab      192.168.1.33:23423     Connected  1s ago     Local
 ```
 
 Use either view when troubleshooting hole punching or verifying that configuration changes took effect.
