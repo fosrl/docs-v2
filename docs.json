@@ -5,7 +5,7 @@
     "description": "Zero trust access to all your infrastructure, self-hosted applications, and SaaS tools. Easy to deploy and scale. Better than your existing VPN.",
     "colors": {
         "primary": "#202020",
-        "light": "#202020",
+        "light": "#FF7A33",
         "dark": "#F36117"
     },
     "background": {
@@ -15,7 +15,10 @@
     },
     "styling": {
         "codeblocks": {
-            "theme": "gruvbox-light-hard"
+            "theme": {
+                "light": "gruvbox-light-hard",
+                "dark": "gruvbox-dark-hard"
+            }
         }
     },
     "favicon": "/favicon.png",
@@ -325,7 +328,7 @@
     },
     "appearance": {
         "default": "light",
-        "strict": true
+        "strict": false
     },
     "logo": {
         "light": "/logo/light.png",
