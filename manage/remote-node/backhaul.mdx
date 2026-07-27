@@ -249,6 +249,10 @@ On Windows, set `nativeMain` in the Newt client's `config.json` instead:
 ```
 
 <Warning>
+If you are using Newt on Windows `wintun.dll` is required to run in native mode. If not already provided by the installer, you can download from https://www.wintun.net/
+</Warning>
+
+<Warning>
 	Windows doesn't respond to ICMP echo requests (ping) over the tunnel interface by default. If you need to ping a Windows site, enable the built-in firewall rule for it:
 
 	```powershell
