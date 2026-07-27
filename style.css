@@ -209,6 +209,21 @@
   #sidebar .relative .sticky {
     opacity: 0;
   }
+
+  /* Full-width shell so sidebar sits on the left; constrain content separately */
+  @media (min-width: 1024px) {
+    #navbar.is-not-custom.is-not-center + div:has(> #sidebar) {
+      max-width: none !important;
+      margin-inline: 0 !important;
+      padding-left: 0 !important;
+    }
+
+    #content-container {
+      width: 100%;
+      max-width: 70rem;
+      margin-inline: auto;
+    }
+  }
   
   #header {
     padding-bottom: 25px;
