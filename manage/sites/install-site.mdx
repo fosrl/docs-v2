@@ -237,7 +237,18 @@ Container management UIs like Portainer typically allow passing commands and env
 
 ### Windows Service
 
-On Windows, newt can to be installed and run as a Windows service to remain persistent.
+On Windows, newt can be run as a service or normally as a binary in a session.
+
+When running as a binary and not installing the service, you can use the same CLI arguments as you would on any other platform.
+
+If you are installing the service, we recommend writing the config into the config file location (`%PROGRAMDATA%\newt\newt-client\config.json`) first, following the [config file format](/manage/sites/install-site#config-file-injected-as-compose-secret), with the provisioning key. Alternatively, you can install the service and start it with CLI args, which will also work. For example:
+
+```
+newt install
+newt start --endpoint https://app.pangolin.net --provisioning-key <provisioning-key>
+```
+
+This will provision a new service, start it, and create the config file for future starts.
 
 #### Service Management Commands
 
