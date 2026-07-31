@@ -142,7 +142,7 @@ The default log level is `info`.
 
 ## Mac Client (Advanced)
 
-On Mac, the Pangolin GUI reads configuration from `~/Library/Application Support/Pangolin/pangolin.json`.
+On Mac, the Pangolin GUI reads configuration from `~/Library/Application Support/Pangolin/pangolin.json`. Restart Pangolin after editing for changes to apply.
 
 <ResponseField name="Config" type="object">
   JSON configuration for the Mac Pangolin client stored in `pangolin.json`.
@@ -170,6 +170,18 @@ On Mac, the Pangolin GUI reads configuration from `~/Library/Application Support
 
     <ResponseField name="tunnelMTU" type="integer">
       MTU for the internal WireGuard interface. Changing this is advanced and not recommended unless you have a clear reason; if you set a non-default value, configure the same MTU on every site this client connects to. See [Configure Sites](/manage/sites/configure-site).
+    </ResponseField>
+
+    <ResponseField name="autoUpdateChecksEnabled" type="boolean">
+      When true, periodically check for updates in the background. When false, automatic checks are off; users can still use **Check for Updates**. If omitted, the client default applies (may prompt the user on second launch). Enabling checks without `autoDownloadUpdatesEnabled` still surfaces the update UI when a new version exists. Intended for admin / MDM provisioning so config stays the source of truth over user toggles.
+    </ResponseField>
+
+    <ResponseField name="autoDownloadUpdatesEnabled" type="boolean">
+      When true, download updates silently when found and stage install for quit/relaunch. When false, show the normal update dialog instead of silent download. Silent download does not replace the running app mid-session; the update installs on quit (and relaunches), so long-running menu bar sessions may keep a staged update until quit. If omitted, the default is `false`.
+    </ResponseField>
+
+    <ResponseField name="updateCheckIntervalSeconds" type="integer">
+      How often automatic checks run, in seconds. Values below `3600` (1 hour) are clamped to `3600`. Only matters when `autoUpdateChecksEnabled` is true. If omitted, the default is `86400` (24 hours).
     </ResponseField>
   </Expandable>
 </ResponseField>
