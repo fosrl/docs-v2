@@ -43,11 +43,13 @@ You cannot use an alias name for your DNS server. It must be the IP address of t
 
 #### Primary Upstream DNS
 
-This is the DNS server that will be used if Override DNS is enabled or DNS Over Tunnel is enabled. It serves as the primary resolver for queries that cannot be resolved as Pangolin resources. Not used when override DNS (aliases) are disabled.
+This is the DNS server used to resolve queries that are not bound to a Pangolin alias when Override DNS or DNS Over Tunnel is enabled.
+
+When left blank, **System DNS** is used. This pulls the existing configured system DNS settings and applies them to the tunnel. If Tunnel DNS is enabled and System DNS is used, requests will likely fail if the DNS server is not accessible over the tunnel.
 
 #### Secondary Upstream DNS
 
-This is a fallback DNS server that the system can use if the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution. Not used when override DNS (aliases) are disabled.
+This is a fallback DNS server used to resolve queries that are not bound to a Pangolin alias when the primary server is unavailable. Ordering and priority of the server is not guaranteed, but it provides redundancy for DNS resolution. When left blank, **System DNS** is used, same as Primary Upstream DNS.
 
 #### Match Domains
 
