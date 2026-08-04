@@ -72,7 +72,7 @@ On Windows, the Pangolin GUI reads configuration from two `pangolin.json` files:
 - User config: `%LOCALAPPDATA%\Pangolin\pangolin.json` (for example, `C:\Users\USER\AppData\Local\Pangolin\pangolin.json`)
 - Global config: `%ProgramData%\Pangolin\pangolin.json`
 
-All config keys in the `Config` object below can be set in either file. If the same key exists in both places, the user config value overrides the global value. This lets administrators define global defaults while still allowing per-user overrides when needed.
+Most keys in the `Config` object below can be set in either file. If the same key exists in both places, the user config value overrides the global value. This lets administrators define global defaults while still allowing per-user overrides when needed. Keys marked **Global only** must be set in `%ProgramData%\Pangolin\pangolin.json`; restart the Pangolin manager/UI after changing them.
 
 <ResponseField name="Config" type="object">
   JSON configuration for the Windows Pangolin client stored in `pangolin.json`.
@@ -121,6 +121,22 @@ All config keys in the `Config` object below can be set in either file. If the s
     <ResponseField name="preferLocalRoutes" type="boolean">
       When true, prioritizes local routes over remote ones by adding an arbitrary metric to the WireGuard routes. This is useful when you want to ensure that local network traffic (for example, to a printer or NAS) is not routed through the Pangolin tunnel.
     </ResponseField>
+
+    <ResponseField name="autoUpdateChecksEnabled" type="boolean">
+      **Global only.** When true, periodically check for updates in the background. When false, automatic checks are off; users can still use **Check for Updates** unless that button is also disabled. If omitted, the default is `true`. Enabling checks surfaces the update UI when a new version exists (tray “Pangolin Update Available” and the update prompt). Intended for org admins / MDM so config is the source of truth.
+    </ResponseField>
+
+    <ResponseField name="updateCheckIntervalSeconds" type="integer">
+      **Global only.** How often automatic checks run, in seconds. Values below `3600` (1 hour) are clamped to `3600`. Only matters when `autoUpdateChecksEnabled` is true. If omitted, the default is `86400` (24 hours). The client applies a small amount of jitter around this interval.
+    </ResponseField>
+
+    <ResponseField name="checkForUpdatesButtonEnabled" type="boolean">
+      **Global only.** When true, show **Check for Updates** in the system tray More menu. When false, hide that menu item. If omitted, the default is `true`. Manual checks always perform a live network lookup when the button is used. This is independent of `autoUpdateChecksEnabled`.
+    </ResponseField>
+
+    <ResponseField name="logLevel" type="string">
+      **Global only.** Controls client log verbosity. Supported values include `debug` and `info`. If omitted, the default is `info`.
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -129,16 +145,6 @@ As a system administrator, you can script placing `pangolin.json` in `%ProgramDa
 <Tip>
  For enterprise customers, contact us if you need a custom MSI installer with baked-in configuration; we can maintain custom installers as an add-on to your enterprise license.
 </Tip>
-
-### Windows client log level
-
-`logLevel` is a global-only setting. To configure it for the Windows client, edit `%ProgramData%\Pangolin\pangolin.json`. For example:
-
-```json
-{ "logLevel": "debug" }
-```
-
-The default log level is `info`.
 
 ## Mac Client (Advanced)
 
