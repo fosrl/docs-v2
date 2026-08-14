@@ -36,6 +36,14 @@ These authentication methods provide user identity information and will include 
 <Card title="Single Sign-On (SSO)" icon="users">
   Full user identity information including username, email, and name.
 </Card>
+
+<Card title="Email-based One Time Passcode (OTP)" icon="envelope">
+  Only `Remote-Email` is provided, set to the whitelisted address the visitor authenticated with. `Remote-User`, `Remote-Name`, and `Remote-Role` are not available since there is no associated user account.
+</Card>
+
+<Card title="Shareable Links" icon="link">
+  Only available if the link was created with an associated user account. In that case, full user identity information is forwarded, the same as SSO. Links created without an associated user do not provide identity headers.
+</Card>
 </CardGroup>
 
 ### Headers Not Available
@@ -48,10 +56,6 @@ These authentication methods do not provide user identity information:
 </Card>
 
 <Card title="Password" icon="lock">
-  No user identity - only access control.
-</Card>
-
-<Card title="Shareable Links" icon="link">
   No user identity - only access control.
 </Card>
 </CardGroup>
