@@ -372,6 +372,31 @@ private-resources:
       - Member
 ```
 
+## Resource Labels
+
+Attach labels to public and private resources to organize and filter them in the dashboard. These are the same labels manageable from **Settings > Labels** — not to be confused with the [Docker container labels](#container-labels-format) used to define blueprints from Compose.
+
+```yaml
+public-resources:
+  app:
+    name: App
+    mode: http
+    full-domain: app.example.com
+    labels:
+      - production
+      - team-infra
+    targets:
+      - site: my-site
+        hostname: app
+        port: 8080
+        method: http
+```
+
+- Label names are matched case-insensitively against existing labels in the organization.
+- If a label with that name doesn't already exist yet, Pangolin creates it automatically.
+- Each apply replaces the resource's full label list with the list in the blueprint.
+- Labels are not synced for [targets-only](#targets-only-resources) public resources — omitting `labels` on a targets-only update leaves existing labels untouched.
+
 ## Container Labels Format
 
 Container labels are the same blueprint schema flattened into dot-separated keys:
@@ -575,6 +600,8 @@ public-resources:
     policy: default-member
     full-domain: app.example.com
     enabled: true
+    labels:
+      - production
     host-header: internal.example.local
     tls-server-name: internal.example.local
     headers:
@@ -688,6 +715,15 @@ public-resources:
 
         YAML: `enabled: true`  
         Container label: `pangolin.public-resources.web-app.enabled=true`
+      </ResponseField>
+
+      <ResponseField name="labels" type="array of strings">
+        [Resource labels](#resource-labels) to attach, by name. Labels that don't already exist in the organization are created automatically. Not synced when the resource is [targets-only](#targets-only-resources).
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `labels: [production]`  
+        Container label: `pangolin.public-resources.web-app.labels[0]=production`
       </ResponseField>
 
       <ResponseField name="host-header" type="string">
@@ -1168,6 +1204,8 @@ private-resources:
       - user@example.com
     machines:
       - machine-id-1
+    labels:
+      - production
 
   internal-app:
     name: Internal App
@@ -1356,6 +1394,15 @@ private-resources:
 
         YAML: `machines: [machine-id-1]`  
         Container label: `pangolin.private-resources.internal-net.machines[0]=machine-id-1`
+      </ResponseField>
+
+      <ResponseField name="labels" type="array of strings">
+        [Resource labels](#resource-labels) to attach, by name. Labels that don't already exist in the organization are created automatically.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `labels: [production]`  
+        Container label: `pangolin.private-resources.internal-net.labels[0]=production`
       </ResponseField>
     </Expandable>
   </ResponseField>
