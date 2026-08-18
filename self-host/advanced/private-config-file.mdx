@@ -202,15 +202,6 @@ This section contains the complete reference for all configuration options in `p
       ```
     </ResponseField>
 
-    <ResponseField name="enable_acme_cert_sync" type="boolean" default="true">
-      Enable automatic synchronization of ACME certificates for TLS termination on private resources.
-      
-      ```yaml
-      flags:
-        enable_acme_cert_sync: true
-      ```
-    </ResponseField>
-    
     <ResponseField name="enable_redis" type="boolean" default="false">
       Enable Redis for caching and session management. Requires `redis` configuration.
       
@@ -226,54 +217,6 @@ This section contains the complete reference for all configuration options in `p
       ```yaml
       flags:
         use_pangolin_dns: true
-      ```
-    </ResponseField>
-  </Expandable>
-</ResponseField>
-
-### ACME Configuration
-
-<ResponseField name="acme" type="object">
-  Configuration for ACME certificate synchronization. Used in conjunction with `flags.enable_acme_cert_sync` to synchronize TLS certificates issued by Traefik (or another ACME client) into Pangolin for use on private resources.
-
-  <Expandable title="properties">
-    <ResponseField name="acme_json_path" type="string" default="config/letsencrypt/acme.json">
-      Path to the `acme.json` file or a directory containing more than one acme json file produced by Traefik (or another ACME client). Pangolin reads this file to extract certificates for synchronization and will look for all files in the specified directory if a directory is provided. The file must be in the format produced by Traefik's ACME integration. This file is typically mounted as a volume from your ACME client container.
-      
-      ```yaml
-      acme:
-        acme_json_path: "config/letsencrypt/acme.json"
-      ```
-    </ResponseField>
-
-    <ResponseField name="sync_interval_ms" type="number" default="5000">
-      Interval in milliseconds at which Pangolin polls the `acme.json` file for certificate changes.
-      
-      ```yaml
-      acme:
-        sync_interval_ms: 5000
-      ```
-    </ResponseField>
-
-    <ResponseField name="acme_http_endpoint" type="string" default="">
-        HTTP endpoint where Pangolin can pull SSL certificates from to load into the database. Provided in the following format: 
-
-        ```json
-        [
-            {
-                "wildcard": false,
-                "altName": "subdomain.example.com",
-                "certName": "subdomain.example.com",
-                "commonName": "subdomain.example.com",
-                "certFile": "",
-                "keyFile": ""
-            }
-        ]
-      ```
-
-      ```yaml
-      acme:
-        acme_http_endpoint: "http://controller-api.pangolin.svc.cluster.local/api/v1/certificates"
       ```
     </ResponseField>
   </Expandable>
