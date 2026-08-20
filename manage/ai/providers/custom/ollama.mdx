@@ -18,7 +18,7 @@ See [Capabilities](/manage/ai/providers/configuration#capabilities) for the full
 3. Select **OpenAI Chat Completions**.
 4. Set **Routing Mode** to **Site Targets** if Ollama runs on a site's network. Use **Upstream URL** (`http://<host>:11434`) only when the Pangolin node can reach Ollama directly.
 5. Set **Auth Type** to **No Auth** on a private LAN. Use **Bearer** if you set an Ollama API key.
-6. Allow the exact model ids you plan to call, for example `llama3.2`. See [Models](/manage/ai/providers/configuration#models).
+6. Allow the exact model ids you plan to call, for example `llama3.2`. See [Model Routing](/manage/ai/providers/model-routing).
 7. Save. On the **Network** tab, add a target: the Ollama host, port `11434`, method HTTP.
 8. Attach the provider to an [AI Gateway resource](/manage/ai/overview).
 

@@ -918,6 +918,60 @@ This section contains the complete reference for all configuration options in `c
   </Expandable>
 </ResponseField>
 
+### AI Model Catalog
+
+The catalog feeds Known Models pickers, wildcard discovery, provider selection, and usage pricing. See [Model Catalog](/manage/ai/model-catalog) for the JSON format, catalog providers, and how budgets use pricing.
+
+<ResponseField name="ai" type="object">
+  AI Gateway catalog settings. Omit this block to use the defaults.
+
+  <Expandable title="AI">
+    <ResponseField name="model_catalog" type="object">
+      Where Pangolin loads the model catalog from, and how often it refreshes.
+
+      <Expandable title="Model catalog">
+        <ResponseField name="upstream_url" type="string" default="https://api.fossorial.io/api/v1/models">
+          HTTP endpoint that returns catalog JSON. Point this at your own API to serve a custom catalog.
+
+          ```yaml
+          ai:
+            model_catalog:
+              upstream_url: "https://api.fossorial.io/api/v1/models"
+          ```
+        </ResponseField>
+
+        <ResponseField name="file" type="string">
+          Path to a local catalog JSON file. When set, this file is the base catalog instead of `upstream_url`.
+
+          ```yaml
+          ai:
+            model_catalog:
+              file: "config/ai-models.json"
+          ```
+        </ResponseField>
+
+        <ResponseField name="merge_file" type="string">
+          Path to a local JSON file whose entries are merged into the base catalog. Base entries win on duplicates; the merge file only adds models that are not already present.
+
+          ```yaml
+          ai:
+            model_catalog:
+              merge_file: "config/ai-models-extra.json"
+          ```
+        </ResponseField>
+
+        <ResponseField name="refresh_interval_min_hours" type="number" default="6">
+          Lower bound, in hours, for the jittered background refresh interval.
+        </ResponseField>
+
+        <ResponseField name="refresh_interval_max_hours" type="number" default="12">
+          Upper bound, in hours, for the jittered background refresh interval. Pangolin waits a random duration between min and max so many instances do not hit the upstream at the same moment.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
 ## Environment Variables
 
 Some configuration values can be set using environment variables for enhanced security:

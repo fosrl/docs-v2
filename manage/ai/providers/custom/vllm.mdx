@@ -18,7 +18,7 @@ See [Capabilities](/manage/ai/providers/configuration#capabilities) for the full
 3. Select **OpenAI Chat Completions**.
 4. Set **Routing Mode** to **Site Targets** if vLLM runs on a site's network. Use **Upstream URL** (`http://<host>:8000`) only when the Pangolin node can reach vLLM directly.
 5. Set **Auth Type** to **No Auth** if the server has no key. Use **Bearer** and paste the key if you started vLLM with `--api-key`.
-6. Allow the exact served model id (the `--model` name or `--served-model-name`). See [Models](/manage/ai/providers/configuration#models).
+6. Allow the exact served model id (the `--model` name or `--served-model-name`). See [Model Routing](/manage/ai/providers/model-routing).
 7. Save. On the **Network** tab, add a target: the vLLM host, port `8000`, method HTTP.
 8. Attach the provider to an [AI Gateway resource](/manage/ai/overview).
 

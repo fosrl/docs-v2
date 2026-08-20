@@ -25,7 +25,7 @@ A capability is an API format the gateway will accept and proxy. The incoming re
 
 Typed providers start with recommended capabilities. Custom providers need at least one selected. You can change capabilities later on the provider's **General** tab. Select every format the upstream actually speaks. Custom providers can mix any combination.
 
-If two attached providers share a capability for the same model, the gateway picks one using allow lists and catalog ownership. Two providers of the same type both allowing `*` can leave the request ambiguous.
+If two attached providers share a capability for the same model, the gateway picks one at request time. See [Model Routing](/manage/ai/providers/model-routing#provider-selection).
 
 ## Auth Type
 
@@ -58,11 +58,7 @@ See [Ollama](/manage/ai/providers/custom/ollama), [vLLM](/manage/ai/providers/cu
 
 ## Models
 
-Allow and block lists restrict which model keys this provider may serve. A request must match an allow entry and must not match a block entry. An empty allow list denies all traffic. Patterns support `*` and `?` (`gpt-*`, `claude-3-5-sonnet-?`).
-
-When you attach a provider to a resource you can **inherit** these lists or **select** a subset for that resource only.
-
-OpenRouter, Vercel AI Gateway, and Custom are treated as aggregators: a wildcard allow such as `*` matches at request time but does not expand in `GET /v1/models`. Add exact model keys to make those models show up in discovery.
+Allow and block lists, inherit vs select, and provider selection are covered in [Model Routing](/manage/ai/providers/model-routing). Known Models, ownership scoring, and token pricing for budgets come from the [Model Catalog](/manage/ai/model-catalog).
 
 ## Headers and TLS
 

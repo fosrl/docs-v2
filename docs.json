@@ -194,6 +194,7 @@
                                         "pages": [
                                             "manage/ai/providers/overview",
                                             "manage/ai/providers/configuration",
+                                            "manage/ai/providers/model-routing",
                                             "manage/ai/providers/openai",
                                             "manage/ai/providers/anthropic",
                                             "manage/ai/providers/google-gemini",
@@ -225,7 +226,8 @@
                                             "manage/ai/configure-ai-clients/claude-desktop",
                                             "manage/ai/configure-ai-clients/openclaw"
                                         ]
-                                    }
+                                    },
+                                    "manage/ai/model-catalog"
                                 ]
                             },
                             "manage/endpoints-and-pops",

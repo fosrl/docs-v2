@@ -1,0 +1,74 @@
+---
+title: "Model Routing"
+description: "Allow and block lists, inherit vs select, and how the gateway picks a provider"
+---
+
+Model routing is how Pangolin decides which attached provider handles a request, and which model keys that provider may serve. Configure lists on the provider, optionally narrow them on the resource, then the gateway picks a provider per request.
+
+See [AI Providers](/manage/ai/providers/overview) for what a provider is, and [Provider Configuration](/manage/ai/providers/configuration) for capabilities, auth, and routing mode. The [Model Catalog](/manage/ai/model-catalog) supplies Known Models, wildcard discovery, ownership scoring, and pricing for budgets.
+
+## Choosing Models on a Provider
+
+On the provider's **Models** tab, every request must match an **allow** entry and must not match a **block** entry. An empty allow list denies all traffic. A key cannot sit on both lists.
+
+You add keys three ways:
+
+| How | What it is | Example |
+|---|---|---|
+| **[Catalog (Known Models)](/manage/ai/model-catalog)** | Pick from the catalog for that provider type | `gpt-4o`, `claude-sonnet-4-6` |
+| **Custom key** | Type an exact model id the upstream accepts | `llama3.2`, `openai/gpt-4o-mini` |
+| **Pattern** | Glob with `*` and `?` | `gpt-*`, `claude-3-5-sonnet-?`, `*` |
+
+`*` matches every model key. Typed providers (OpenAI, Anthropic, Google Gemini, Vertex AI, Amazon Bedrock, Microsoft Foundry) show Known Models from the catalog. [OpenRouter](/manage/ai/providers/open-router), [Vercel AI Gateway](/manage/ai/providers/vercel-ai-gateway), and [Custom](/manage/ai/providers/custom) skip that list; enter custom keys or patterns.
+
+### Allow vs Block
+
+Allow is the positive set. Block subtracts even when allow matched. Allow `*` and block `gpt-4o-mini` to permit every key except that one. Allow `gpt-*` and leave block empty to permit only keys that start with `gpt-`.
+
+### Model Discovery
+
+`GET /v1/models` is answered from these lists plus the catalog. The gateway does not proxy that listing call upstream.
+
+- Exact allow keys are listed as themselves.
+- Patterns expand against the catalog for typed providers (`claude-*` becomes every matching catalog id).
+- On OpenRouter, Vercel AI Gateway, and Custom, add exact allow keys to make those models show up in discovery. A wildcard still matches at request time.
+
+A block pattern hides a model from discovery the same way it would reject the request.
+
+## Inherit vs Select
+
+On an AI Gateway resource, attach providers from the **AI Gateway** settings tab. Each attachment has an access mode:
+
+| Mode | What the resource uses |
+|---|---|
+| **Inherit** | The provider's allow and block lists as configured on the provider |
+| **Select** | A subset of that provider's allow-list models, chosen on this resource |
+
+The same provider can be inherited on one resource and selected on another. You can disable an attachment without removing the provider.
+
+Select only offers models already on the provider's allow list. Use inherit when every resource should see the same keys. Use select when one gateway should expose a narrower set (for example a public resource with `gpt-4o` only, while the provider still allows `gpt-*`).
+
+## Provider Selection
+
+When a resource has more than one attached provider, the gateway picks one per request. Overlapping allows are allowed at save time. Collisions are resolved, or rejected, when the request arrives.
+
+Steps, in order. Later steps run only while more than one candidate remains:
+
+1. **Capability.** The path must match a [capability](/manage/ai/providers/configuration#capabilities) the provider advertises.
+2. **Allow and block.** The effective lists (inherit or select) must pass.
+3. **Specificity.** The most specific matching allow wins: exact keys beat patterns, fewer wildcards win, longer literals win. `gpt-4o` beats `gpt-*` beats `*`.
+4. **Catalog ownership.** A typed provider whose catalog contains the id beats an aggregator that also allows it.
+5. **Class.** Native typed providers beat aggregators (OpenRouter, Vercel AI Gateway), which beat Custom.
+6. **Ambiguous.** If more than one distinct provider remains, the gateway returns `403` with `Model "<id>" is ambiguous across multiple AI providers on this resource`.
+
+Typical ambiguous cases: two OpenAI providers both allowing `*`, or two aggregators both allowing `*` with no native owner on the resource.
+
+`GET /v1/models` skips steps 3-6. There is no requested model to disambiguate, so the gateway returns the union of what every attached provider advertising Anthropic Models would accept.
+
+### Examples
+
+**OpenAI + Anthropic, both `*`.** `POST /v1/chat/completions` with `gpt-4o` goes to OpenAI. Anthropic never reaches scoring; capability alone decides. `POST /v1/messages` with a Claude model goes to Anthropic.
+
+**OpenAI + OpenRouter, both `*`.** `gpt-4o` on Chat Completions matches both. Specificity is a tie (`*` vs `*`). Catalog ownership sends it to OpenAI.
+
+**Two OpenAI providers, both `*`.** Capability, lists, specificity, catalog, and class all leave both candidates. Result is the ambiguous error. Narrow at least one allow list, disable one attachment, or split them across resources.

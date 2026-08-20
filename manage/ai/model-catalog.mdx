@@ -1,0 +1,77 @@
+---
+title: "Model Catalog"
+description: "Known models, pricing for budgets, and how to load a custom catalog"
+---
+
+The model catalog is Pangolin's list of known model ids, which provider type owns them, and token pricing. It is used for:
+
+- The **Known Models** picker on a provider's Models tab
+- Expanding wildcard allows in `GET /v1/models`
+- [Provider selection](/manage/ai/providers/model-routing#provider-selection) when more than one attached provider allows the same id
+- **Budgets and usage cost**, which look up `in` / `out` / `cache` / `reasoning` rates for a model key
+
+See [Model Routing](/manage/ai/providers/model-routing) for allow lists, inherit vs select, and how those lists combine with the catalog at request time.
+
+## Catalog Providers
+
+Default source: `https://api.fossorial.io/api/v1/models`. Typed AI provider types map as follows:
+
+| Provider type | Catalog |
+|---|---|
+| OpenAI | `openai` |
+| Anthropic | `anthropic` |
+| Google Gemini | `gemini` |
+| Vertex AI | `vertex` |
+| Amazon Bedrock | `bedrock` |
+| Microsoft Foundry | `azure` |
+| OpenRouter, Vercel AI Gateway, Custom | (not mapped) |
+
+Unmapped types skip Known Models and wildcard expansion against the catalog. Enter exact keys if you need them listed in discovery.
+
+## Pricing and Budgets
+
+Each catalog entry can include token rates: `in`, `out`, `cache`, and `reasoning`. Budget enforcement and usage analytics use those rates when the requested model matches a catalog id. Unknown keys have no catalog price, so add custom models to the catalog if you need cost tracking for them.
+
+## Loading a Custom Catalog
+
+Self-hosted Pangolin loads and refreshes the catalog from [`config.yml`](/self-host/advanced/config-file#ai-model-catalog):
+
+```yaml
+ai:
+  model_catalog:
+    upstream_url: "https://api.fossorial.io/api/v1/models"
+    file: "config/ai-models.json"
+    merge_file: "config/ai-models-extra.json"
+    refresh_interval_min_hours: 6
+    refresh_interval_max_hours: 12
+```
+
+| Key | Purpose |
+|---|---|
+| `upstream_url` | HTTP GET for the catalog JSON. Defaults to the Fossorial API. Point this at your own endpoint to serve a custom catalog. |
+| `file` | Local JSON file that **replaces** the HTTP catalog. |
+| `merge_file` | Local JSON merged on top of the base catalog. Base entries win on duplicates; the merge file only adds missing models. |
+| `refresh_interval_min_hours` / `max_hours` | Background refresh window. The interval is jittered between min and max so many instances do not hit the upstream at the same moment. Defaults are 6 and 12. |
+
+If both `file` and `upstream_url` are set, `file` is used as the base. `merge_file` still applies.
+
+Catalog files and API responses are JSON:
+
+```json
+{
+  "data": [
+    {
+      "model": "gpt-4o",
+      "provider": "openai",
+      "pricing": {
+        "in": 2.5,
+        "out": 10,
+        "cache": 1.25,
+        "reasoning": null
+      }
+    }
+  ]
+}
+```
+
+`provider` must be `openai`, `anthropic`, `gemini`, `vertex`, `azure`, or `bedrock`. Prefixes `bedrock*`, `vertex*`, and `azure*` are accepted and normalized to those catalogs. Unknown providers are skipped.

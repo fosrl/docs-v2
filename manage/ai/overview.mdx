@@ -12,6 +12,7 @@ An AI Gateway resource is a normal Pangolin resource that proxies requests to on
 - **[Providers](/manage/ai/providers/overview)** are configured once per organization - the upstream URL, API key, and capabilities for OpenAI, Anthropic, etc.
 - **Resources** (type `AI Gateway`) attach one or more of those providers and get a normal Pangolin domain.
 - **Keys** are what clients authenticate to the resource with. Public resources check them; private resources don't, since only devices on the Pangolin network can reach them at all.
+- The **[Model Catalog](/manage/ai/model-catalog)** is the known-model list and token pricing used by [model routing](/manage/ai/providers/model-routing) and budgets.
 
 A resource only understands the API format(s) its attached providers support. An Anthropic provider makes the resource speak the Anthropic Messages API; an OpenAI provider makes it speak Chat Completions/Responses; a Gemini provider makes it speak Gemini's `generateContent` API. Attach whichever providers match the clients you plan to connect. See [AI Providers](/manage/ai/providers/overview) for per-type setup and [Provider Configuration](/manage/ai/providers/configuration) for capabilities, auth, and model lists.
 

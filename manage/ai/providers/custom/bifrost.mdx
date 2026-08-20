@@ -18,7 +18,7 @@ See [Capabilities](/manage/ai/providers/configuration#capabilities) for the full
 3. Select **OpenAI Chat Completions** (and any other formats Bifrost should accept).
 4. Set **Routing Mode** to **Site Targets** if Bifrost runs on a site's network. Use **Upstream URL** (`http://<host>:8080`) only when the Pangolin node can reach Bifrost directly.
 5. Set **Auth Type** to **No Auth** on a private LAN. Use **Bearer** if Bifrost requires a virtual key or other API key.
-6. Allow the model ids Bifrost should serve, including provider-prefixed keys such as `openai/gpt-4o-mini` if that is how Bifrost names them. See [Models](/manage/ai/providers/configuration#models).
+6. Allow the model ids Bifrost should serve, including provider-prefixed keys such as `openai/gpt-4o-mini` if that is how Bifrost names them. See [Model Routing](/manage/ai/providers/model-routing).
 7. Save. On the **Network** tab, add a target: the Bifrost host, port `8080`, method HTTP.
 8. Attach the provider to an [AI Gateway resource](/manage/ai/overview).
 
