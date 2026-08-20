@@ -3,9 +3,7 @@ title: "Firewall Quirks"
 description: "Improve Pangolin direct-connect success behind restrictive firewalls"
 ---
 
-import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
-<PangolinCloudTocCta />
 
 Most of the time, Pangolin works with existing firewall policies without any special tuning. Newt and Pangolin clients attempt NAT traversal first so traffic can flow directly between client and site. When direct connectivity cannot be established, traffic falls back to relaying through Gerbil. You can [learn more about how holepunching works here](https://pangolin.net/news/nat-holepunching).
 
