@@ -191,6 +191,7 @@ Public resources expose services through Pangolin.
 - Use **`http`** for websites, APIs, and dashboards
 - Use **`tcp`** or **`udp`** for raw public services bound to a port on the Pangolin server
 - Use **`ssh`**, **`rdp`**, or **`vnc`** for protocol-specific resources
+- Use **`inference`** for an [AI Gateway](/manage/ai/overview) resource that proxies requests to one or more attached AI providers
 
 <Note>
 Use `mode` for new blueprints. `protocol` is still accepted for backward compatibility and is normalized to `mode`.
@@ -324,6 +325,34 @@ Maintenance `type` values:
 - **`forced`**: Always show the maintenance page
 - **`automatic`**: Show it only when all targets are unhealthy or the sites are offline
 
+### AI Gateway (Inference) Example
+
+Set `mode: inference` to turn a public resource into an [AI Gateway](/manage/ai/overview) that proxies requests to one or more AI providers already configured in the organization. Inference resources do not take `targets`.
+
+```yaml
+public-resources:
+  ai-gateway:
+    name: AI Gateway
+    mode: inference
+    full-domain: ai.example.com
+    ai-providers:
+      - provider: openai-prod
+        access-mode: select
+        models:
+          - gpt-4o
+      - provider: anthropic-prod
+        access-mode: inherit
+    ai-budget:
+      - amount: 100
+        unit: usd
+        period: monthly
+        enforcement: hard
+```
+
+- `ai-providers` references AI providers by their identifier and is only allowed when `mode: inference`.
+- `access-mode: select` limits the resource to the listed `models`, which must already be on the provider's allow list. `access-mode: inherit` uses the provider's own allow and block lists. See [Model Routing](/manage/ai/providers/model-routing) for details.
+- `ai-budget` is a list of spend or usage limits enforced on the resource. Only one budget per `unit`/`period` combination is allowed.
+
 ## Private Resources
 
 Private resources define what Pangolin clients can reach after they connect to your organization.
@@ -332,6 +361,7 @@ Private resources define what Pangolin clients can reach after they connect to y
 - Use **`mode: cidr`** for an entire network range
 - Use **`mode: http`** to expose an internal HTTP endpoint to clients via a private domain
 - Use **`mode: ssh`** for SSH access workflows (including native auth-daemon mode)
+- Use **`mode: inference`** for a private [AI Gateway](/manage/ai/overview) resource reachable only by Pangolin clients, not the public internet
 
 <Note>
 When applying a blueprint via Newt (using `--blueprint-file` or container labels), `sites` is optional. If omitted, the resource is assigned to the site of the Newt that applied the blueprint.
@@ -650,7 +680,9 @@ public-resources:
       <ResponseField name="mode" type="string">
         Resource mode. Preferred over `protocol`.
 
-        **Options**: `http`, `tcp`, `udp`, `ssh`, `rdp`, `vnc`
+        **Options**: `http`, `tcp`, `udp`, `ssh`, `rdp`, `vnc`, `inference`
+
+        `inference` turns the resource into an [AI Gateway](/manage/ai/overview) that proxies to attached `ai-providers` instead of `targets`.
 
         YAML: `mode: http`  
         Container label: `pangolin.public-resources.web-app.mode=http`
@@ -722,6 +754,108 @@ public-resources:
 
         YAML: `labels: [production]`  
         Container label: `pangolin.public-resources.web-app.labels[0]=production`
+      </ResponseField>
+
+      <ResponseField name="ai-providers" type="array of objects">
+        AI providers attached to an [AI Gateway](/manage/ai/overview) resource. Only allowed when `mode: inference`.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-providers: [{ provider: openai-prod, access-mode: inherit }]`  
+        Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].provider=openai-prod`
+
+        <Expandable title="AI provider attachment object">
+          <ResponseField name="provider" type="string" required>
+            Identifier of an AI provider already configured in the organization.
+
+            YAML: `provider: openai-prod`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].provider=openai-prod`
+          </ResponseField>
+
+          <ResponseField name="access-mode" type="string">
+            How the resource uses the provider's model lists. `select` requires `models` to be set; `inherit` requires `models` to be empty.
+
+            **Options**: `inherit`, `select`  
+            **Default**: `inherit`
+
+            YAML: `access-mode: select`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].access-mode=select`
+          </ResponseField>
+
+          <ResponseField name="enabled" type="boolean">
+            Enables or disables this provider attachment.
+
+            **Default**: `true`
+
+            YAML: `enabled: true`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].enabled=true`
+          </ResponseField>
+
+          <ResponseField name="models" type="array of strings">
+            Subset of the provider's allow-listed model keys exposed by this resource. Only valid when `access-mode: select`.
+
+            Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+            YAML: `models: [gpt-4o]`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].models[0]=gpt-4o`
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="ai-budget" type="array of objects">
+        Spend or usage budgets enforced on an [AI Gateway](/manage/ai/overview) resource. Each entry must use a unique `unit`/`period` combination.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-budget: [{ amount: 100, unit: usd, period: monthly }]`  
+        Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].amount=100`
+
+        <Expandable title="AI budget object">
+          <ResponseField name="amount" type="number" required>
+            Budget limit. Must be positive.
+
+            YAML: `amount: 100`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].amount=100`
+          </ResponseField>
+
+          <ResponseField name="unit" type="string" required>
+            Unit the budget is measured in.
+
+            **Options**: `usd`, `tokens`
+
+            YAML: `unit: usd`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].unit=usd`
+          </ResponseField>
+
+          <ResponseField name="period" type="string">
+            Rolling window the budget resets on.
+
+            **Options**: `hourly`, `daily`, `weekly`, `monthly`, `yearly`, `lifetime`  
+            **Default**: `monthly`
+
+            YAML: `period: monthly`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].period=monthly`
+          </ResponseField>
+
+          <ResponseField name="enforcement" type="string">
+            What happens once the budget is exceeded. `hard` blocks further requests; `soft` allows them to continue.
+
+            **Options**: `hard`, `soft`  
+            **Default**: `hard`
+
+            YAML: `enforcement: hard`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].enforcement=hard`
+          </ResponseField>
+
+          <ResponseField name="enabled" type="boolean">
+            Enables or disables this budget.
+
+            **Default**: `true`
+
+            YAML: `enabled: true`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].enabled=true`
+          </ResponseField>
+        </Expandable>
       </ResponseField>
 
       <ResponseField name="host-header" type="string">
@@ -1003,7 +1137,7 @@ public-resources:
       </ResponseField>
 
       <ResponseField name="targets" type="array of objects">
-        Backend destinations for the resource.
+        Backend destinations for the resource. Not allowed when `mode: inference`.
 
         Container labels for arrays must include an index (`[0]`, `[1]`, ...).
 
@@ -1233,12 +1367,13 @@ private-resources:
       <ResponseField name="mode" type="string" required>
         Private resource type.
 
-        **Options**: `host`, `cidr`, `http`, `ssh`
+        **Options**: `host`, `cidr`, `http`, `ssh`, `inference`
 
         - `host`: A single host or IP. If `destination` is a domain, `alias` is required.
         - `cidr`: An entire IPv4 or IPv6 CIDR range.
         - `http`: An internal HTTP endpoint exposed to clients via `full-domain`.
         - `ssh`: SSH access resource. `destination` may be omitted only when `auth-daemon.mode` is `native` (or when `auth-daemon` is omitted).
+        - `inference`: A private [AI Gateway](/manage/ai/overview) exposed to clients via `full-domain`, proxying to attached `ai-providers` instead of a `destination`.
 
         YAML: `mode: cidr`  
         Container label: `pangolin.private-resources.internal-net.mode=cidr`
@@ -1267,6 +1402,7 @@ private-resources:
         - `cidr`: a valid IPv4 or IPv6 CIDR block
         - `http`: a host or IP for the upstream HTTP endpoint
         - `ssh`: optional only for `auth-daemon.mode: native`; required otherwise
+        - `inference`: not used; the resource proxies to `ai-providers` instead
 
         YAML: `destination: 10.0.0.0/24`  
         Container label: `pangolin.private-resources.internal-net.destination=10.0.0.0/24`
@@ -1402,6 +1538,24 @@ private-resources:
         YAML: `labels: [production]`  
         Container label: `pangolin.private-resources.internal-net.labels[0]=production`
       </ResponseField>
+
+      <ResponseField name="ai-providers" type="array of objects">
+        AI providers attached to an [AI Gateway](/manage/ai/overview) resource. Only allowed when `mode: inference`. Same shape as `ai-providers` on [public resources](#public-resource-object-public-resources).
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-providers: [{ provider: openai-prod, access-mode: inherit }]`  
+        Container label: `pangolin.private-resources.ai-gateway.ai-providers[0].provider=openai-prod`
+      </ResponseField>
+
+      <ResponseField name="ai-budget" type="array of objects">
+        Spend or usage budgets enforced on an [AI Gateway](/manage/ai/overview) resource. Each entry must use a unique `unit`/`period` combination. Same shape as `ai-budget` on [public resources](#public-resource-object-public-resources).
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-budget: [{ amount: 100, unit: usd, period: monthly }]`  
+        Container label: `pangolin.private-resources.ai-gateway.ai-budget[0].amount=100`
+      </ResponseField>
     </Expandable>
   </ResponseField>
 </Expandable>
@@ -1519,10 +1673,12 @@ public-policies:
 4. When mode/protocol is `tcp` or `udp`, the resource must have `proxy-port`, targets must not include `method`, and `auth` is not allowed.
 5. `proxy-protocol` and `proxy-protocol-version` are only valid when mode/protocol is `tcp`.
 6. If `auth-daemon.mode` is `remote`, `auth-daemon.port` is required.
-7. In private resources, `destination` is required unless `mode: ssh` with native auth-daemon mode.
+7. In private resources, `destination` is required unless `mode: ssh` with native auth-daemon mode, or `mode: inference`.
 8. `full-domain` values must be unique across public resources.
 9. `proxy-port` values must be unique per protocol within `public-resources`. TCP `3000` and UDP `3000` can coexist, but two TCP resources cannot both use `3000`.
 10. `alias` values must be unique across private resources in the blueprint.
+11. `mode: inference` (public or private) requires `full-domain`, must not have `targets`, and is the only mode that may set `ai-providers`.
+12. `ai-budget` entries on a resource must each use a unique `unit`/`period` combination.
 
 ### Common Validation Errors
 
@@ -1581,3 +1737,19 @@ In `cidr` mode, `destination` must be a valid CIDR block such as `10.0.0.0/24`.
 ### "Admin role cannot be included in roles"
 
 `Admin` is reserved and cannot be used in private resource `roles`.
+
+### "'ai-providers' can only be set when mode is 'inference'"
+
+`ai-providers` is only valid on public or private resources with `mode: inference`.
+
+### "When mode is 'inference', 'targets' must not be provided"
+
+Public resources with `mode: inference` proxy to `ai-providers` and cannot also define `targets`.
+
+### "'ai-budget' entries must not overlap: only one budget per unit/period combination is allowed"
+
+Each entry in `ai-budget` must use a distinct `unit`/`period` pair, such as one `usd`/`monthly` budget and one `tokens`/`daily` budget on the same resource.
+
+### "'models' can only be set on a provider with access-mode 'select'"
+
+Set `models` only when the `ai-providers` entry uses `access-mode: select`. Entries using `access-mode: inherit` must leave `models` empty.
