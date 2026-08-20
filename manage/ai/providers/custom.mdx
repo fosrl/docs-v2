@@ -1,0 +1,48 @@
+---
+title: "Custom"
+description: "Connect any upstream endpoint and assign whichever API capabilities it speaks"
+---
+
+A custom provider is for an upstream that is not in the typed list: a self-hosted model server, a vendor API, a proxy, or an internal service reached through a Pangolin site. You assign any mix of [capabilities](/manage/ai/providers/configuration#capabilities). The gateway will accept those API formats on resources that attach this provider.
+
+Custom providers start blank. You choose capabilities, [routing](/manage/ai/providers/configuration#routing), and [auth](/manage/ai/providers/configuration#auth-type). At least one capability is required. Site Targets routing is available on Custom only.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before, and [Provider Configuration](/manage/ai/providers/configuration) for the field reference.
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Custom** and give it a name.
+3. Select every **API capability** the upstream speaks. You can add any combination.
+4. Choose **Routing Mode**. For **Upstream URL**, paste the base URL. For **Site Targets**, add targets after save.
+5. Pick **Auth Type** and paste a key if that type needs one.
+6. Set **Allow** and **Block** lists. Add exact model keys if you want them listed in `GET /v1/models`. See [Models](/manage/ai/providers/configuration#models).
+7. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+## Reach a Self-Hosted API
+
+Site Targets send the request over a Pangolin tunnel to a host Newt can reach. [Install a site](/manage/sites/install-site) on the same network as the model server so the gateway can route to that API over the tunnel. See [Understanding Sites](/manage/sites/understanding-sites).
+
+After the site is connected, add the process as a target on the provider's **Network** tab (host, port, HTTP or HTTPS). Worked examples: [Ollama](/manage/ai/providers/custom/ollama), [vLLM](/manage/ai/providers/custom/vllm), and [Bifrost](/manage/ai/providers/custom/bifrost).
+
+## Examples
+
+Worked Custom setups:
+
+- [Ollama](/manage/ai/providers/custom/ollama): local models on a site, OpenAI Chat Completions
+- [vLLM](/manage/ai/providers/custom/vllm): a vLLM OpenAI server on a site
+- [Bifrost](/manage/ai/providers/custom/bifrost): downstream model routing with Pangolin identity headers
+- [Cloud APIs Through a Site](/manage/ai/providers/custom/cloud-apis-through-a-site): send OpenAI or Anthropic out through a site so the vendor sees that site's IP
+
+The same Custom pattern works for llama.cpp server, LM Studio, LocalAI, and other OpenAI-compatible listeners: pick Chat Completions, point Site Targets at the process, and allow the model ids it serves.
+
+## Example: Kimi K2
+
+This is one custom setup: Moonshot AI's Kimi K2 endpoint speaks the Anthropic API, so you select Anthropic capabilities. A different upstream would get a different capability set.
+
+1. Create a **Custom** provider.
+2. Select **Anthropic Messages** and **Anthropic Models**.
+3. Set routing to **Upstream URL** and use Moonshot's Anthropic-compatible base URL.
+4. Set auth to **`x-api-key`** and paste the Moonshot key.
+5. Allow the Kimi model ids you plan to call.
+6. Attach the provider to a resource, then point [Claude Code](/manage/ai/configure-ai-clients/claude) or [Claude Desktop](/manage/ai/configure-ai-clients/claude-desktop) at that resource.

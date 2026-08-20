@@ -1,0 +1,38 @@
+---
+title: "Microsoft Foundry"
+description: "Connect Microsoft Foundry as an AI Gateway provider"
+---
+
+A Microsoft Foundry provider forwards OpenAI-format and Anthropic-format requests to your Azure AI Foundry (or Azure OpenAI) resource. One Foundry provider can serve both Codex-style clients and Claude Code, because the defaults include Chat Completions, Responses, and Anthropic Messages.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before. Field options are in [Provider Configuration](/manage/ai/providers/configuration).
+
+## Defaults
+
+| Setting | Value |
+|---|---|
+| Upstream URL | You enter your Foundry or Azure OpenAI resource base URL |
+| Auth type | Bearer |
+| Capabilities | OpenAI Chat Completions, OpenAI Responses, Anthropic Messages, Anthropic Models |
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Microsoft Foundry**. Capabilities and auth type fill in from the defaults above.
+3. Set **Upstream URL** to the resource base, for example `https://<resource-name>.services.ai.azure.com` or `https://<resource-name>.openai.azure.com`.
+4. Paste a Bearer credential the resource accepts (typically the Azure API key).
+5. Set **Allow** and **Block** lists. Use the deployment or model names the Foundry resource exposes.
+6. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+Leave capabilities at the defaults if you want both OpenAI-compatible and Anthropic-compatible clients on the same resource. Trim them if this Foundry resource only hosts one API family.
+
+## Clients
+
+| Client | Guide |
+|---|---|
+| Codex | [Setup guide](/manage/ai/configure-ai-clients/codex) |
+| Claude Code | [Setup guide](/manage/ai/configure-ai-clients/claude) |
+| OpenCode | [Setup guide](/manage/ai/configure-ai-clients/opencode) |
+| Open WebUI | [Setup guide](/manage/ai/configure-ai-clients/open-webui) |
+| Claude Desktop | [Setup guide](/manage/ai/configure-ai-clients/claude-desktop) |
+| OpenClaw | [Setup guide](/manage/ai/configure-ai-clients/openclaw) |

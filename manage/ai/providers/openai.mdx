@@ -1,0 +1,35 @@
+---
+title: "OpenAI"
+description: "Connect OpenAI as an AI Gateway provider"
+---
+
+An OpenAI provider forwards Chat Completions and Responses requests to OpenAI's API. Attach it to an AI Gateway resource when you want Codex, OpenCode, Open WebUI, OpenClaw, or any other OpenAI-compatible client to use your org's OpenAI key.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before. Field options are in [Provider Configuration](/manage/ai/providers/configuration).
+
+## Defaults
+
+| Setting | Value |
+|---|---|
+| Upstream URL | `https://api.openai.com/v1` |
+| Auth type | Bearer |
+| Capabilities | OpenAI Chat Completions, OpenAI Responses |
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **OpenAI**. Name, capabilities, upstream URL, and auth type fill in from the defaults above.
+3. Paste your OpenAI API key.
+4. Set **Allow** and **Block** lists. `*` allows every model key; `gpt-*` is a typical narrower pattern.
+5. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+Leave the upstream URL as the default unless you are pointing at a compatible OpenAI-style base URL.
+
+## Clients
+
+| Client | Guide |
+|---|---|
+| Codex | [Setup guide](/manage/ai/configure-ai-clients/codex) |
+| OpenCode | [Setup guide](/manage/ai/configure-ai-clients/opencode) |
+| Open WebUI | [Setup guide](/manage/ai/configure-ai-clients/open-webui) |
+| OpenClaw | [Setup guide](/manage/ai/configure-ai-clients/openclaw) |

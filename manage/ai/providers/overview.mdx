@@ -1,0 +1,59 @@
+---
+title: "AI Providers"
+description: "Connect upstream model APIs once per organization, then attach them to AI Gateway resources"
+---
+
+A provider is an organization-level connection to an upstream model API. It stores the provider type, credentials, base URL, API capabilities, and optional model allow and block lists. Create providers once, then attach them to any AI Gateway resource in the org. Clients call the resource's domain, not the provider directly.
+
+See [AI Gateway Overview](/manage/ai/overview) for creating a resource and issuing keys. See [Provider Configuration](/manage/ai/providers/configuration) for capabilities, auth, routing, and model lists.
+
+## What a Provider Is
+
+Sidebar → **AI Gateway** → **Providers** → **Create**.
+
+Each provider is:
+
+- A **type** (OpenAI, Anthropic, Google Gemini, and others) that fills in recommended defaults
+- **Credentials** and a **base URL** the gateway uses when it forwards a request
+- **Capabilities** that declare which API formats the provider can handle
+- Optional **allow** and **block** lists that restrict which model keys may be used
+
+Providers are reused across resources. The resource still owns the public URL and the keys clients authenticate with.
+
+{/*
+Screenshot: `/images/ai/create-provider.png`
+The AI Gateway → Providers → Create form, showing the provider type dropdown and API key field filled in for OpenAI or Anthropic.
+<Frame>
+  <img src="/images/ai/create-provider.png" alt="Creating an AI provider" />
+</Frame>
+*/}
+
+## Attach to a Resource
+
+On an AI Gateway resource, attach one or more providers from the **AI Gateway** settings tab. For each attachment you can inherit the provider's model lists or select a subset. Details are in [Provider Configuration](/manage/ai/providers/configuration#models).
+
+The resource only speaks the API formats its attached providers advertise. Attach whichever providers match the [clients](/manage/ai/overview#4-connect-a-client) you plan to connect.
+
+{/*
+Screenshot: `/images/ai/create-resource.png`
+The new resource dialog with Type set to "AI Gateway" and a provider selected in the AI Providers section.
+<Frame>
+  <img src="/images/ai/create-resource.png" alt="Attaching providers to an AI Gateway resource" />
+</Frame>
+*/}
+
+## Provider Types
+
+| Provider | Default capabilities | Guide |
+|---|---|---|
+| OpenAI | Chat Completions, Responses | [Configure OpenAI](/manage/ai/providers/openai) |
+| Anthropic | Messages, Models | [Configure Anthropic](/manage/ai/providers/anthropic) |
+| Google Gemini | Gemini Generate Content | [Configure Google Gemini](/manage/ai/providers/google-gemini) |
+| Vertex AI | Vertex Generate Content, Raw Predict | [Configure Vertex AI](/manage/ai/providers/vertex-ai) |
+| Amazon Bedrock | Bedrock Converse | [Configure Amazon Bedrock](/manage/ai/providers/bedrock) |
+| Microsoft Foundry | Chat Completions, Responses, Messages, Models | [Configure Microsoft Foundry](/manage/ai/providers/microsoft-foundry) |
+| OpenRouter | Chat Completions | [Configure OpenRouter](/manage/ai/providers/open-router) |
+| Vercel AI Gateway | Chat Completions, Responses | [Configure Vercel AI Gateway](/manage/ai/providers/vercel-ai-gateway) |
+| Custom | Whatever you select | [Configure Custom](/manage/ai/providers/custom) |
+
+Custom also covers local engines, downstream routers, and cloud APIs sent through a site. See [Ollama](/manage/ai/providers/custom/ollama), [vLLM](/manage/ai/providers/custom/vllm), [Bifrost](/manage/ai/providers/custom/bifrost), and [Cloud APIs Through a Site](/manage/ai/providers/custom/cloud-apis-through-a-site).

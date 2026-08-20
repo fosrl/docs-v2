@@ -1,0 +1,25 @@
+---
+title: "Bifrost"
+description: "Point a Custom provider at Bifrost for downstream model routing and identity-aware access control"
+---
+
+[Bifrost](https://www.getmaxim.ai/bifrost) is an OpenAI-compatible LLM gateway that routes to many upstream model providers. Use it as a Custom AI Gateway provider when Pangolin should authenticate clients and Bifrost should pick models, fail over, or apply its own access controls.
+
+Pangolin talks to Bifrost at `/v1/chat/completions` (default port `8080`). Add [Anthropic Messages](/manage/ai/providers/configuration#capabilities) as well if clients will call Bifrost's Anthropic-compatible paths.
+
+See [Capabilities](/manage/ai/providers/configuration#capabilities) for the full capability list.
+
+[Install a site](/manage/sites/install-site) on the same network as Bifrost so Pangolin can reach it over the tunnel. See [Reach a Self-Hosted API](/manage/ai/providers/custom#reach-a-self-hosted-api).
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Custom** and give it a name.
+3. Select **OpenAI Chat Completions** (and any other formats Bifrost should accept).
+4. Set **Routing Mode** to **Site Targets** if Bifrost runs on a site's network. Use **Upstream URL** (`http://<host>:8080`) only when the Pangolin node can reach Bifrost directly.
+5. Set **Auth Type** to **No Auth** on a private LAN. Use **Bearer** if Bifrost requires a virtual key or other API key.
+6. Allow the model ids Bifrost should serve, including provider-prefixed keys such as `openai/gpt-4o-mini` if that is how Bifrost names them. See [Models](/manage/ai/providers/configuration#models).
+7. Save. On the **Network** tab, add a target: the Bifrost host, port `8080`, method HTTP.
+8. Attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+Then point a client at that resource: [Codex](/manage/ai/configure-ai-clients/codex), [OpenCode](/manage/ai/configure-ai-clients/opencode), or [Open WebUI](/manage/ai/configure-ai-clients/open-webui). Clients still call the Pangolin resource. Bifrost only sees the request after Pangolin has authenticated it.

@@ -1,0 +1,39 @@
+---
+title: "OpenRouter"
+description: "Connect OpenRouter as an AI Gateway provider"
+---
+
+An OpenRouter provider forwards Chat Completions requests to OpenRouter. Use it as an aggregator when you want one key to reach many upstream models through OpenAI Chat Completions.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before. Field options are in [Provider Configuration](/manage/ai/providers/configuration).
+
+## Defaults
+
+| Setting | Value |
+|---|---|
+| Upstream URL | `https://openrouter.ai/api/v1` |
+| Auth type | Bearer |
+| Capabilities | OpenAI Chat Completions |
+
+OpenRouter's default capability is Chat Completions only. Clients that require Responses or Anthropic Messages need a different provider, extra capabilities this OpenRouter account actually supports, or a [custom](/manage/ai/providers/custom) endpoint.
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **OpenRouter**. Name, capabilities, upstream URL, and auth type fill in from the defaults above.
+3. Paste your OpenRouter API key.
+4. Set **Allow** and **Block** lists. OpenRouter model keys are often vendor-prefixed, for example `openai/gpt-4o` or `anthropic/claude-sonnet-4`.
+5. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+## Models
+
+OpenRouter is an aggregator. See [Models](/manage/ai/providers/configuration#models) for how allow lists and `GET /v1/models` discovery work. Add exact keys such as `openai/gpt-4o` or `anthropic/claude-sonnet-4`.
+
+## Clients
+
+| Client | Guide |
+|---|---|
+| Codex | [Setup guide](/manage/ai/configure-ai-clients/codex) |
+| OpenCode | [Setup guide](/manage/ai/configure-ai-clients/opencode) |
+| Open WebUI | [Setup guide](/manage/ai/configure-ai-clients/open-webui) |
+| OpenClaw | [Setup guide](/manage/ai/configure-ai-clients/openclaw) |

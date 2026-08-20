@@ -1,0 +1,25 @@
+---
+title: "vLLM"
+description: "Point a Custom provider at a vLLM OpenAI server on a Pangolin site"
+---
+
+[vLLM](https://docs.vllm.ai) can expose an OpenAI-compatible HTTP server for local or GPU-hosted models. Create a [Custom](/manage/ai/providers/custom) provider and route to that server so Codex, OpenCode, Open WebUI, and other Chat Completions clients can use it.
+
+Pangolin talks to vLLM at `/v1/chat/completions` on the OpenAI server (default port `8000`).
+
+See [Capabilities](/manage/ai/providers/configuration#capabilities) for the full capability list.
+
+[Install a site](/manage/sites/install-site) on the same network as vLLM so Pangolin can reach it over the tunnel. See [Reach a Self-Hosted API](/manage/ai/providers/custom#reach-a-self-hosted-api).
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Custom** and give it a name.
+3. Select **OpenAI Chat Completions**.
+4. Set **Routing Mode** to **Site Targets** if vLLM runs on a site's network. Use **Upstream URL** (`http://<host>:8000`) only when the Pangolin node can reach vLLM directly.
+5. Set **Auth Type** to **No Auth** if the server has no key. Use **Bearer** and paste the key if you started vLLM with `--api-key`.
+6. Allow the exact served model id (the `--model` name or `--served-model-name`). See [Models](/manage/ai/providers/configuration#models).
+7. Save. On the **Network** tab, add a target: the vLLM host, port `8000`, method HTTP.
+8. Attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+Then point a client at that resource: [Codex](/manage/ai/configure-ai-clients/codex), [OpenCode](/manage/ai/configure-ai-clients/opencode), or [Open WebUI](/manage/ai/configure-ai-clients/open-webui).

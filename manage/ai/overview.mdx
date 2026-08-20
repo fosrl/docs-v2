@@ -7,15 +7,15 @@ An AI Gateway resource is a normal Pangolin resource that proxies requests to on
 
 ## How it fits together
 
-- **Providers** are configured once per organization - the upstream URL and API key for OpenAI, Anthropic, etc.
+- **[Providers](/manage/ai/providers/overview)** are configured once per organization - the upstream URL, API key, and capabilities for OpenAI, Anthropic, etc.
 - **Resources** (type `AI Gateway`) attach one or more of those providers and get a normal Pangolin domain.
 - **Keys** are what clients authenticate to the resource with. Public resources check them; private resources don't, since only devices on the Pangolin network can reach them at all.
 
-A resource only understands the API format(s) its attached providers support. An Anthropic provider makes the resource speak the Anthropic Messages API; an OpenAI provider makes it speak Chat Completions/Responses; a Gemini provider makes it speak Gemini's `generateContent` API. Attach whichever providers match the clients you plan to connect.
+A resource only understands the API format(s) its attached providers support. An Anthropic provider makes the resource speak the Anthropic Messages API; an OpenAI provider makes it speak Chat Completions/Responses; a Gemini provider makes it speak Gemini's `generateContent` API. Attach whichever providers match the clients you plan to connect. See [AI Providers](/manage/ai/providers/overview) for per-type setup and [Provider Configuration](/manage/ai/providers/configuration) for capabilities, auth, and model lists.
 
 ## 1. Add a provider
 
-Sidebar → **AI Gateway** → **Providers** → **Create**. Pick a provider type, paste in its API key, and save. You can add as many as you need.
+Create an org-level provider so the gateway has an upstream to call. Sidebar → **AI Gateway** → **Providers** → **Create**, or follow the [AI Providers](/manage/ai/providers/overview) guide. Pick a type, paste in its API key, and save. You can add as many as you need.
 
 {/*
 Screenshot: `/images/ai/create-provider.png`
@@ -70,29 +70,31 @@ Every resource's Keys page has ready-to-copy setup for common clients, and `pang
 
 | Client | Needs a provider that speaks | Guide |
 |---|---|---|
-| Claude Code | Anthropic Messages | [Setup guide](/manage/ai/claude) |
-| Codex | OpenAI Chat/Responses | [Setup guide](/manage/ai/codex) |
-| OpenCode | Anthropic Messages and/or OpenAI Chat | [Setup guide](/manage/ai/opencode) |
-| Gemini CLI | Gemini `generateContent` | [Setup guide](/manage/ai/gemini) |
+| Claude Code | Anthropic Messages | [Setup guide](/manage/ai/configure-ai-clients/claude) |
+| Codex | OpenAI Chat/Responses | [Setup guide](/manage/ai/configure-ai-clients/codex) |
+| OpenCode | Anthropic Messages and/or OpenAI Chat | [Setup guide](/manage/ai/configure-ai-clients/opencode) |
+| Gemini CLI | Gemini `generateContent` | [Setup guide](/manage/ai/configure-ai-clients/gemini) |
 
 There are also guides for pointing other tools at a Pangolin AI Gateway resource:
 
-- [Open WebUI](/manage/ai/open-webui)
-- [Claude Desktop](/manage/ai/claude-desktop)
-- [OpenClaw](/manage/ai/openclaw)
+- [Open WebUI](/manage/ai/configure-ai-clients/open-webui)
+- [Claude Desktop](/manage/ai/configure-ai-clients/claude-desktop)
+- [OpenClaw](/manage/ai/configure-ai-clients/openclaw)
 
 ## Supported providers
 
-| Provider | Speaks |
-|---|---|
-| OpenAI | Chat Completions, Responses |
-| Anthropic | Messages |
-| Google Gemini | `generateContent` |
-| Vertex AI | Google `generateContent`/`rawPredict` |
-| Bedrock | Converse |
-| Microsoft Foundry | Chat Completions, Responses, Messages |
-| OpenRouter | Chat Completions |
-| Vercel AI Gateway | Chat Completions, Responses |
-| Custom | Whatever you configure |
+Each type has its own configuration guide. Capabilities (which API formats a provider speaks) are explained in [Provider Configuration](/manage/ai/providers/configuration#capabilities).
 
-Use **Custom** for any OpenAI- or Anthropic-compatible endpoint that isn't in the list above - for example a Moonshot AI (Kimi) endpoint, which is Anthropic-compatible.
+| Provider | Default capabilities | Guide |
+|---|---|---|
+| OpenAI | Chat Completions, Responses | [Configure](/manage/ai/providers/openai) |
+| Anthropic | Messages | [Configure](/manage/ai/providers/anthropic) |
+| Google Gemini | `generateContent` | [Configure](/manage/ai/providers/google-gemini) |
+| Vertex AI | Google `generateContent`/`rawPredict` | [Configure](/manage/ai/providers/vertex-ai) |
+| Amazon Bedrock | Converse | [Configure](/manage/ai/providers/bedrock) |
+| Microsoft Foundry | Chat Completions, Responses, Messages | [Configure](/manage/ai/providers/microsoft-foundry) |
+| OpenRouter | Chat Completions | [Configure](/manage/ai/providers/open-router) |
+| Vercel AI Gateway | Chat Completions, Responses | [Configure](/manage/ai/providers/vercel-ai-gateway) |
+| Custom | Whatever you select | [Configure](/manage/ai/providers/custom) |
+
+Use [Custom](/manage/ai/providers/custom) for any upstream that isn't in the typed list. Assign whichever capabilities it speaks - OpenAI, Anthropic, Gemini, Vertex, Bedrock, or a mix. A Moonshot AI (Kimi) endpoint is one example: select Anthropic Messages and point at its Anthropic-compatible URL.

@@ -1,0 +1,35 @@
+---
+title: "Vertex AI"
+description: "Connect Google Vertex AI as an AI Gateway provider"
+---
+
+A Vertex AI provider forwards Vertex `generateContent` and `rawPredict` requests to your Google Cloud project. Use it when clients call Vertex AI publisher-model paths rather than the Gemini Developer API.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before. Field options are in [Provider Configuration](/manage/ai/providers/configuration).
+
+For Google's Gemini Developer API, use [Google Gemini](/manage/ai/providers/google-gemini) instead.
+
+## Defaults
+
+| Setting | Value |
+|---|---|
+| Upstream URL | You enter the regional Vertex AI base URL |
+| Auth type | Bearer |
+| Capabilities | Vertex Generate Content, Vertex Raw Predict |
+
+Vertex Generate Content covers Gemini-format calls on Vertex. Vertex Raw Predict covers Anthropic models hosted on Vertex (`rawPredict` / `streamRawPredict`).
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Vertex AI**. Capabilities and auth type fill in from the defaults above.
+3. Set **Upstream URL** to your regional Vertex host, for example `https://us-central1-aiplatform.googleapis.com`. The host includes the location.
+4. Paste a Bearer credential the Vertex endpoint accepts (typically a Google OAuth access token).
+5. Set **Allow** and **Block** lists. Use the model ids Vertex expects, including publisher-qualified keys when that is how the client sends them.
+6. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+The gateway authenticates with `Authorization: Bearer <key>`. Add extra capabilities on the **General** tab only if this Vertex endpoint actually speaks those API formats.
+
+## Clients
+
+Clients that call Vertex `generateContent` or `rawPredict` paths work with the default capabilities. Gemini CLI talks the Gemini Developer API (`gemini_generate_content`), so it needs a [Google Gemini](/manage/ai/providers/google-gemini) provider rather than this one.

@@ -1,0 +1,33 @@
+---
+title: "Amazon Bedrock"
+description: "Connect Amazon Bedrock as an AI Gateway provider"
+---
+
+An Amazon Bedrock provider forwards Converse requests to Bedrock Runtime in the region you configure. Use it when clients call Bedrock's Converse API.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before. Field options are in [Provider Configuration](/manage/ai/providers/configuration).
+
+## Defaults
+
+| Setting | Value |
+|---|---|
+| Upstream URL | You enter the regional Bedrock Runtime base URL |
+| Auth type | Bearer |
+| Capabilities | Bedrock Converse |
+
+Bedrock Model Invoke (`InvokeModel` / `invoke-with-response-stream`) is available as an extra capability if the client uses that API instead of Converse.
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Amazon Bedrock**. Capabilities and auth type fill in from the defaults above.
+3. Set **Upstream URL** to your regional Bedrock Runtime host, for example `https://bedrock-runtime.us-east-1.amazonaws.com`.
+4. Paste a Bearer credential the upstream accepts. Pangolin sends `Authorization: Bearer <key>` on every request.
+5. Set **Allow** and **Block** lists. Use Bedrock model ids (for example `anthropic.claude-sonnet-4-20250514-v1:0` or an inference profile id).
+6. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+Add **Bedrock Model Invoke** on the **General** tab if the client calls `/model/{id}/invoke` rather than Converse. Add other capabilities only if this endpoint actually speaks those API formats.
+
+## Clients
+
+Clients that call Bedrock Converse work with the default capability. Claude Code talks Anthropic Messages (`POST /v1/messages`), so it needs a provider that advertises Anthropic Messages, such as [Anthropic](/manage/ai/providers/anthropic), [Microsoft Foundry](/manage/ai/providers/microsoft-foundry), or a [custom](/manage/ai/providers/custom) Anthropic-compatible endpoint.

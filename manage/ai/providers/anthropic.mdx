@@ -1,0 +1,41 @@
+---
+title: "Anthropic"
+description: "Connect Anthropic as an AI Gateway provider"
+---
+
+An Anthropic provider forwards Messages requests to Anthropic's API. Attach it to an AI Gateway resource when you want Claude Code, Claude Desktop, OpenCode, OpenClaw, or any other Anthropic-compatible client to use your org's Anthropic key.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before. Field options are in [Provider Configuration](/manage/ai/providers/configuration).
+
+## Defaults
+
+| Setting | Value |
+|---|---|
+| Upstream URL | `https://api.anthropic.com` |
+| Auth type | `x-api-key` |
+| Capabilities | Anthropic Messages, Anthropic Models |
+
+Anthropic Models (`GET /v1/models`) is answered from this provider's allow and block lists. See [Capabilities](/manage/ai/providers/configuration#capabilities).
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Anthropic**. Name, capabilities, upstream URL, and auth type fill in from the defaults above.
+3. Paste your Anthropic API key.
+4. Set **Allow** and **Block** lists. `*` allows every model key; `claude-*` is a typical narrower pattern.
+5. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+Leave the upstream URL as the default unless you are pointing at a compatible Anthropic-style base URL.
+
+<Tip>
+Clients can send `anthropic-version` themselves. You can also set it as a [custom header](/manage/ai/providers/configuration#headers-and-tls) on the provider (`anthropic-version: 2023-06-01`). A header set on the provider is always sent upstream and overrides the same header from the client.
+</Tip>
+
+## Clients
+
+| Client | Guide |
+|---|---|
+| Claude Code | [Setup guide](/manage/ai/configure-ai-clients/claude) |
+| Claude Desktop | [Setup guide](/manage/ai/configure-ai-clients/claude-desktop) |
+| OpenCode | [Setup guide](/manage/ai/configure-ai-clients/opencode) |
+| OpenClaw | [Setup guide](/manage/ai/configure-ai-clients/openclaw) |

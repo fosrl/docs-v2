@@ -1,0 +1,34 @@
+---
+title: "Google Gemini"
+description: "Connect Google Gemini as an AI Gateway provider"
+---
+
+A Google Gemini provider forwards `generateContent` requests to Google's Gemini API. Attach it to an AI Gateway resource when you want Gemini CLI (or another client that speaks the Gemini API) to use your org's Gemini key.
+
+See [AI Providers](/manage/ai/providers/overview) if you haven't created a provider before. Field options are in [Provider Configuration](/manage/ai/providers/configuration).
+
+This type is the Gemini Developer API (`generativelanguage.googleapis.com`). For Vertex AI's `generateContent` / `rawPredict` paths, use [Vertex AI](/manage/ai/providers/vertex-ai) instead.
+
+## Defaults
+
+| Setting | Value |
+|---|---|
+| Upstream URL | `https://generativelanguage.googleapis.com` |
+| Auth type | `x-goog-api-key` |
+| Capabilities | Gemini Generate Content |
+
+## Configure
+
+1. Sidebar → **AI Gateway** → **Providers** → **Create**.
+2. Set **Provider Type** to **Google Gemini**. Name, capabilities, upstream URL, and auth type fill in from the defaults above.
+3. Paste your Gemini API key.
+4. Set **Allow** and **Block** lists. `*` allows every model key; `gemini-*` is a typical narrower pattern.
+5. Save, then attach the provider to an [AI Gateway resource](/manage/ai/overview).
+
+Leave the upstream URL as the default unless you are pointing at a compatible Gemini API base URL.
+
+## Clients
+
+| Client | Guide |
+|---|---|
+| Gemini CLI | [Setup guide](/manage/ai/configure-ai-clients/gemini) |

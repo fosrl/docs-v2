@@ -189,13 +189,43 @@
                                 "icon": "robot",
                                 "pages": [
                                     "manage/ai/overview",
-                                    "manage/ai/claude",
-                                    "manage/ai/codex",
-                                    "manage/ai/opencode",
-                                    "manage/ai/gemini",
-                                    "manage/ai/open-webui",
-                                    "manage/ai/claude-desktop",
-                                    "manage/ai/openclaw"
+                                    {
+                                        "group": "Providers",
+                                        "pages": [
+                                            "manage/ai/providers/overview",
+                                            "manage/ai/providers/configuration",
+                                            "manage/ai/providers/openai",
+                                            "manage/ai/providers/anthropic",
+                                            "manage/ai/providers/google-gemini",
+                                            "manage/ai/providers/vertex-ai",
+                                            "manage/ai/providers/bedrock",
+                                            "manage/ai/providers/microsoft-foundry",
+                                            "manage/ai/providers/open-router",
+                                            "manage/ai/providers/vercel-ai-gateway",
+                                            {
+                                                "group": "Custom",
+                                                "pages": [
+                                                    "manage/ai/providers/custom",
+                                                    "manage/ai/providers/custom/ollama",
+                                                    "manage/ai/providers/custom/vllm",
+                                                    "manage/ai/providers/custom/bifrost",
+                                                    "manage/ai/providers/custom/cloud-apis-through-a-site"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "group": "Configure AI Clients and Agents",
+                                        "pages": [
+                                            "manage/ai/configure-ai-clients/claude",
+                                            "manage/ai/configure-ai-clients/codex",
+                                            "manage/ai/configure-ai-clients/opencode",
+                                            "manage/ai/configure-ai-clients/gemini",
+                                            "manage/ai/configure-ai-clients/open-webui",
+                                            "manage/ai/configure-ai-clients/claude-desktop",
+                                            "manage/ai/configure-ai-clients/openclaw"
+                                        ]
+                                    }
                                 ]
                             },
                             "manage/endpoints-and-pops",
@@ -494,6 +524,34 @@
         {
             "source": "/manage/sites/configure-site#nat-traversal-tweaks",
             "destination": "/manage/clients/nat-traversal"
+        },
+        {
+            "source": "/manage/ai/claude",
+            "destination": "/manage/ai/configure-ai-clients/claude"
+        },
+        {
+            "source": "/manage/ai/codex",
+            "destination": "/manage/ai/configure-ai-clients/codex"
+        },
+        {
+            "source": "/manage/ai/opencode",
+            "destination": "/manage/ai/configure-ai-clients/opencode"
+        },
+        {
+            "source": "/manage/ai/gemini",
+            "destination": "/manage/ai/configure-ai-clients/gemini"
+        },
+        {
+            "source": "/manage/ai/open-webui",
+            "destination": "/manage/ai/configure-ai-clients/open-webui"
+        },
+        {
+            "source": "/manage/ai/claude-desktop",
+            "destination": "/manage/ai/configure-ai-clients/claude-desktop"
+        },
+        {
+            "source": "/manage/ai/openclaw",
+            "destination": "/manage/ai/configure-ai-clients/openclaw"
         }
     ],
     "seo": {

@@ -1,0 +1,72 @@
+---
+title: "Provider Configuration"
+description: "Capabilities, auth, routing, and model lists for AI Gateway providers"
+---
+
+This page is the field reference for every AI provider type. Type-specific defaults (URL, auth header, capabilities) live on each provider page. See [AI Providers](/manage/ai/providers/overview) for what a provider is and how it attaches to a resource.
+
+Sidebar → **AI Gateway** → **Providers** → **Create**. After you save, the provider has tabs for **General**, **Network**, **Models**, **Authentication**, and **Budget**.
+
+## Capabilities
+
+A capability is an API format the gateway will accept and proxy. The incoming request path selects a capability, and only attached providers that advertise that capability can handle the request. That is why Claude Code needs a provider with Anthropic Messages, and Codex needs a provider with OpenAI Chat Completions or Responses.
+
+| Capability | What the gateway accepts |
+|---|---|
+| OpenAI Chat Completions | `POST /v1/chat/completions` |
+| OpenAI Responses | `POST /v1/responses` |
+| Anthropic Messages | `POST /v1/messages` |
+| Anthropic Models | `GET /v1/models` (answered from the gateway's allow and block lists, not proxied upstream) |
+| Gemini Generate Content | Gemini `generateContent` / `streamGenerateContent` |
+| Vertex Generate Content | Vertex AI Gemini format |
+| Vertex Raw Predict | Vertex AI `rawPredict` for Anthropic models |
+| Bedrock Converse | Amazon Bedrock Converse API |
+| Bedrock Model Invoke | Amazon Bedrock InvokeModel |
+
+Typed providers start with recommended capabilities. Custom providers need at least one selected. You can change capabilities later on the provider's **General** tab. Select every format the upstream actually speaks. Custom providers can mix any combination.
+
+If two attached providers share a capability for the same model, the gateway picks one using allow lists and catalog ownership. Two providers of the same type both allowing `*` can leave the request ambiguous.
+
+## Auth Type
+
+How the gateway authenticates to the upstream. Typed providers prefill the header that upstream expects.
+
+| Auth type | What Pangolin sends |
+|---|---|
+| Bearer | `Authorization: Bearer <key>`. Used by OpenAI and most compatible APIs. |
+| `x-api-key` | `x-api-key` header. Used by Anthropic and Anthropic-compatible APIs. |
+| `x-goog-api-key` | `x-goog-api-key` header. Used by Google Gemini. |
+| Cloudflare AI Gateway | `cf-aig-authorization: Bearer <key>`. |
+| Splunk HEC | `Authorization: Splunk <key>`. |
+| Passthrough | Forward the caller's remaining API key headers to the upstream (after Pangolin strips its own virtual key). |
+| No Auth | Send the request without authentication headers. |
+
+Bearer, `x-api-key`, `x-goog-api-key`, Cloudflare AI Gateway, and Splunk HEC all require an API key on the provider.
+
+## Routing
+
+Where the gateway sends the request after it has selected this provider.
+
+| Mode | When to use |
+|---|---|
+| **Upstream URL** | Call a public or private API base URL. Typed providers with a public API prefill this. Vertex AI, Amazon Bedrock, and Microsoft Foundry ask you to enter a regional or resource base URL. |
+| **Site Targets** | Route through HTTP targets on your Pangolin sites, the same way a public resource reaches an internal service. Available on [Custom](/manage/ai/providers/custom) providers only. |
+
+If you choose **Site Targets**, configure the targets on the provider's **Network** tab after you save.
+
+See [Ollama](/manage/ai/providers/custom/ollama), [vLLM](/manage/ai/providers/custom/vllm), [Bifrost](/manage/ai/providers/custom/bifrost), and [Cloud APIs Through a Site](/manage/ai/providers/custom/cloud-apis-through-a-site) for Site Targets walkthroughs.
+
+## Models
+
+Allow and block lists restrict which model keys this provider may serve. A request must match an allow entry and must not match a block entry. An empty allow list denies all traffic. Patterns support `*` and `?` (`gpt-*`, `claude-3-5-sonnet-?`).
+
+When you attach a provider to a resource you can **inherit** these lists or **select** a subset for that resource only.
+
+OpenRouter, Vercel AI Gateway, and Custom are treated as aggregators: a wildcard allow such as `*` matches at request time but does not expand in `GET /v1/models`. Add exact model keys to make those models show up in discovery.
+
+## Headers and TLS
+
+On **Network** you can also set:
+
+- **Custom headers** sent on every request to this provider (`Header-Name: value`, one per line)
+- **Skip TLS verification** for the upstream connection
