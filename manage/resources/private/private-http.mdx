@@ -3,12 +3,6 @@ title: "HTTP / HTTPS"
 description: "Private reverse proxy with optional TLS termination at the site edge over the Pangolin tunnel"
 ---
 
-
-
-<Note>
-Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
-</Note>
-
 Private HTTP/HTTPS resources expose web applications over the Pangolin tunnel with a fully qualified domain name. Unlike [public HTTP/HTTPS resources](/manage/resources/public/http-https), nothing is reachable from the public internet—a user must connect with the Pangolin client first.
 
 Once connected, users open the resource in a normal web browser at a URL like `https://my-app.internal.example.com`. The Pangolin client resolves the hostname privately, traffic travels over the peer-to-peer tunnel, and the site connector terminates TLS and runs a reverse proxy to the backend.
