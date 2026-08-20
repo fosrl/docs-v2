@@ -37,14 +37,6 @@ To undo it:
 pangolin configure opencode --reset
 ```
 
-{/*
-Screenshot: `/images/ai/opencode-cli-tab.png`
-The OpenCode card on a resource's Keys page, expanded, with the CLI tab selected showing the `pangolin configure opencode` command.
-<Frame>
-  <img src="/images/ai/opencode-cli-tab.png" alt="OpenCode CLI setup" />
-</Frame>
-*/}
-
 ## Manual setup
 
 Merge this into your global `opencode.json` (`~/.config/opencode/opencode.json`, or `$XDG_CONFIG_HOME/opencode/opencode.json` if set):
@@ -87,11 +79,3 @@ Then merge your key into `auth.json` (`~/.local/share/opencode/auth.json`, or `$
 </Warning>
 
 Only add entries for the providers your resource actually supports. To point a different OpenCode provider (`openrouter`, `google`, `groq`, etc.) at this gateway, add a matching block under `provider` in `opencode.json` and a matching key in `auth.json`.
-
-{/*
-Screenshot: `/images/ai/opencode-manual-tab.png`
-The same card with the Manual tab selected, showing the opencode.json/auth.json snippets.
-<Frame>
-  <img src="/images/ai/opencode-manual-tab.png" alt="OpenCode manual setup" />
-</Frame>
-*/}

@@ -37,14 +37,6 @@ To undo it:
 pangolin configure gemini --reset
 ```
 
-{/*
-Screenshot: `/images/ai/gemini-cli-tab.png`
-The Gemini CLI card on a resource's Keys page, expanded, with the CLI tab selected showing the `pangolin configure gemini` command.
-<Frame>
-  <img src="/images/ai/gemini-cli-tab.png" alt="Gemini CLI setup" />
-</Frame>
-*/}
-
 ## Manual setup
 
 Write `~/.gemini/.env`:
@@ -63,13 +55,5 @@ export GOOGLE_GEMINI_BASE_URL=<endpoint>
 export GEMINI_API_KEY=<key>
 gemini
 ```
-
-{/*
-Screenshot: `/images/ai/gemini-manual-tab.png`
-The same card with the Manual tab selected, showing the .env file and shell snippets.
-<Frame>
-  <img src="/images/ai/gemini-manual-tab.png" alt="Gemini CLI manual setup" />
-</Frame>
-*/}
 
 For a private resource, keep `GEMINI_API_KEY` in place and set it to `none`. Gemini CLI won't start without it set to something.

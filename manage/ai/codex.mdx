@@ -37,14 +37,6 @@ To undo it:
 pangolin configure codex --reset
 ```
 
-{/*
-Screenshot: `/images/ai/codex-cli-tab.png`
-The Codex card on a resource's Keys page, expanded, with the CLI tab selected showing the `pangolin configure codex` command.
-<Frame>
-  <img src="/images/ai/codex-cli-tab.png" alt="Codex CLI setup" />
-</Frame>
-*/}
-
 ## Manual setup
 
 Merge this into `~/.codex/config.toml` (honors `$CODEX_HOME` if you've set it):
@@ -66,11 +58,3 @@ export PANGOLIN_API_KEY=<key>
 ```
 
 Codex is the one client here that also tolerates no key at all: for a private resource you can drop the `env_key` line and skip the export entirely. Exporting `PANGOLIN_API_KEY=none` works too, so use whichever you find clearer.
-
-{/*
-Screenshot: `/images/ai/codex-manual-tab.png`
-The same card with the Manual tab selected, showing the config.toml snippet.
-<Frame>
-  <img src="/images/ai/codex-manual-tab.png" alt="Codex manual setup" />
-</Frame>
-*/}
