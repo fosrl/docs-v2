@@ -3,25 +3,6 @@ title: "SSH Access"
 description: "SSH configuration, setup, and examples for public and private resources"
 ---
 
-import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
-
-{/* <iframe
-  className="w-full aspect-video rounded-xl"
-  src="https://www.youtube.com/embed/U4O9pESwMEg"
-  title="Pangolin SSH Access walkthrough"
-  frameBorder="0"
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-  allowFullScreen
-></iframe> */}
-
-<PangolinCloudTocCta />
-
-<Note>
-Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
-</Note>
-
-Pangolin SSH works on both [public](/manage/resources/public/ssh) and [private](/manage/resources/private/ssh) resources. The SSH configuration in the dashboard is identical for both—the difference is how users connect (browser vs. `pangolin ssh`) and which authentication layer gates access first.
-
 This page explains the configuration options shared by both resource types, gives a concrete example for every valid combination, and walks through host setup for **Standard SSH Server** automated provisioning.
 
 ## Default Configuration (Easiest)
@@ -44,29 +25,33 @@ SSH resources are configured through three decisions in the dashboard.
 
 ### Mode
 
-| Option | Description |
-|--------|-------------|
-| **Pangolin SSH (Recommended)** | Executes commands directly on the host via the site connector. No network SSH server is required, and you do not enter a host or port. Newt must run as the [binary](/manage/sites/install-site#binary-installation) on the host as root (`sudo newt ...`). Containerized installs are not supported—sessions may open the container shell instead of the host. |
-| **Standard SSH Server** | Routes commands over the network to an SSH server such as OpenSSH. Enter the backend host and port. To use automated provisioning (PAM) with this mode, you must configure OpenSSH to accept Pangolin certificates and connections. This mode also supports a remote auth daemon for pushing users to machines on the same network as the site connector that are not running the connector itself. |
+| Option                         | Description                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Pangolin SSH (Recommended)** | Executes commands directly on the host via the site connector. No network SSH server is required, and you do not enter a host or port. Newt must run as the [binary](/manage/sites/install-site#binary-installation) on the host as root (`sudo newt ...`). Containerized installs are not supported—sessions may open the container shell instead of the host.                                     |
+| **Standard SSH Server**        | Routes commands over the network to an SSH server such as OpenSSH. Enter the backend host and port. To use automated provisioning (PAM) with this mode, you must configure OpenSSH to accept Pangolin certificates and connections. This mode also supports a remote auth daemon for pushing users to machines on the same network as the site connector that are not running the connector itself. |
 
 <Warning>
-**Pangolin SSH mode requires the Newt binary on the host.** Install Newt as a [binary on the site connector host](/manage/sites/install-site#binary-installation) and run it as root (`sudo newt ...` or a root systemd service). If Newt runs in a container, SSH sessions may drop you into the container shell rather than the host.
+    **Pangolin SSH mode requires the Newt binary on the host.** Install Newt as
+    a [binary on the site connector
+    host](/manage/sites/install-site#binary-installation) and run it as root
+    (`sudo newt ...` or a root systemd service). If Newt runs in a container,
+    SSH sessions may drop you into the container shell rather than the host.
 </Warning>
 
 ### Authentication Method
 
-| Option | Description |
-|--------|-------------|
-| **Manual Authentication** | Requires existing host credentials and bypasses automatic user provisioning. On [public resources](/manage/resources/public/ssh), users enter a username and password or upload a private key in a browser form after completing the public authentication layer. On [private resources](/manage/resources/private/ssh), credentials are handled by the SSH client. |
-| **Automated Provisioning** | Automatically creates users, groups, and sudo permissions on the host based on Pangolin identity (PAM). Requires auth daemon and OpenSSH configuration on the target host. |
+| Option                     | Description                                                                                                                                                                                                                                                                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Manual Authentication**  | Requires existing host credentials and bypasses automatic user provisioning. On [public resources](/manage/resources/public/ssh), users enter a username and password or upload a private key in a browser form after completing the public authentication layer. On [private resources](/manage/resources/private/ssh), credentials are handled by the SSH client. |
+| **Automated Provisioning** | Automatically creates users, groups, and sudo permissions on the host based on Pangolin identity (PAM). Requires auth daemon and OpenSSH configuration on the target host.                                                                                                                                                                                          |
 
 ### Auth Daemon Location
 
 Only shown when **Automated Provisioning** is selected.
 
-| Option | Description |
-|--------|-------------|
-| **On Site** | The auth daemon runs on the machine hosting the site connector. Use when the connector and target SSH host are the same machine, or when the connector handles provisioning locally. |
+| Option             | Description                                                                                                                                                                                                    |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **On Site**        | The auth daemon runs on the machine hosting the site connector. Use when the connector and target SSH host are the same machine, or when the connector handles provisioning locally.                           |
 | **On Remote Host** | The auth daemon runs on a separate target machine on the same network. Use when the site connector is a bastion and each target host runs its own auth daemon. Only applies with **Standard SSH Server** mode. |
 
 ### Daemon Port
@@ -74,7 +59,8 @@ Only shown when **Automated Provisioning** is selected.
 When the auth daemon runs on a remote host, set the port it listens on (default `22123`). This must match the `--port` flag used when starting the auth daemon. Newt and the auth daemon communicate over HTTPS on this port within your internal network.
 
 <Warning>
-Ensure your target host is properly configured to run the auth daemon before completing setup, or provisioning will fail.
+    Ensure your target host is properly configured to run the auth daemon before
+    completing setup, or provisioning will fail.
 </Warning>
 
 ## Configuration Examples
@@ -142,7 +128,10 @@ There are five valid configuration combinations. Auth daemon location is not app
 ---
 
 <Note>
-**Pangolin SSH + Automated Provisioning + On Remote Host** is not a valid combination. Pangolin SSH executes sessions on the site connector host itself, so the auth daemon must run on site. Use **Standard SSH Server** mode when the auth daemon runs on a remote host.
+    **Pangolin SSH + Automated Provisioning + On Remote Host** is not a valid
+    combination. Pangolin SSH executes sessions on the site connector host
+    itself, so the auth daemon must run on site. Use **Standard SSH Server**
+    mode when the auth daemon runs on a remote host.
 </Note>
 
 ## How Certificates Work
@@ -166,9 +155,9 @@ With **Pangolin SSH** and automated provisioning, Pangolin handles user provisio
 
 Host setup is only required for **Standard SSH Server** mode with **Automated Provisioning**. **Pangolin SSH** mode (manual or automated) requires Newt to run as root on the site connector host but does not require OpenSSH or auth daemon configuration.
 
-| Configuration | Setup path |
-|---------------|------------|
-| Standard SSH Server + Automated + On Site | [Option 1](#option-1-newt-as-the-auth-daemon-same-host) |
+| Configuration                                    | Setup path                                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Standard SSH Server + Automated + On Site        | [Option 1](#option-1-newt-as-the-auth-daemon-same-host)                               |
 | Standard SSH Server + Automated + On Remote Host | [Option 2](#option-2-external-auth-daemon-ssh-on-another-server-that-doesnt-run-newt) |
 
 Before setting up the host, create the SSH resource (public or private) in the dashboard, grant access, and for private resources allow TCP 22 in [port restrictions](/manage/resources/private/port-restrictions).
@@ -298,7 +287,8 @@ sudo systemctl status pangolin-auth-daemon
 ```
 
 <Warning>
-Ensure the Pangolin CLI binary is at `/usr/local/bin/pangolin` (or update `ExecStart` to its path) before creating the service.
+    Ensure the Pangolin CLI binary is at `/usr/local/bin/pangolin` (or update
+    `ExecStart` to its path) before creating the service.
 </Warning>
 
 ### Step 3: Configure the SSH server on each target host
@@ -311,7 +301,8 @@ On each of these hosts, configure the SSH server as in [Configure the SSH server
 - **Clients → SSH:** Port **22** must be open for SSH to each target server.
 
 <Warning>
-These ports do not need to be exposed to the public internet. They only need to be reachable within the network where Newt and the target servers live.
+    These ports do not need to be exposed to the public internet. They only need
+    to be reachable within the network where Newt and the target servers live.
 </Warning>
 
 ## Configure the SSH server on the host
@@ -360,6 +351,30 @@ pangolin ssh sign vm-01.prod.example.com --key-file /path/to/public/key.pub
 ## Generating Passwords for Users
 
 If you need a password generated for your user on the remote system (for example for sudo access), use `--ad-generate-random-password` to have Pangolin generate a random password when users are created on the device.
+
+## Configuring Role Permissions
+
+<Note>
+    Configuring role based access is only available in [Pangolin
+    Cloud](https://app.pangolin.net/auth/signup) and [Enterprise
+    Edition](/self-host/enterprise-edition).
+</Note>
+
+<Frame>
+    <img
+        src="
+/images/role_ssh_modal.png"
+        alt="Claude Desktop third-party inference settings"
+    />
+</Frame>
+
+When using SSH automated provisioning, you can configure role permissions to control which users have the ability to SSH and what privileges they have. This is done in the Pangolin dashboard under the role's settings.
+
+Choosing to disable SSH will prevent users in that role from being able to connect with either private or public resources.
+
+Choosing to restrict the sudo mode will configure what sudo permissions the user has on the remote machine. You can choose between no sudo access, full sudo access, or limited sudo access restricted by specific commands. Additionally, you can configure which groups to put the users into.
+
+You can choose weather or not to allow the user to have a home directory configure when provisioning the user on the remote machine.
 
 ## FAQ
 
