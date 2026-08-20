@@ -3,47 +3,40 @@ title: "AI Gateway Overview"
 description: "Route coding agents and AI clients through Pangolin with centralized providers and keys"
 ---
 
-
-
 An AI Gateway resource is a normal Pangolin resource that proxies requests to one or more upstream AI providers (OpenAI, Anthropic, Google Gemini, Bedrock, Vertex AI, or a custom endpoint). Point a client at the resource's URL instead of the provider's, and Pangolin handles auth, access control, and logging in front of it.
 
-## How it fits together
+## How It Fits Together
 
 - **[Providers](/manage/ai/providers/overview)** are configured once per organization - the upstream URL, API key, and capabilities for OpenAI, Anthropic, etc.
 - **Resources** (type `AI Gateway`) attach one or more of those providers and get a normal Pangolin domain.
-- **Keys** are what clients authenticate to the resource with. Public resources check them; private resources don't, since only devices on the Pangolin network can reach them at all.
+- **[Virtual API Keys](/manage/ai/virtual-api-keys)** are what clients send to a **public** AI Gateway resource. Private resources are reached through the Pangolin network, so the gateway does not check a key.
 - The **[Model Catalog](/manage/ai/model-catalog)** is the known-model list and token pricing used by [model routing](/manage/ai/providers/model-routing) and budgets.
 
 A resource only understands the API format(s) its attached providers support. An Anthropic provider makes the resource speak the Anthropic Messages API; an OpenAI provider makes it speak Chat Completions/Responses; a Gemini provider makes it speak Gemini's `generateContent` API. Attach whichever providers match the clients you plan to connect. See [AI Providers](/manage/ai/providers/overview) for per-type setup and [Provider Configuration](/manage/ai/providers/configuration) for capabilities, auth, and model lists.
 
-## 1. Add a provider
+## 1. Add a Provider
 
 Create an org-level provider so the gateway has an upstream to call. Sidebar → **AI Gateway** → **Providers** → **Create**, or follow the [AI Providers](/manage/ai/providers/overview) guide. Pick a type, paste in its API key, and save. You can add as many as you need.
 
-## 2. Create a resource
+## 2. Create a Resource
 
 Resources → **Create** → set **Type** to **AI Gateway**, pick a domain, and attach the provider(s) from step 1. You can also attach providers to an existing resource later from its **AI Gateway** settings tab.
 
-## 3. Get a key
+## 3. Get a Key
 
-How a client authenticates depends on whether the resource is public or private.
+How a client authenticates depends on whether the resource is public or private. See [Virtual API Keys](/manage/ai/virtual-api-keys) for identity vs manual keys, always-on auth, and where to copy a key.
 
-### Public resources
+### Public Resources
 
-Reachable from anywhere, so the gateway checks an API key. Find yours in either place:
+Reachable from anywhere, so the gateway checks a virtual API key. Copy yours from the resource URL after login, the Resource Launcher more-info panel, or `https://app.pangolin.net/<org-id>/keys` (use your self-hosted dashboard URL in place of `app.pangolin.net` if you self-host).
 
-- Your org's **Your API Keys** page (top-level nav)
-- The resource's **API Keys** panel in the Resource Launcher
+### Private Resources
 
-Both show your personal **Identity Key** and any other keys attributed to you.
+Only reachable from devices connected to your Pangolin network, so the gateway does not check a key. Instead, the machine running the client needs the [Pangolin client](/manage/clients/install-client) installed and connected.
 
-### Private resources
+You still have to put *something* in the client's key field. Most AI clients refuse to start with a missing key, so use the literal string `none`. Deleting the field usually breaks things. Claude Code, for instance, silently falls back to your regular Anthropic account if `apiKeyHelper` is missing, and OpenCode errors out with `OpenAI API key is missing`.
 
-Only reachable from devices connected to your Pangolin network, so no key is checked. Instead, the machine running the client needs the [Pangolin client](/manage/clients/install-client) installed and connected.
-
-You still have to put *something* in the client's key field. Most AI clients refuse to start with no key set at all, so use the literal string `none`. Deleting the field usually breaks things - Claude Code, for instance, silently falls back to your regular Anthropic account if `apiKeyHelper` is missing, and OpenCode errors out with `OpenAI API key is missing`.
-
-## 4. Connect a client
+## 4. Connect a Client
 
 Every resource's Keys page has ready-to-copy setup for common clients, and `pangolin configure <client>` can write the config for you. Full instructions per client:
 
@@ -60,7 +53,7 @@ There are also guides for pointing other tools at a Pangolin AI Gateway resource
 - [Claude Desktop](/manage/ai/configure-ai-clients/claude-desktop)
 - [OpenClaw](/manage/ai/configure-ai-clients/openclaw)
 
-## Supported providers
+## Supported Providers
 
 Each type has its own configuration guide. Capabilities (which API formats a provider speaks) are explained in [Provider Configuration](/manage/ai/providers/configuration#capabilities).
 

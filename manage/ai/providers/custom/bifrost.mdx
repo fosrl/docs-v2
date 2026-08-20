@@ -23,3 +23,5 @@ See [Capabilities](/manage/ai/providers/configuration#capabilities) for the full
 8. Attach the provider to an [AI Gateway resource](/manage/ai/overview).
 
 Then point a client at that resource: [Codex](/manage/ai/configure-ai-clients/codex), [OpenCode](/manage/ai/configure-ai-clients/opencode), or [Open WebUI](/manage/ai/configure-ai-clients/open-webui). Clients still call the Pangolin resource. Bifrost only sees the request after Pangolin has authenticated it.
+
+When the caller is a known user, Pangolin forwards [`Remote-User`, `Remote-Email`, `Remote-Name`, and `Remote-Role`](/manage/ai/providers/configuration#identity-headers). Use those in Bifrost (or any Custom upstream) for downstream access control. An unattributed [manual key](/manage/ai/virtual-api-keys#manual-keys) authenticates without sending them.

@@ -2,7 +2,7 @@
 title: "Forwarded Headers"
 description: "Learn how Pangolin forwards user identity information to your backend applications through HTTP headers"
 ---
-Pangolin can forward user identity information to your backend applications through custom HTTP headers. This allows your applications to receive user details directly from the request headers, enabling integration with Pangolin's authentication system.
+Pangolin can forward user identity information to your backend applications through custom HTTP headers. This allows your applications to receive user details directly from the request headers, enabling integration with Pangolin's authentication system. [AI Gateway](/manage/ai/overview) resources send the same headers to the upstream provider when the caller is a known user. See [Identity Headers](/manage/ai/providers/configuration#identity-headers).
 
 <Info>
 Forwarded headers are only available when using authentication methods that provide user identity information.
@@ -52,3 +52,13 @@ These authentication methods do not provide user identity information:
   No user identity - only access control.
 </Card>
 </CardGroup>
+
+## AI Gateway
+
+[AI Gateway](/manage/ai/overview) resources forward the same `Remote-User`, `Remote-Email`, `Remote-Name`, and `Remote-Role` headers to the upstream model API when Pangolin knows the user:
+
+- A public resource called with an [identity key](/manage/ai/virtual-api-keys#identity-keys)
+- A public resource called with a [manual key](/manage/ai/virtual-api-keys#manual-keys) attributed to a user
+- A private AI Gateway resource called from a connected [Pangolin client](/manage/clients/install-client)
+
+An unattributed manual key authenticates without sending these headers. Details are in [Identity Headers](/manage/ai/providers/configuration#identity-headers).

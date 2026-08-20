@@ -66,3 +66,24 @@ On **Network** you can also set:
 
 - **Custom headers** sent on every request to this provider (`Header-Name: value`, one per line)
 - **Skip TLS verification** for the upstream connection
+
+### Identity Headers
+
+When Pangolin knows which user made the request, it forwards that identity to the upstream on every call:
+
+| Header | Value |
+|---|---|
+| `Remote-User` | Username |
+| `Remote-Email` | Email, when set |
+| `Remote-Name` | Display name, when set |
+| `Remote-Role` | Org role names, when the user has roles |
+
+The user is known when:
+
+- A public resource is called with an [identity key](/manage/ai/virtual-api-keys#identity-keys)
+- A public resource is called with a [manual key](/manage/ai/virtual-api-keys#manual-keys) attributed to a user
+- A private AI Gateway resource is called from a connected [Pangolin client](/manage/clients/install-client), and that client maps to a user
+
+An unattributed manual key still authenticates, but these headers are omitted. Empty values are omitted rather than sent blank.
+
+These are the same names as [Forwarded Headers](/manage/access-control/forwarded-headers) on HTTPS resources. A Custom upstream such as [Bifrost](/manage/ai/providers/custom/bifrost) can use them for downstream access control. They are sent in addition to any custom headers you configure on the provider.

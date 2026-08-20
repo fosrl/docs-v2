@@ -189,6 +189,7 @@
                                 "icon": "robot",
                                 "pages": [
                                     "manage/ai/overview",
+                                    "manage/ai/virtual-api-keys",
                                     {
                                         "group": "Providers",
                                         "pages": [
