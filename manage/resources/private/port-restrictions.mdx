@@ -21,7 +21,7 @@ Use All when the service needs arbitrary ports (for example ephemeral ports on t
 
 ### Blocked
 
-Blocked means that protocol is not allowed to the destination through Pangolin: no TCP or no UDP traffic passes, depending on which row you set. The other protocol can still be All or Custom independently—for example TCP Custom (only `443`) with UDP Blocked for a HTTPS-only workload that should not receive UDP to that destination.
+Blocked means that protocol is not allowed to the destination through Pangolin: no TCP or no UDP traffic passes, depending on which row you set. The other protocol can still be All or Custom independently-for example TCP Custom (only `443`) with UDP Blocked for a HTTPS-only workload that should not receive UDP to that destination.
 
 Use Blocked when you want to turn off a protocol entirely for that resource.
 
@@ -41,5 +41,5 @@ Use Custom for least-privilege access: allow only the ports your application act
 By default, ICMP (ping) to the resource’s destination is enabled. To turn it off, disable the ICMP option when configuring access to the resource. That stops ICMP echo requests (ping) to the destination for principals that have access.
 
 <Note>
-ICMP ping does not work when using a resource [alias](/manage/resources/private/alias) as the target—ping applies to the resource’s configured destination (FQDN, IP, or CIDR), not to alias hostnames.
+ICMP ping does not work when using a resource [alias](/manage/resources/private/alias) as the target-ping applies to the resource’s configured destination (FQDN, IP, or CIDR), not to alias hostnames.
 </Note>

@@ -1,0 +1,133 @@
+---
+title: "Claude Code"
+description: "Connect Claude Code to a Pangolin AI Gateway resource"
+---
+
+Claude Code talks the Anthropic Messages API, so the resource you point it at needs an Anthropic-compatible provider attached - Anthropic itself, Bedrock, Vertex AI, or a custom Anthropic-compatible endpoint like Kimi K2. See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
+
+import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
+
+You'll need the resource's URL (its `<endpoint>`) and its API key (`<key>`). Both are on the resource's Keys page.
+
+<AiGatewayKey />
+
+## Fastest: Pangolin CLI
+
+[Install the Pangolin CLI](/manage/clients/install-client#quick-install-recommended) if you don't have it, then log in:
+
+```bash
+pangolin login
+```
+
+Configure Claude Code against a resource:
+
+```bash
+pangolin configure claude
+```
+
+This prompts you to pick an organization and resource if you have more than one, fetches a key for you if the resource needs one, and writes `~/.claude/settings.json`. To skip the prompts:
+
+```bash
+pangolin configure claude --resource <resource-niceid-or-domain>
+```
+
+To undo it:
+
+```bash
+pangolin configure claude --reset
+```
+
+{/*
+Screenshot: `/images/ai/claude-cli-tab.png`
+The Claude Code card on a resource's Keys page, expanded, with the CLI tab selected showing the `pangolin configure claude` command.
+<Frame>
+  <img src="/images/ai/claude-cli-tab.png" alt="Claude Code CLI setup" />
+</Frame>
+*/}
+
+## Manual setup
+
+Pick the preset that matches your provider.
+
+### Default (Anthropic)
+
+Write `~/.claude/settings.json`:
+
+```json
+{
+    "apiKeyHelper": "echo '<key>'",
+    "env": {
+        "ANTHROPIC_BASE_URL": "<endpoint>"
+    }
+}
+```
+
+Or, for a one-off shell session instead of a permanent settings file:
+
+```bash
+export ANTHROPIC_BASE_URL=<endpoint>
+export ANTHROPIC_API_KEY=<key>
+claude
+```
+
+For a private resource, keep `apiKeyHelper`/`ANTHROPIC_API_KEY` in place and set the key to `none`. Claude Code only calls `apiKeyHelper` if it's present, and falls back to whatever account you're already signed into if it isn't - so removing it sends your traffic to Anthropic instead of through the gateway.
+
+### Amazon Bedrock
+
+Use this when the resource has a Bedrock provider attached. Write `~/.claude/settings.json`:
+
+```json
+{
+    "env": {
+        "ANTHROPIC_MODEL": "claude-sonnet-4-6",
+        "ANTHROPIC_BEDROCK_BASE_URL": "<endpoint>/bedrock",
+        "CLAUDE_CODE_USE_BEDROCK": "1",
+        "CLAUDE_CODE_SKIP_BEDROCK_AUTH": "1"
+    }
+}
+```
+
+### Google Vertex AI
+
+Use this when the resource has a Vertex AI provider attached. Write `~/.claude/settings.json`:
+
+```json
+{
+    "env": {
+        "CLOUD_ML_REGION": "global",
+        "ANTHROPIC_VERTEX_PROJECT_ID": "<your-gcp-project-id>",
+        "CLAUDE_CODE_USE_VERTEX": "1",
+        "CLAUDE_CODE_SKIP_VERTEX_AUTH": "1",
+        "ANTHROPIC_VERTEX_BASE_URL": "<endpoint>/v1"
+    }
+}
+```
+
+Replace `<your-gcp-project-id>` with your actual GCP project ID.
+
+### Kimi K2 (Moonshot AI)
+
+Use this when the resource has a custom provider pointed at Moonshot AI's Anthropic-compatible endpoint. Write `~/.claude/settings.json`:
+
+```json
+{
+    "apiKeyHelper": "echo '<key>'",
+    "env": {
+        "ANTHROPIC_BASE_URL": "<endpoint>/anthropic",
+        "ANTHROPIC_MODEL": "kimi-k2",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "kimi-k2",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "kimi-k2",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "kimi-k2",
+        "CLAUDE_CODE_SUBAGENT_MODEL": "kimi-k2",
+        "ENABLE_TOOL_SEARCH": "false"
+    }
+}
+```
+
+{/*
+Screenshot: `/images/ai/claude-manual-tab.png`
+The same card with the Manual tab selected and the preset dropdown open, showing Default/Bedrock/Vertex/Kimi options.
+<Frame>
+  <img src="/images/ai/claude-manual-tab.png" alt="Claude Code manual setup presets" />
+</Frame>
+*/}

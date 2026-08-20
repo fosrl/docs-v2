@@ -1,0 +1,97 @@
+---
+title: "OpenClaw"
+description: "Connect OpenClaw to a Pangolin AI Gateway resource"
+---
+
+[OpenClaw](https://openclaw.ai) is an open-source agent gateway that can run against any OpenAI- or Anthropic-compatible endpoint. Point it at an AI Gateway resource with a matching provider attached - OpenAI-compatible (OpenAI, OpenRouter, Vercel AI Gateway, Microsoft Foundry, custom) or Anthropic-compatible (Anthropic, Bedrock, Vertex AI, custom). See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
+
+import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
+
+You'll need the resource's URL (its `<endpoint>`) and its API key (`<key>`), both on the resource's Keys page, plus the name of a model your attached provider actually serves (e.g. `gpt-4o`, `claude-sonnet-4-6`) - that's `<model-id>` below.
+
+<AiGatewayKey />
+
+## Install
+
+```bash
+# macOS/Linux
+curl -fsSL https://openclaw.ai/install.sh | bash
+
+# Windows PowerShell
+iwr -useb https://openclaw.ai/install.ps1 | iex
+```
+
+## Connect it to your resource
+
+```bash
+openclaw onboard --non-interactive --accept-risk \
+  --auth-choice custom-api-key \
+  --custom-base-url "<endpoint>/v1" \
+  --custom-model-id "<model-id>" \
+  --custom-api-key "<key>" \
+  --custom-compatibility openai \
+  --install-daemon --skip-channels --skip-skills
+```
+
+Set `--custom-compatibility anthropic` instead of `openai` if the resource's provider is Anthropic/Bedrock/Vertex rather than OpenAI-compatible, and drop `--custom-base-url`'s trailing `/v1` in that case (Anthropic-style resources are addressed at the endpoint root).
+
+Prefer the interactive wizard instead:
+
+```bash
+openclaw onboard --install-daemon
+```
+
+When prompted, choose **QuickStart or Manual mode**, select the custom/OpenAI-compatible provider option, and enter the base URL and key.
+
+{/*
+Screenshot: `/images/ai/openclaw-onboard.png`
+The `openclaw onboard` interactive wizard at the provider selection step.
+<Frame>
+  <img src="/images/ai/openclaw-onboard.png" alt="OpenClaw onboarding wizard" />
+</Frame>
+*/}
+
+## Manual setup
+
+Onboarding writes `~/.openclaw/openclaw.json`. You can edit it directly instead - changes reload automatically:
+
+```json
+{
+    "models": {
+        "providers": {
+            "pangolin": {
+                "baseUrl": "<endpoint>/v1",
+                "apiKey": "<key>",
+                "api": "openai-completions",
+                "models": [
+                    {
+                        "id": "<model-id>",
+                        "name": "<model-id> via Pangolin"
+                    }
+                ]
+            }
+        }
+    },
+    "agents": {
+        "defaults": {
+            "model": { "primary": "pangolin/<model-id>" }
+        }
+    }
+}
+```
+
+To switch models later without re-editing the file:
+
+```bash
+openclaw models set pangolin/<model-id>
+```
+
+## Verify
+
+```bash
+openclaw health
+openclaw models status
+openclaw agent --agent main -m "Hello, what model are you?"
+```
+
+For a private resource, keep `--custom-api-key`/`apiKey` and set it to `none`, and make sure the Pangolin client is connected on whichever machine runs the OpenClaw daemon.

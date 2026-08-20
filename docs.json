@@ -184,6 +184,20 @@
                                     "manage/remote-node/backhaul"
                                 ]
                             },
+                            {
+                                "group": "AI Gateway",
+                                "icon": "robot",
+                                "pages": [
+                                    "manage/ai/overview",
+                                    "manage/ai/claude",
+                                    "manage/ai/codex",
+                                    "manage/ai/opencode",
+                                    "manage/ai/gemini",
+                                    "manage/ai/open-webui",
+                                    "manage/ai/claude-desktop",
+                                    "manage/ai/openclaw"
+                                ]
+                            },
                             "manage/endpoints-and-pops",
                             "manage/integration-api",
                             "manage/branding"

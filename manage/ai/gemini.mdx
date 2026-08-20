@@ -1,0 +1,75 @@
+---
+title: "Gemini CLI"
+description: "Connect Gemini CLI to a Pangolin AI Gateway resource"
+---
+
+Gemini CLI talks Google's native `generateContent` API, so the resource you point it at needs a Google Gemini (or Vertex AI) provider attached. See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
+
+import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
+
+You'll need the resource's URL (its `<endpoint>`) and its API key (`<key>`). Both are on the resource's Keys page.
+
+<AiGatewayKey />
+
+## Fastest: Pangolin CLI
+
+[Install the Pangolin CLI](/manage/clients/install-client#quick-install-recommended) if you don't have it, then log in:
+
+```bash
+pangolin login
+```
+
+Configure Gemini CLI against a resource:
+
+```bash
+pangolin configure gemini
+```
+
+This prompts you to pick an organization and resource if you have more than one, fetches a key for you if the resource needs one, and writes `~/.gemini/.env` - the file Gemini CLI loads automatically on every run, regardless of which directory you start it from. To skip the prompts:
+
+```bash
+pangolin configure gemini --resource <resource-niceid-or-domain>
+```
+
+To undo it:
+
+```bash
+pangolin configure gemini --reset
+```
+
+{/*
+Screenshot: `/images/ai/gemini-cli-tab.png`
+The Gemini CLI card on a resource's Keys page, expanded, with the CLI tab selected showing the `pangolin configure gemini` command.
+<Frame>
+  <img src="/images/ai/gemini-cli-tab.png" alt="Gemini CLI setup" />
+</Frame>
+*/}
+
+## Manual setup
+
+Write `~/.gemini/.env`:
+
+```bash
+GOOGLE_GEMINI_BASE_URL=<endpoint>
+GEMINI_API_KEY=<key>
+```
+
+Gemini CLI also checks a project-local `.env` first (in the current directory or a parent, up to `.git` or your home directory) before falling back to `~/.gemini/.env`, so a project-level file with the same two lines overrides this for just that project.
+
+Or, for a one-off shell session instead of a permanent file:
+
+```bash
+export GOOGLE_GEMINI_BASE_URL=<endpoint>
+export GEMINI_API_KEY=<key>
+gemini
+```
+
+{/*
+Screenshot: `/images/ai/gemini-manual-tab.png`
+The same card with the Manual tab selected, showing the .env file and shell snippets.
+<Frame>
+  <img src="/images/ai/gemini-manual-tab.png" alt="Gemini CLI manual setup" />
+</Frame>
+*/}
+
+For a private resource, keep `GEMINI_API_KEY` in place and set it to `none`. Gemini CLI won't start without it set to something.

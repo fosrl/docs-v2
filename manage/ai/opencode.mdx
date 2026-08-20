@@ -1,0 +1,97 @@
+---
+title: "OpenCode"
+description: "Connect OpenCode to a Pangolin AI Gateway resource"
+---
+
+OpenCode configures each model provider separately, so it can talk to whichever API formats your resource supports — Anthropic Messages, OpenAI Chat/Responses, or both, depending on which providers are attached. See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
+
+import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
+
+You'll need the resource's URL (its `<endpoint>`) and its API key (`<key>`). Both are on the resource's Keys page.
+
+<AiGatewayKey />
+
+## Fastest: Pangolin CLI
+
+[Install the Pangolin CLI](/manage/clients/install-client#quick-install-recommended) if you don't have it, then log in:
+
+```bash
+pangolin login
+```
+
+Configure OpenCode against a resource:
+
+```bash
+pangolin configure opencode
+```
+
+This prompts you to pick an organization and resource (if you have more than one), then asks which OpenCode provider ID(s) should point at this gateway — defaults to `anthropic,openai`, but you can enter any comma-separated list OpenCode recognizes (e.g. `openrouter,google`). It fetches a key for you if needed and writes `opencode.json` and `auth.json`. To skip the org/resource prompts:
+
+```bash
+pangolin configure opencode --resource <resource-niceid-or-domain>
+```
+
+To undo it:
+
+```bash
+pangolin configure opencode --reset
+```
+
+{/*
+Screenshot: `/images/ai/opencode-cli-tab.png`
+The OpenCode card on a resource's Keys page, expanded, with the CLI tab selected showing the `pangolin configure opencode` command.
+<Frame>
+  <img src="/images/ai/opencode-cli-tab.png" alt="OpenCode CLI setup" />
+</Frame>
+*/}
+
+## Manual setup
+
+Merge this into your global `opencode.json` (`~/.config/opencode/opencode.json`, or `$XDG_CONFIG_HOME/opencode/opencode.json` if set):
+
+```json
+{
+    "$schema": "https://opencode.ai/config.json",
+    "provider": {
+        "anthropic": {
+            "options": {
+                "baseURL": "<endpoint>/v1"
+            }
+        },
+        "openai": {
+            "options": {
+                "baseURL": "<endpoint>/v1"
+            }
+        }
+    }
+}
+```
+
+Then merge your key into `auth.json` (`~/.local/share/opencode/auth.json`, or `$XDG_DATA_HOME/opencode/auth.json` if set):
+
+```json
+{
+    "anthropic": {
+        "type": "api",
+        "key": "<key>"
+    },
+    "openai": {
+        "type": "api",
+        "key": "<key>"
+    }
+}
+```
+
+<Warning>
+`auth.json` is required even for a private resource. OpenCode refuses to start a provider with no key at all and fails with `OpenAI API key is missing. Pass it using the 'apiKey' parameter or the OPENAI_API_KEY environment variable.` Set the key to `none` rather than leaving the entry out.
+</Warning>
+
+Only add entries for the providers your resource actually supports. To point a different OpenCode provider (`openrouter`, `google`, `groq`, etc.) at this gateway, add a matching block under `provider` in `opencode.json` and a matching key in `auth.json`.
+
+{/*
+Screenshot: `/images/ai/opencode-manual-tab.png`
+The same card with the Manual tab selected, showing the opencode.json/auth.json snippets.
+<Frame>
+  <img src="/images/ai/opencode-manual-tab.png" alt="OpenCode manual setup" />
+</Frame>
+*/}

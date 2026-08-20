@@ -1,0 +1,55 @@
+---
+title: "Open WebUI"
+description: "Connect Open WebUI to a Pangolin AI Gateway resource"
+---
+
+Open WebUI is a self-hosted chat interface. It talks the OpenAI API, so point it at an AI Gateway resource that has an OpenAI-compatible provider attached (OpenAI, OpenRouter, Vercel AI Gateway, Microsoft Foundry, or custom). See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
+
+import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
+
+You'll need the resource's URL (its `<endpoint>`) and its API key (`<key>`). Both are on the resource's Keys page.
+
+<AiGatewayKey />
+
+## If you're running Open WebUI for the first time
+
+```bash
+docker run -d -p 3000:8080 \
+  -e OPENAI_API_BASE_URL=<endpoint>/v1 \
+  -e OPENAI_API_KEY=<key> \
+  -v open-webui:/app/backend/data \
+  --name open-webui \
+  --restart always \
+  ghcr.io/open-webui/open-webui:main
+```
+
+Open `http://localhost:3000`, finish the first-run account setup, and your Pangolin gateway is already the active connection.
+
+## If Open WebUI is already running
+
+Go to **Settings → Connections** and add a connection:
+
+- **URL:** `<endpoint>/v1`
+- **Key:** `<key>`
+
+{/*
+Screenshot: `/images/ai/openwebui-connections.png`
+Open WebUI's Settings → Connections page with the Pangolin gateway URL and key filled in.
+<Frame>
+  <img src="/images/ai/openwebui-connections.png" alt="Open WebUI connection settings" />
+</Frame>
+*/}
+
+Save, then open a new chat - the models exposed by your resource's attached provider(s) show up in the model picker.
+
+{/*
+Screenshot: `/images/ai/openwebui-model-picker.png`
+The Open WebUI model picker showing models served through the Pangolin gateway.
+<Frame>
+  <img src="/images/ai/openwebui-model-picker.png" alt="Open WebUI model picker" />
+</Frame>
+*/}
+
+For a private resource, set the key to `none` rather than leaving it blank. Open WebUI treats a blank key as "no connection configured" and won't list the models.
+
+Note that Open WebUI runs as a server, not on your laptop - so it's the Open WebUI host that needs the Pangolin client installed and connected to reach a private resource, not the browser you're viewing it from.

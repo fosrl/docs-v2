@@ -1,0 +1,10 @@
+<Note>
+**Public vs. private resources**
+
+Wherever these instructions show `<key>`, what you put there depends on the resource type:
+
+- **Public resource** - reachable from anywhere, so the gateway checks your API key. Use the key from the resource's Keys page or your personal org API key which can be retrieved from the dashboard.
+- **Private resource** - only reachable from devices connected to your Pangolin network, so no key is checked. You must have the [Pangolin client](/manage/clients/install-client) installed and connected. Use the literal string `none` as the key.
+
+Don't delete the key field for private resources. Most clients refuse to start without *some* key set, so they need an inert placeholder rather than a missing one.
+</Note>
