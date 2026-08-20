@@ -3,9 +3,7 @@ title: "TCP / UDP"
 description: "Expose raw TCP and UDP services on a Pangolin server port without authentication"
 ---
 
-import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
 
-<PangolinCloudTocCta />
 
 TCP and UDP public resources are protocol-agnostic proxies. Unlike HTTP/HTTPS, SSH, RDP, and VNC, they do **not** receive a fully qualified domain name or TLS certificate. Instead, each resource binds to a port on the Pangolin server host. Clients connect to `<pangolin-server>:<port>` and traffic is forwarded to the downstream service through a site connector.
 

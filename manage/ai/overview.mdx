@@ -3,6 +3,8 @@ title: "AI Gateway Overview"
 description: "Route coding agents and AI clients through Pangolin with centralized providers and keys"
 ---
 
+
+
 An AI Gateway resource is a normal Pangolin resource that proxies requests to one or more upstream AI providers (OpenAI, Anthropic, Google Gemini, Bedrock, Vertex AI, or a custom endpoint). Point a client at the resource's URL instead of the provider's, and Pangolin handles auth, access control, and logging in front of it.
 
 ## How it fits together
@@ -17,25 +19,9 @@ A resource only understands the API format(s) its attached providers support. An
 
 Create an org-level provider so the gateway has an upstream to call. Sidebar → **AI Gateway** → **Providers** → **Create**, or follow the [AI Providers](/manage/ai/providers/overview) guide. Pick a type, paste in its API key, and save. You can add as many as you need.
 
-{/*
-Screenshot: `/images/ai/create-provider.png`
-The AI Gateway → Providers → Create form, showing the provider type dropdown and API key field filled in for OpenAI or Anthropic.
-<Frame>
-  <img src="/images/ai/create-provider.png" alt="Creating an AI provider" />
-</Frame>
-*/}
-
 ## 2. Create a resource
 
 Resources → **Create** → set **Type** to **AI Gateway**, pick a domain, and attach the provider(s) from step 1. You can also attach providers to an existing resource later from its **AI Gateway** settings tab.
-
-{/*
-Screenshot: `/images/ai/create-resource.png`
-The new resource dialog with Type set to "AI Gateway" and a provider selected in the AI Providers section.
-<Frame>
-  <img src="/images/ai/create-resource.png" alt="Creating an AI Gateway resource" />
-</Frame>
-*/}
 
 ## 3. Get a key
 
@@ -55,14 +41,6 @@ Both show your personal **Identity Key** and any other keys attributed to you.
 Only reachable from devices connected to your Pangolin network, so no key is checked. Instead, the machine running the client needs the [Pangolin client](/manage/clients/install-client) installed and connected.
 
 You still have to put *something* in the client's key field. Most AI clients refuse to start with no key set at all, so use the literal string `none`. Deleting the field usually breaks things - Claude Code, for instance, silently falls back to your regular Anthropic account if `apiKeyHelper` is missing, and OpenCode errors out with `OpenAI API key is missing`.
-
-{/*
-Screenshot: `/images/ai/api-keys-panel.png`
-The resource launcher's API Keys panel, showing the Identity Key section and the "Configure Coding Agents" cards below it.
-<Frame>
-  <img src="/images/ai/api-keys-panel.png" alt="Resource API Keys panel" />
-</Frame>
-*/}
 
 ## 4. Connect a client
 

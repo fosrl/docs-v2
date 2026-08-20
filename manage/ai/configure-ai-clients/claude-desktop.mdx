@@ -3,7 +3,17 @@ title: "Claude Desktop"
 description: "Connect Claude Desktop's third-party inference to a Pangolin AI Gateway resource"
 ---
 
+
+
 Claude Desktop can route its requests through a third-party inference gateway instead of Anthropic directly. Point it at an AI Gateway resource that has an Anthropic-compatible provider attached — Anthropic itself, Bedrock, Vertex AI, or a custom Anthropic-compatible endpoint. See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
+
+<Frame>
+    <img
+        src="
+/images/claude_desktop_landing.png"
+        alt="Claude Desktop third-party inference settings"
+    />
+</Frame>
 
 import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
 
@@ -14,21 +24,34 @@ You'll need the resource's URL (its `<endpoint>`) and its API key (`<key>`). Bot
 ## Steps
 
 1. Open Claude Desktop, go to the menu in the top left and select **Help > Troubleshooting**, and turn on **Developer Mode**.
+<Frame>
+    <img
+        src="
+/images/claude_desktop_troubleshooting.png"
+        alt="Claude Desktop third-party inference settings"
+    />
+</Frame>
 2. From the menu bar, open **Developer**, then **Configure Third-Party Inference…**.
+<Frame>
+    <img
+        src="
+/images/claude_desktop_developer.png"
+        alt="Claude Desktop third-party inference settings"
+    />
+</Frame>
 3. Select **Gateway**
 4. Select **Credential kind** > **Static API Key**.
-3. Fill in:
-   - **Gateway base URL:** `<endpoint>`
-   - **Gateway API Key:** `<key>`
-4. Restart Claude Desktop.
-
-{/*
-Screenshot: `/images/ai/claude-desktop-inference-dialog.png`
-The "Configure Third-Party Inference" dialog with the Gateway URL and API Key fields filled in.
+5. Fill in:
+    - **Gateway base URL:** `<endpoint>`
+    - **Gateway API Key:** `<key>`
 <Frame>
-  <img src="/images/ai/claude-desktop-inference-dialog.png" alt="Claude Desktop third-party inference settings" />
+    <img
+        src="
+/images/claude_desktop_developer_settings.png"
+        alt="Claude Desktop third-party inference settings"
+    />
 </Frame>
-*/}
+6. Restart Claude Desktop.
 
 Send a message to confirm it's working — check the resource's activity in Pangolin's logs if you want to verify traffic is actually flowing through the gateway rather than straight to Anthropic.
 

@@ -3,6 +3,8 @@ title: "OpenClaw"
 description: "Connect OpenClaw to a Pangolin AI Gateway resource"
 ---
 
+
+
 [OpenClaw](https://openclaw.ai) is an open-source agent gateway that can run against any OpenAI- or Anthropic-compatible endpoint. Point it at an AI Gateway resource with a matching provider attached - OpenAI-compatible (OpenAI, OpenRouter, Vercel AI Gateway, Microsoft Foundry, custom) or Anthropic-compatible (Anthropic, Bedrock, Vertex AI, custom). See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
 
 import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
@@ -42,14 +44,6 @@ openclaw onboard --install-daemon
 ```
 
 When prompted, choose **QuickStart or Manual mode**, select the custom/OpenAI-compatible provider option, and enter the base URL and key.
-
-{/*
-Screenshot: `/images/ai/openclaw-onboard.png`
-The `openclaw onboard` interactive wizard at the provider selection step.
-<Frame>
-  <img src="/images/ai/openclaw-onboard.png" alt="OpenClaw onboarding wizard" />
-</Frame>
-*/}
 
 ## Manual setup
 

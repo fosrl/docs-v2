@@ -3,6 +3,8 @@ title: "Claude Code"
 description: "Connect Claude Code to a Pangolin AI Gateway resource"
 ---
 
+
+
 Claude Code talks the Anthropic Messages API, so the resource you point it at needs an Anthropic-compatible provider attached - Anthropic itself, Bedrock, Vertex AI, or a custom Anthropic-compatible endpoint like Kimi K2. See [AI Gateway Overview](/manage/ai/overview) if you haven't set that up yet.
 
 import AiGatewayKey from "/snippets/ai-gateway-key.mdx";
@@ -36,14 +38,6 @@ To undo it:
 ```bash
 pangolin configure claude --reset
 ```
-
-{/*
-Screenshot: `/images/ai/claude-cli-tab.png`
-The Claude Code card on a resource's Keys page, expanded, with the CLI tab selected showing the `pangolin configure claude` command.
-<Frame>
-  <img src="/images/ai/claude-cli-tab.png" alt="Claude Code CLI setup" />
-</Frame>
-*/}
 
 ## Manual setup
 
@@ -123,11 +117,3 @@ Use this when the resource has a custom provider pointed at Moonshot AI's Anthro
     }
 }
 ```
-
-{/*
-Screenshot: `/images/ai/claude-manual-tab.png`
-The same card with the Manual tab selected and the preset dropdown open, showing Default/Bedrock/Vertex/Kimi options.
-<Frame>
-  <img src="/images/ai/claude-manual-tab.png" alt="Claude Code manual setup presets" />
-</Frame>
-*/}

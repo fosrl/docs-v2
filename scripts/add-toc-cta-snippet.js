@@ -7,9 +7,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const BLOCK = `import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
-
-<PangolinCloudTocCta />
+const BLOCK = `
 
 `;
 
