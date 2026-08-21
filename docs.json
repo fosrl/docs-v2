@@ -150,6 +150,8 @@
                                     "manage/analytics/access",
                                     "manage/analytics/connection",
                                     "manage/analytics/action",
+                                    "manage/ai/session-logs",
+                                    "manage/ai/usage-analytics",
                                     {
                                         "group": "Event Streaming",
                                         "pages": [
@@ -191,6 +193,7 @@
                                 "icon": "robot",
                                 "pages": [
                                     "manage/ai/overview",
+                                    "manage/ai/multiple-gateway-resources",
                                     "manage/ai/virtual-api-keys",
                                     {
                                         "group": "Providers",
@@ -230,7 +233,10 @@
                                             "manage/ai/configure-ai-clients/openclaw"
                                         ]
                                     },
-                                    "manage/ai/model-catalog"
+                                    "manage/ai/budgets",
+                                    "manage/ai/model-catalog",
+                                    "manage/ai/session-logs",
+                                    "manage/ai/usage-analytics"
                                 ]
                             },
                             "manage/endpoints-and-pops",

@@ -1,0 +1,66 @@
+---
+title: "Budgets"
+description: "Cap estimated USD spend or token usage on providers, models, resources, roles, and keys"
+---
+
+A budget is a cap on estimated USD spend or token count for a rolling window. Pangolin checks every matching enabled budget before it forwards a request. If **any** one is already at or above its maximum, the call is blocked.
+
+Budgets are estimates used for enforcement, not a copy of the vendor invoice. See [Model Catalog](/manage/ai/model-catalog) for where USD rates come from. The same recorded usage appears in [Usage Analytics](/manage/ai/usage-analytics).
+
+## Estimates, Not Invoices
+
+USD cost uses catalog rates (`in`, `out`, `cache`, `reasoning`) times the token buckets Pangolin recorded for the call. Cache-write tokens use the input rate. Missing reasoning rates use the output rate.
+
+If the model ID is not in the catalog, the request has no USD amount and does not count toward USD budgets. Token budgets still sum tokens for that call.
+
+[OpenRouter](/manage/ai/providers/open-router), [Vercel AI Gateway](/manage/ai/providers/vercel-ai-gateway), and [Custom](/manage/ai/providers/custom) may match a catalog ID with approximate pricing.
+
+If the upstream omits usage, Pangolin estimates tokens from the request and response.
+
+The check uses **prior** recorded usage. A request that would cross the cap can still complete, so usage can slightly overshoot. Reset periods are trailing windows from now, not calendar months. Daily means the last 24 hours.
+
+## How Usage Is Calculated
+
+After each call, Pangolin records prompt, cache-read, cache-write, completion, and reasoning tokens.
+
+- **Token** budgets sum those counts.
+- **USD** budgets multiply the same counts by catalog rates, then sum dollars.
+
+Enforcement totals that history for the budget's scope and [period](#fields), then compares the total to **Maximum Spend**.
+
+## Where to Set a Budget
+
+Each budget has exactly one scope. You can add more than one budget on the same scope when the unit or period differs, for example a daily USD cap and a monthly token cap on the same provider.
+
+| Scope | Where | Why |
+|---|---|---|
+| **Provider** | **AI Gateway → Providers → Budget** | Cap everything that uses that upstream key |
+| **Model** | Provider **Models** tab, on an allow-list entry | Cap one key or glob, such as `gpt-4o` or `gpt-*` |
+| **Public resource** | Resource **Budget** tab | Cap a specific public gateway |
+| **Private resource** | Resource **Budget** tab | Cap a client-only gateway |
+| **Role** | Role form | Cap everyone in that role. Usage attributed to those users is summed |
+| **Virtual API key** | Create or edit the key | Cap a service key or usage attributed to that key |
+
+All matching scopes apply together. A call can hit a provider budget, a resource budget, a role budget, and a key budget at once. Exceeding any of them blocks the request.
+
+## Fields
+
+The editor uses **Spend Type**, **Maximum Spend**, and **Reset Period**.
+
+| Field | Options |
+|---|---|
+| **Spend Type** | `USD` or `Tokens` |
+| **Maximum Spend** | A positive maximum in that unit |
+| **Reset Period** | Hourly, Daily (24 hours), Weekly (7 days), Monthly (30 days), Yearly (365 days), or Lifetime |
+
+Lifetime covers all recorded usage for that scope.
+
+## Over Budget
+
+The gateway returns HTTP **429** with the message `AI usage budget exceeded for this request`. The JSON envelope matches the API the client is calling:
+
+| Family | Shape |
+|---|---|
+| OpenAI | `error.type`: `rate_limit_error`, `error.code`: `rate_limit_exceeded` |
+| Anthropic | `error.type`: `rate_limit_error` |
+| Gemini | `error.status`: `RESOURCE_EXHAUSTED` |

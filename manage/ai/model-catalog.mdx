@@ -30,7 +30,7 @@ Unmapped types skip Known Models and wildcard expansion against the catalog. Ent
 
 ## Pricing and Budgets
 
-Each catalog entry can include token rates: `in`, `out`, `cache`, and `reasoning`. Budget enforcement and usage analytics use those rates when the requested model matches a catalog id. Unknown keys have no catalog price, so add custom models to the catalog if you need cost tracking for them.
+Each catalog entry can include token rates: `in`, `out`, `cache`, and `reasoning`. [Budget](/manage/ai/budgets) enforcement and usage analytics use those rates when the requested model matches a catalog id. Unknown keys have no catalog price, so they do not count toward USD budgets. Add custom models to the catalog if you need cost tracking for them. Token budgets still sum usage for unknown ids.
 
 ## Loading a Custom Catalog
 

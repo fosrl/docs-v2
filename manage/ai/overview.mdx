@@ -1,6 +1,6 @@
 ---
 title: "AI Gateway Overview"
-description: "Route coding agents and AI clients through Pangolin with centralized providers and keys"
+description: "Route coding agents and AI clients through Pangolin with centralized providers and access control"
 ---
 
 An AI Gateway resource is a normal Pangolin resource that proxies requests to one or more upstream AI providers (OpenAI, Anthropic, Google Gemini, Bedrock, Vertex AI, or a custom endpoint). Point a client at the resource's URL instead of the provider's, and Pangolin handles auth, access control, and logging in front of it.
@@ -11,6 +11,9 @@ An AI Gateway resource is a normal Pangolin resource that proxies requests to on
 - **Resources** (type `AI Gateway`) attach one or more of those providers and get a normal Pangolin domain.
 - **[Virtual API Keys](/manage/ai/virtual-api-keys)** are what clients send to a **public** AI Gateway resource. Private resources are reached through the Pangolin network, so the gateway does not check a key.
 - The **[Model Catalog](/manage/ai/model-catalog)** is the known-model list and token pricing used by [model routing](/manage/ai/providers/model-routing) and budgets.
+- **[Budgets](/manage/ai/budgets)** cap estimated USD spend or token usage on a provider, model, resource, role, or key.
+- **[Session Logs](/manage/ai/session-logs)** store prompt and response transcripts for each call.
+- **[Usage Analytics](/manage/ai/usage-analytics)** charts cost, tokens, and request volume across providers, resources, roles, users, and keys.
 
 A resource only understands the API format(s) its attached providers support. An Anthropic provider makes the resource speak the Anthropic Messages API; an OpenAI provider makes it speak Chat Completions/Responses; a Gemini provider makes it speak Gemini's `generateContent` API. Attach whichever providers match the clients you plan to connect. See [AI Providers](/manage/ai/providers/overview) for per-type setup and [Provider Configuration](/manage/ai/providers/configuration) for capabilities, auth, and model lists.
 
@@ -22,23 +25,23 @@ Create an org-level provider so the gateway has an upstream to call. Sidebar →
 
 Resources → **Create** → set **Type** to **AI Gateway**, pick a domain, and attach the provider(s) from step 1. You can also attach providers to an existing resource later from its **AI Gateway** settings tab. How public and private AI Gateway resources reach users is covered on the [public](/manage/resources/public/ai-gateway) and [private](/manage/resources/private/ai-gateway) resource type pages.
 
-## 3. Get a Key
+You can create more than one AI Gateway resource so different users and roles get their own providers. Distinct hostnames are the usual approach; they can also share a FQDN. See [Multiple Gateway Resources](/manage/ai/multiple-gateway-resources).
 
-How a client authenticates depends on whether the resource is public or private. See [Virtual API Keys](/manage/ai/virtual-api-keys) for identity vs manual keys, always-on auth, and where to copy a key.
+## 3. Authenticate to the Gateway
 
-### Public Resources
-
-Reachable from anywhere, so the gateway checks a virtual API key. Copy yours from the resource URL after login, the Resource Launcher more-info panel, or `https://app.pangolin.net/<org-id>/keys` (use your self-hosted dashboard URL in place of `app.pangolin.net` if you self-host).
+How a client authenticates depends on whether the resource is public or private.
 
 ### Private Resources
 
-Only reachable from devices connected to your Pangolin network, so the gateway does not check a key. Instead, the machine running the client needs the [Pangolin client](/manage/clients/install-client) installed and connected.
+Reachable only on devices connected with the [Pangolin client](/manage/clients/install-client). Identity comes from that connection, so you do not issue a [virtual API key](/manage/ai/virtual-api-keys). The desktop client already proved who is calling. Details are on the [private AI Gateway](/manage/resources/private/ai-gateway) resource page.
 
-You still have to put *something* in the client's key field. Most AI clients refuse to start with a missing key, so use the literal string `none`. Deleting the field usually breaks things. Claude Code, for instance, silently falls back to your regular Anthropic account if `apiKeyHelper` is missing, and OpenCode errors out with `OpenAI API key is missing`.
+### Public Resources
 
-## 4. Connect a Client
+Reachable from anywhere. The gateway checks a [virtual API key](/manage/ai/virtual-api-keys) on every call. Details are on the [public AI Gateway](/manage/resources/public/ai-gateway) resource page.
 
-Every resource's Keys page has ready-to-copy setup for common clients, and `pangolin configure <client>` can write the config for you. Full instructions per client:
+## 4. Connect a Coding Agent, Agent, or AI Client to the Gateway
+
+Every resource has ready-to-copy setup for common clients, and `pangolin configure <client>` can write the config for you. Full instructions per client:
 
 | Client | Needs a provider that speaks | Guide |
 |---|---|---|

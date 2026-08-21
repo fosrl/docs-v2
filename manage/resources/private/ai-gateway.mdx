@@ -28,6 +28,10 @@ Access is the private resource model: grant users, roles, or machines explicitly
 
 When the connected client maps to a user, Pangolin forwards that identity upstream as [`Remote-*` headers](/manage/ai/providers/configuration#identity-headers).
 
+## More Than One Resource
+
+Give different users and roles their own providers with more than one AI Gateway resource. Distinct hostnames are the usual approach. Unlike other private resource types, they can also share a FQDN because they all route to the gateway inside Pangolin. See [Multiple Gateway Resources](/manage/ai/multiple-gateway-resources).
+
 ## Compared to Public AI Gateway
 
 | | Private AI Gateway | [Public AI Gateway](/manage/resources/public/ai-gateway) |
