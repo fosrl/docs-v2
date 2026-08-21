@@ -68,7 +68,7 @@ You can now configure targets across different sites for the same resource:
 This is an [Enterprise Edition](/self-host/enterprise-edition)-only feature.
 </Note>
 
-This refers to having more than on Pangolin server node that a site can connect to. If one of the server nodes goes down, the site moves to another node. This has some implications for site-based load balancing, because DNS must can only route a FQDN to one Pangolin server node at a time.
+On highly available clustered Enterprise Pangolin servers - lik the cloud platform - different sites can connect to different nodes. If one of the nodes goes down, the site moves to another node. This has implications for site-based load balancing, because DNS must can only route a FQDN to one Pangolin server node at a time.
 
 Load balancing between different targets only works when sites are connected to the same Pangolin node. In Pangolin instances with multiple remote nodes, ensure load balancing occurs on the same node.
 
@@ -77,6 +77,8 @@ To ensure effective load balancing in multi-node environments:
 ```bash
 newt --prefer-endpoint <specific-endpoint> <other-args>
 ```
+
+For a list of endpoints used on the cloud platform, take a look at `/manage/endpoints-and-pops#points-of-presence`.
 
 ## Path-Based Routing
 

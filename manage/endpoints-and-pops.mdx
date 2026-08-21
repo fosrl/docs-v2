@@ -4,10 +4,11 @@ icon: "network-wired"
 description: "Pangolin Cloud hostnames for firewall allowlists and network whitelisting"
 ---
 
-
-
 <Note>
-This page applies to [Pangolin Cloud](https://app.pangolin.net/auth/signup) only. If you self-host Pangolin, see [DNS & Networking](/self-host/dns-and-networking) for the hostnames and ports on your own deployment.
+    This page applies to [Pangolin Cloud](https://app.pangolin.net/auth/signup)
+    only. If you self-host Pangolin, see [DNS &
+    Networking](/self-host/dns-and-networking) for the hostnames and ports on
+    your own deployment.
 </Note>
 
 Use this page when you need to allowlist Pangolin in a corporate firewall, proxy, or egress policy. Sites, clients, and browsers connect to two classes of infrastructure on Pangolin Cloud: the **control plane** and **points of presence** (also called relays).
@@ -16,8 +17,8 @@ Use this page when you need to allowlist Pangolin in a corporate firewall, proxy
 
 The control plane is the central Pangolin service that runs the dashboard, REST API, authentication, and configuration orchestration.
 
-| Hostname | Purpose |
-| --- | --- |
+| Hostname           | Purpose                                                                           |
+| ------------------ | --------------------------------------------------------------------------------- |
 | `app.pangolin.net` | Dashboard, API, authentication, and WebSocket configuration for sites and clients |
 
 Sites and clients use this hostname as their **endpoint**. For example, Sites connect here to register, receive policy, and maintain their control channel.
@@ -26,17 +27,18 @@ Sites and clients use this hostname as their **endpoint**. For example, Sites co
 
 Points of presence (PoPs), also called relays, are the networking edge where sites and clients connect for data traffic.
 
-| Hostname |
-| --- |
-| `uranus.pop.pangolin.net` |
-| `mars.pop.pangolin.net` |
-| `earth.pop.pangolin.net` |
-| `jupiter.pop.pangolin.net` |
-| `saturn.pop.pangolin.net` |
-| `neptune.pop.pangolin.net` |
-| `pluto.pop.pangolin.net` |
-| `mercury.pop.pangolin.net` |
-| `erid.pop.pangolin.net` |
+| Hostname                   | Location |
+| -------------------------- | -------- |
+| `jupiter.pop.pangolin.net` | US West  |
+| `saturn.pop.pangolin.net`  | US West  |
+| `neptune.pop.pangolin.net` | US West  |
+| `earth.pop.pangolin.net`   | US East  |
+| `mars.pop.pangolin.net`    | US East  |
+| `erid.pop.pangolin.net`    | US East  |
+| `pluto.pop.pangolin.net`   | US East  |
+| `uranus.pop.pangolin.net`  | Europe   |
+| `venus.pop.pangolin.net`   | Europe   |
+| `mercury.pop.pangolin.net` | Europe   |
 
 ### What PoPs Do
 
