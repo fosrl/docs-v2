@@ -1,0 +1,45 @@
+---
+title: "AI Gateway"
+description: "Publish an AI API on a public FQDN and authenticate coding agents with virtual API keys"
+---
+
+An AI Gateway public resource is a protocol-aware reverse proxy on a fully qualified domain name, like [HTTP / HTTPS](/manage/resources/public/http-https). Clients call that URL instead of OpenAI, Anthropic, Gemini, or another model API. Pangolin authenticates the caller, then forwards the request to an attached [provider](/manage/ai/providers/overview).
+
+This page covers how the **resource** works: reachability, authentication, and what you attach. Providers, keys, model routing, the catalog, and client setup live in [AI Gateway](/manage/ai/overview).
+
+## How It Works
+
+1. You assign a FQDN on a domain managed in Pangolin and set the resource type to **AI Gateway**.
+2. You attach one or more org-level providers. The resource speaks the API formats those providers advertise.
+3. A user retrieves a [virtual API key](/manage/ai/virtual-api-keys) by visiting the URL in a browser and logging in, or from the Resource Launcher or `https://app.pangolin.net/<org-id>/keys`.
+4. Coding agents send that key to the same FQDN. Pangolin checks the key and proxies to the selected provider.
+
+Visiting the URL in a browser is how you retrieve a key. Model calls still need the key in the request. A dashboard session cookie cannot proxy through the gateway.
+
+## Providers, Not Targets
+
+AI Gateway public resources do **not** use HTTP [targets](/manage/resources/public/targets). Traffic goes to providers configured under **AI Gateway → Providers**, then attached on the resource.
+
+Cloud APIs (OpenAI, Anthropic, and similar) need no site. [Custom](/manage/ai/providers/custom) providers can use **Site Targets** when the model server sits on a site network. That routing is on the provider, not on the resource.
+
+## Authentication and Access Rules
+
+Authentication is always on. You cannot turn Platform SSO off the way you can on an HTTPS resource.
+
+Assign [users and roles](/manage/access-control/create-user) the same way as a public HTTPS resource. Those grants control who can use an **identity key**. [Manual keys](/manage/ai/virtual-api-keys#manual-keys) grant access as soon as you create them, regardless of users and roles on the resource.
+
+When the call uses an identity key, or a manual key attributed to a user, Pangolin forwards that identity upstream as [`Remote-*` headers](/manage/ai/providers/configuration#identity-headers). An unattributed manual key authenticates without sending them.
+
+HTTPS resources can add PIN, passcode, header auth, shareable links, or email OTP. AI clients authenticate programmatically, so this type uses virtual API keys instead of those methods. See [Virtual API Keys](/manage/ai/virtual-api-keys) and [public authentication](/manage/resources/public/authentication).
+
+You can still attach a [resource policy](/manage/resources/public/resource-policies) for users, roles, and access rules.
+
+## Compared to Private AI Gateway
+
+| | Public AI Gateway | [Private AI Gateway](/manage/resources/private/ai-gateway) |
+|---|---|---|
+| **Reachability** | Public FQDN | Pangolin client tunnel |
+| **Auth** | Virtual API key on every call | Client identity; the gateway does not check a key |
+| **Browser visit** | Shows the user's key after login | Not used to retrieve a key |
+
+For providers, keys, model routing, and connecting Claude Code, Codex, and other clients, see [AI Gateway](/manage/ai/overview).

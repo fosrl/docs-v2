@@ -56,6 +56,7 @@
                                         "group": "Public Resources",
                                         "pages": [
                                             "manage/resources/public/http-https",
+                                            "manage/resources/public/ai-gateway",
                                             "manage/resources/public/ssh",
                                             "manage/resources/public/rdp",
                                             "manage/resources/public/vnc",
@@ -74,6 +75,7 @@
                                             "manage/resources/private/host",
                                             "manage/resources/private/cidr",
                                             "manage/resources/private/private-http",
+                                            "manage/resources/private/ai-gateway",
                                             "manage/resources/private/ssh",
                                             "manage/resources/private/authentication",
                                             "manage/resources/private/destinations",

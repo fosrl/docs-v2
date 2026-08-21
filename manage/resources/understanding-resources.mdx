@@ -33,13 +33,19 @@ Public resources create a public proxy on the Pangolin server. The protocol chan
 
 HTTP/HTTPS, SSH, RDP, and VNC are all **browser-based**. You assign a fully qualified domain name (FQDN) to each resource and users open it in a web browser—no client-side software is required. Pangolin authentication and access rules protect all of these types the same way. You can configure those rules inline on each resource or share them through a [resource policy](/manage/resources/public/resource-policies).
 
-SSH, RDP, and VNC require a **Newt site**. HTTP/HTTPS and TCP/UDP resources can also run on local and basic WireGuard sites.
+[AI Gateway](/manage/resources/public/ai-gateway) also gets a public FQDN, but coding agents call it as an API. Visiting the URL in a browser is how users retrieve a virtual API key, not how they run the workload.
+
+SSH, RDP, and VNC require a **Newt site**. HTTP/HTTPS, AI Gateway, and TCP/UDP resources can also run on local and basic WireGuard sites.
 
 TCP and UDP are the exception. They do not receive a FQDN. Instead, they bind to a port on the Pangolin server host and act as simple protocol-agnostic pipes to the downstream resource. Because they are not protocol-aware, they do not enforce Pangolin authentication or access rules.
 
 <CardGroup cols={3}>
 <Card title="HTTP / HTTPS" icon="globe" href="/manage/resources/public/http-https" arrow="true">
   Websites, APIs, and dashboards behind an authenticated reverse proxy.
+</Card>
+
+<Card title="AI Gateway" icon="robot" href="/manage/resources/public/ai-gateway" arrow="true">
+  Public FQDN for coding agents. Authenticate with virtual API keys.
 </Card>
 
 <Card title="SSH" icon="terminal" href="/manage/resources/public/ssh" arrow="true">
@@ -73,13 +79,13 @@ TCP and UDP are the exception. They do not receive a FQDN. Instead, they bind to
 </Card>
 
 <Card title="Local Site" icon="server" href="/manage/sites/understanding-sites#local-site">
-  HTTP/HTTPS and TCP/UDP only.
+  HTTP/HTTPS, AI Gateway, and TCP/UDP only.
 
   SSH, RDP, and VNC are not supported.
 </Card>
 
 <Card title="Basic WireGuard Site" icon="shield" href="/manage/sites/understanding-sites#basic-wireguard-site">
-  HTTP/HTTPS and TCP/UDP only.
+  HTTP/HTTPS, AI Gateway, and TCP/UDP only.
 
   SSH, RDP, and VNC are not supported.
 </Card>
@@ -100,6 +106,10 @@ Private resources require users to connect with the Pangolin client before any t
 
 <Card title="HTTP / HTTPS" icon="globe" href="/manage/resources/private/private-http" arrow="true">
   Private reverse proxy with optional TLS termination at the site edge.
+</Card>
+
+<Card title="AI Gateway" icon="robot" href="/manage/resources/private/ai-gateway" arrow="true">
+  AI API over the client tunnel. Identity from the connected client.
 </Card>
 
 <Card title="SSH" icon="terminal" href="/manage/resources/private/ssh" arrow="true">

@@ -6,6 +6,8 @@ Though public resources are public and accessible to via a web browser, admins c
 
 You can configure these settings directly on each resource or share them across multiple resources with a [resource policy](/manage/resources/public/resource-policies). A resource either uses an inline policy (no shared policy attached) or inherits a shared policy and can add resource-specific overrides on top.
 
+[AI Gateway](/manage/resources/public/ai-gateway) public resources always require authentication. Coding agents use [virtual API keys](/manage/ai/virtual-api-keys) rather than PIN, passcode, or email OTP. Users and roles still apply to identity keys the same way they do for HTTPS.
+
 When an unauthenticated user visits a resource in their web browser, they will be redirected to a Pangolin-controlled authentication page where they must complete authentication.
 
 ## User Login

@@ -1,0 +1,39 @@
+---
+title: "AI Gateway"
+description: "Reach an AI API over the Pangolin tunnel using the connected client's identity"
+---
+
+A private AI Gateway resource exposes an AI API only to devices connected with the [Pangolin client](/manage/clients/install-client). Nothing is reachable from the public internet. Unlike [public AI Gateway](/manage/resources/public/ai-gateway), the gateway does not check a virtual API key. Identity comes from the active client connection.
+
+This page covers how the **resource** works: reachability, access, and what you attach. Providers, model routing, the catalog, and client setup live in [AI Gateway](/manage/ai/overview).
+
+## How It Works
+
+1. You create a private resource with type **AI Gateway** on a Newt site and attach one or more org-level [providers](/manage/ai/providers/overview).
+2. You grant [users, roles, or machines](/manage/resources/private/authentication) access, the same as any other private resource.
+3. The user connects with the Pangolin client. The machine running the AI client must be on that tunnel.
+4. The agent calls the resource URL. Pangolin attributes the call to the connected user and proxies to the selected provider.
+
+Clients still need a value in the API key field. Use the literal string `none`. Deleting the field usually breaks the client.
+
+## Providers, Not Destinations
+
+Private AI Gateway resources attach providers on the resource's **AI Gateway** tab. They do not use a host or CIDR [destination](/manage/resources/private/destinations) as the model backend. Cloud APIs are called from Pangolin. [Custom](/manage/ai/providers/custom) providers can use **Site Targets** when the model server is on a site network.
+
+Private resources, including this type, can only be created on [Newt sites](/manage/sites/understanding-sites#newt-site-recommended).
+
+## Authentication and Access Rules
+
+Access is the private resource model: grant users, roles, or machines explicitly. See [Private Authentication](/manage/resources/private/authentication).
+
+When the connected client maps to a user, Pangolin forwards that identity upstream as [`Remote-*` headers](/manage/ai/providers/configuration#identity-headers).
+
+## Compared to Public AI Gateway
+
+| | Private AI Gateway | [Public AI Gateway](/manage/resources/public/ai-gateway) |
+|---|---|---|
+| **Reachability** | Pangolin client tunnel | Public FQDN |
+| **Auth** | Client identity; use `none` as the key placeholder | [Virtual API key](/manage/ai/virtual-api-keys) on every call |
+| **Who can call it** | Users, roles, and machines granted on the resource | Identity keys follow users and roles; manual keys grant access when created |
+
+For providers, model routing, and connecting Claude Code, Codex, and other clients, see [AI Gateway](/manage/ai/overview).
