@@ -25,7 +25,7 @@ Think of different nodes as the "front doors" to your applications - users conne
   <img src="/images/ha.png" alt="Diagram of high availability failover across remote nodes" width="400" centered/>
 </Frame>
 
-## Some Benefits
+## Benefits
 
 ### Automatic Updates and Less Maintenance
 The cloud dashboard evolves quickly, so you get new features and bug fixes without having to manually pull new containers every time. Because the remote node is just handling the networking you do not need to do database migrations, or backups.
@@ -38,3 +38,8 @@ You can attach multiple nodes to your account for redundancy and better performa
 
 ### Better Bandwidth
 Since all tunnel traffic flows through your own server, you benefit from your own network's bandwidth capacity. This means you are not constrained by shared cloud infrastructure limits - if your server has high-throughput connectivity, your tunnels will too.
+
+## Restrictions
+
+### AI Gateway Providers
+AI Gateway providers are only routed to the Pangolin server nodes. Sites that are connected to remote nodes will not be accessible to be routed to as targets on providers. DNS resolution of gateway resources will not point at remote nodes. Users using gateway resources with custom targets on sites may wish to create a separate org for these resources so sites are able to connect to regular nodes.
