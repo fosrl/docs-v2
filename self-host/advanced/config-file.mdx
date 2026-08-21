@@ -166,6 +166,14 @@ This section contains the complete reference for all configuration options in `c
       **Example**: `3003`
     </ResponseField>
 
+    <ResponseField name="ai_gateway_port" type="integer">
+      The port for the AI Gateway service.
+
+      **Example**: `3005`
+
+      **Default**: `3005`
+    </ResponseField>
+
     <ResponseField name="internal_hostname" type="string">
       The hostname of the Pangolin container for internal communication.
 
@@ -210,12 +218,52 @@ This section contains the complete reference for all configuration options in `c
       </Expandable>
     </ResponseField>
 
+    <ResponseField name="remote_headers" type="object">
+      Names of the HTTP headers Badger injects into proxied requests to identify an authenticated user or virtual API key. Also used by the AI Gateway to attach the identified user to a request once it has passed Badger's session/key verification.
+
+      <Expandable title="Remote Headers">
+        <ResponseField name="user_id" type="string">
+          Header name for the authenticated user's ID.
+
+          **Default**: `Remote-User-Id`
+        </ResponseField>
+
+        <ResponseField name="virtual_api_key_id" type="string">
+          Header name for the virtual API key ID.
+
+          **Default**: `Remote-Virtual-Api-Key-Id`
+        </ResponseField>
+
+        <ResponseField name="user" type="string">
+          Header name for the authenticated username.
+
+          **Default**: `Remote-User`
+        </ResponseField>
+
+        <ResponseField name="email" type="string">
+          Header name for the authenticated user's email.
+
+          **Default**: `Remote-Email`
+        </ResponseField>
+
+        <ResponseField name="name" type="string">
+          Header name for the authenticated user's display name.
+
+          **Default**: `Remote-Name`
+        </ResponseField>
+
+        <ResponseField name="role" type="string">
+          Header name for the authenticated user's role.
+
+          **Default**: `Remote-Role`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
     <ResponseField name="resource_session_request_param" type="string">
       Query parameter for session request tokens.
 
-      **Example**: `p_session_request`
-
-      **Default**: `p_session_request`
+      **Default**: `resource_session_request_param`
     </ResponseField>
 
     <ResponseField name="cors" type="object">
@@ -260,6 +308,18 @@ This section contains the complete reference for all configuration options in `c
       </Tip>
     </ResponseField>
 
+    <ResponseField name="enable_ai_gateway_client_ip_header" type="boolean">
+      Whether to have Badger stamp the resolved client IP into a dedicated `X-Pangolin-Client-Ip` header on the site-resource AI Gateway route.
+
+      **Default**: `false`
+
+      **Environment Variable**: `ENABLE_AI_GATEWAY_CLIENT_IP_HEADER`
+
+      <Note>
+        Useful when an intermediary proxy sits between Traefik and the AI Gateway and overwrites `X-Forwarded-For`/`X-Real-Ip` instead of appending to them. Requires a Badger version that supports `realIpHeader`.
+      </Note>
+    </ResponseField>
+
     <ResponseField name="dashboard_session_length_hours" type="integer">
       Dashboard session duration in hours.
 
@@ -302,6 +362,16 @@ This section contains the complete reference for all configuration options in `c
         Used for IP geolocation functionality. Requires a MaxMind GeoLite2 or GeoIP2 database file.
       </Note>
     </ResponseField>
+
+    <ResponseField name="maxmind_asn_path" type="string">
+      Path to the MaxMind ASN database file for ASN lookups.
+
+      **Example**: `./config/GeoLite2-ASN.mmdb`
+
+      <Note>
+        Sibling setting to `maxmind_db_path`. Used to resolve the ASN for an IP address.
+      </Note>
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -329,13 +399,13 @@ This section contains the complete reference for all configuration options in `c
           **Example**: `example.com`
         </ResponseField>
 
-        <ResponseField name="cert_resolver" type="string" required>
+        <ResponseField name="cert_resolver" type="string">
           The Traefik certificate resolver name.
 
           **Example**: `letsencrypt`
 
           <Note>
-            This must match the certificate resolver name in your Traefik configuration.
+            This must match the certificate resolver name in your Traefik configuration. If omitted, falls back to `traefik.cert_resolver`.
           </Note>
         </ResponseField>
 
@@ -449,6 +519,16 @@ This section contains the complete reference for all configuration options in `c
       **Default**: `["newt", "wireguard", "local"]`
     </ResponseField>
 
+    <ResponseField name="allow_raw_resources" type="boolean">
+      Whether Traefik generates routes for raw TCP/UDP (non-HTTP) resources.
+
+      **Default**: `true`
+
+      <Note>
+        This gates Traefik's config generation and is distinct from `flags.allow_raw_resources`, which gates the API from accepting new raw resources.
+      </Note>
+    </ResponseField>
+
     <ResponseField name="file_mode" type="boolean">
       Whether to use file-based configuration mode for Traefik.
 
@@ -468,6 +548,24 @@ This section contains the complete reference for all configuration options in `c
 
       **Default**: `pp-transport-v`
     </ResponseField>
+
+    <ResponseField name="rate_limit" type="object">
+      Rate limit settings for the browser gateway Traefik middleware.
+
+      <Expandable title="Rate Limit">
+        <ResponseField name="average" type="integer">
+          Average number of requests per second allowed.
+
+          **Default**: `30`
+        </ResponseField>
+
+        <ResponseField name="burst" type="integer">
+          Maximum burst size allowed above the average rate.
+
+          **Default**: `50`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
@@ -481,6 +579,14 @@ This section contains the complete reference for all configuration options in `c
       Domain name included in WireGuard configuration for tunnel connections.
 
       **Example**: `pangolin.example.com`
+    </ResponseField>
+
+    <ResponseField name="exit_node_name" type="string">
+      Name of the exit node record that identifies this server's own Gerbil exit node.
+
+      <Note>
+        Used to look up (or create, if missing) this instance's exit node in the database. Useful when running multiple exit nodes so this server can find its own.
+      </Note>
     </ResponseField>
 
     <ResponseField name="start_port" type="integer">
@@ -590,13 +696,13 @@ This section contains the complete reference for all configuration options in `c
         <ResponseField name="window_minutes" type="integer">
           Time window for rate limiting in minutes.
 
-          **Example**: `1`
+          **Default**: `1`
         </ResponseField>
 
         <ResponseField name="max_requests" type="integer">
           Maximum number of requests allowed in the time window.
 
-          **Example**: `100`
+          **Default**: `500`
         </ResponseField>
       </Expandable>
     </ResponseField>
@@ -795,6 +901,12 @@ This section contains the complete reference for all configuration options in `c
         When enabled, Enterprise-only features are hidden from the UI. 
       </Note>
     </ResponseField> 
+
+    <ResponseField name="disable_private_http_placeholder" type="boolean">
+       When set to true Pangolin will not generate publicly facing placeholder pages for private HTTP resources. This can impact the ability for Pangolin to generate nessicary certificates.
+
+      **Default**: `false`
+    </ResponseField> 
   </Expandable>
 </ResponseField>
 
@@ -860,6 +972,78 @@ This section contains the complete reference for all configuration options in `c
           **Default**: `5000` (5 seconds)
 
           **Example**: `10000`
+        </ResponseField>
+
+        <ResponseField name="jit_mode" type="boolean">
+          Whether to allow Postgres query JIT compilation on pooled connections.
+
+          **Default**: `true`
+
+          <Note>
+            Set to `false` when connecting through a pooler (e.g. PgBouncer) that rejects the JIT startup option. When disabled, `SET jit = off` is run on each new connection.
+          </Note>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Logs Database
+
+<ResponseField name="postgres_logs" type="object">
+  Configuration for an optional, separate PostgreSQL database dedicated to logs, kept apart from the main application database.
+
+  <Expandable title="PostgreSQL Logs">
+    <ResponseField name="connection_string" type="string">
+      Connection string for the dedicated logs database.
+
+      **Environment Variable**: `POSTGRES_LOGS_CONNECTION_STRING`
+
+      **Example**: `postgresql://user:password@host:port/logs_database`
+
+      <Note>
+        If not set, logging falls back to the main `postgres` database.
+      </Note>
+    </ResponseField>
+
+    <ResponseField name="replicas" type="array of objects">
+      Read-only replica configurations for the logs database.
+
+      <Expandable title="Replica Configuration">
+        <ResponseField name="connection_string" type="string" required>
+          Connection string for the read replica logs database.
+
+          **Example**: `postgresql://user:password@replica-host:port/logs_database`
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="pool" type="object">
+      Connection pool settings for the logs database. Falls back to `postgres.pool` values when omitted.
+
+      <Expandable title="Pool Settings">
+        <ResponseField name="max_connections" type="integer">
+          Maximum number of connections to the primary logs database.
+
+          **Default**: `20`
+        </ResponseField>
+
+        <ResponseField name="max_replica_connections" type="integer">
+          Maximum number of connections to logs replica databases.
+
+          **Default**: `10`
+        </ResponseField>
+
+        <ResponseField name="idle_timeout_ms" type="integer">
+          Time in milliseconds before idle connections are closed.
+
+          **Default**: `30000` (30 seconds)
+        </ResponseField>
+
+        <ResponseField name="connection_timeout_ms" type="integer">
+          Time in milliseconds to wait for a database connection.
+
+          **Default**: `5000` (5 seconds)
         </ResponseField>
       </Expandable>
     </ResponseField>
@@ -985,3 +1169,4 @@ Some configuration values can be set using environment variables for enhanced se
 | PostgreSQL Replica Connection Strings | `POSTGRES_REPLICA_CONNECTION_STRINGS` | `postgres.replicas` (comma-separated list of connection strings) |
 | PostgreSQL Logs Connection String | `POSTGRES_LOGS_CONNECTION_STRING` | `postgres_logs.connection_string` |
 | Enable SQLite WAL Mode | `ENABLE_SQLITE_WAL_MODE` | *(SQLite only)* Set to `true` to enable [WAL mode](https://www.sqlite.org/wal.html) for improved SQLite concurrency |
+| Enable AI Gateway Client IP Header | `ENABLE_AI_GATEWAY_CLIENT_IP_HEADER` | `server.enable_ai_gateway_client_ip_header` |
