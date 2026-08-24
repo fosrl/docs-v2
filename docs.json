@@ -190,7 +190,7 @@
                             },
                             {
                                 "group": "AI Gateway",
-                                "icon": "robot",
+                                "icon": "sparkles",
                                 "pages": [
                                     "manage/ai/overview",
                                     "manage/ai/multiple-gateway-resources",

@@ -20,27 +20,15 @@ Each provider is:
 
 Providers are reused across resources. The resource still owns the public URL and the keys clients authenticate with.
 
-{/*
-Screenshot: `/images/ai/create-provider.png`
-The AI Gateway → Providers → Create form, showing the provider type dropdown and API key field filled in for OpenAI or Anthropic.
-<Frame>
-  <img src="/images/ai/create-provider.png" alt="Creating an AI provider" />
-</Frame>
-*/}
-
 ## Attach to a Resource
 
 On an AI Gateway resource, attach one or more providers from the **AI Gateway** settings tab. For each attachment you can inherit the provider's model lists or select a subset. Details are in [Model Routing](/manage/ai/providers/model-routing#inherit-vs-select).
 
 The resource only speaks the API formats its attached providers advertise. Attach whichever providers match the [clients](/manage/ai/overview#4-connect-a-client) you plan to connect.
 
-{/*
-Screenshot: `/images/ai/create-resource.png`
-The new resource dialog with Type set to "AI Gateway" and a provider selected in the AI Providers section.
 <Frame>
-  <img src="/images/ai/create-resource.png" alt="Attaching providers to an AI Gateway resource" />
+  <img src="/images/ai/public-resource-providers.png" alt="AI Gateway resource settings with attached providers" centered />
 </Frame>
-*/}
 
 ## Provider Types
 
