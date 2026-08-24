@@ -155,7 +155,7 @@ services:
       - 80:80
 
   traefik:
-    image: traefik:v3.4.0
+    image: traefik:v3.7
     container_name: traefik
     restart: unless-stopped
     network_mode: service:gerbil # Ports appear on the gerbil service
