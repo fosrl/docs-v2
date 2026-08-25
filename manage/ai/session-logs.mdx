@@ -3,7 +3,7 @@ title: "AI Session Logs"
 description: "Prompt and response transcripts for AI Gateway requests in an organization"
 ---
 
-Session logs store the prompt and response for each AI Gateway call. Open **AI Gateway → Session Logs** to browse them. Use them to see what a client sent, what the upstream returned, and which user, key, provider, and resource handled the call.
+Session logs store the prompt and response for each AI Gateway call. Open **AI Gateway > Session Logs** to browse them. Use them to see what a client sent, what the upstream returned, and which user, key, provider, and resource handled the call.
 
 <Frame>
   <img src="/images/ai/session-logs.png" alt="AI Gateway session logs table in the Pangolin dashboard" centered />
@@ -54,3 +54,7 @@ Narrow the table by date range, then:
 ## Export
 
 Export the current filters as CSV from the table, the same way as other organization logs.
+
+## Streaming
+
+Session logs can be streamed (like all other logs) to upstream SIEM providers or other data sources. You can set this up following the [streaming](/manage/analytics/streaming) documentation.
