@@ -44,7 +44,16 @@
                                     "manage/sites/update-site",
                                     "manage/sites/auto-update",
                                     "manage/sites/credentials",
-                                    "manage/sites/site-provisioning"
+                                    "manage/sites/site-provisioning",
+                                    {
+                                        "group": "Kubernetes",
+                                        "pages": [
+                                            "manage/sites/kubernetes/helm",
+                                            "manage/sites/kubernetes/kustomize",
+                                            "manage/sites/kubernetes/configuration",
+                                            "manage/sites/kubernetes/troubleshooting"
+                                        ]
+                                    }
                                 ]
                             },
                             {
@@ -269,15 +278,6 @@
                                                     "self-host/manual/kubernetes/gitops/overview",
                                                     "self-host/manual/kubernetes/gitops/argocd",
                                                     "self-host/manual/kubernetes/gitops/flux"
-                                                ]
-                                            },
-                                            {
-                                                "group": "Site (newt)",
-                                                "pages": [
-                                                    "self-host/manual/kubernetes/newt/helm",
-                                                    "self-host/manual/kubernetes/newt/kustomize",
-                                                    "self-host/manual/kubernetes/newt/configuration",
-                                                    "self-host/manual/kubernetes/newt/troubleshooting"
                                                 ]
                                             },
                                             {
@@ -529,7 +529,7 @@
         },
         {
             "source": "/manage/sites/install-kubernetes",
-            "destination": "/self-host/manual/kubernetes/newt/helm",
+            "destination": "/manage/sites/kubernetes/helm",
             "permanent": true
         },
         {

@@ -1,7 +1,9 @@
 ---
 title: "Configuration"
 description: "Configuration reference for Newt Kubernetes deployments."
----This page covers the main Newt Kubernetes configuration options for Helm and Kustomize workflows.
+---
+
+This page covers the main Newt Kubernetes configuration options for Helm and Kustomize workflows.
 
 For exhaustive option coverage, refer to the chart resources:
 
@@ -692,7 +694,7 @@ helm upgrade --install newt fossorial/newt \
   --set 'newtInstances[0].auth.existingSecretName=newt-auth'
 ```
 
-See [Site (newt) Helm](/self-host/manual/kubernetes/newt/helm) for the installation flow.
+See [Site (newt) Helm](/manage/sites/kubernetes/helm) for the installation flow.
 
 ### Kustomize
 
@@ -711,7 +713,7 @@ Then apply an overlay:
 kubectl apply -k overlays/site-a
 ```
 
-See [Newt Kustomize](/self-host/manual/kubernetes/newt/kustomize) for the Kustomize workflow.
+See [Newt Kustomize](/manage/sites/kubernetes/kustomize) for the Kustomize workflow.
 
 ### GitOps
 
@@ -748,13 +750,13 @@ See [GitOps](/self-host/manual/kubernetes/gitops/overview) for GitOps guidance.
 ## Next steps
 
 <CardGroup cols={2}>
-	<Card title="Helm Install" href="/self-host/manual/kubernetes/newt/helm" icon="box">
+	<Card title="Helm Install" href="/manage/sites/kubernetes/helm" icon="box">
 		Install Newt with Helm.
 	</Card>
-	<Card title="Kustomize Install" href="/self-host/manual/kubernetes/newt/kustomize" icon="layer-group">
+	<Card title="Kustomize Install" href="/manage/sites/kubernetes/kustomize" icon="layer-group">
 		Install Newt with rendered manifests and Kustomize overlays.
 	</Card>
-	<Card title="Troubleshooting" href="/self-host/manual/kubernetes/newt/troubleshooting" icon="circle-question">
+	<Card title="Troubleshooting" href="/manage/sites/kubernetes/troubleshooting" icon="circle-question">
 		Debug Newt deployment and connection issues.
 	</Card>
 	<Card title="GitOps" href="/self-host/manual/kubernetes/gitops/overview" icon="code-branch">
