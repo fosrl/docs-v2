@@ -108,7 +108,13 @@
                                     "manage/clients/credentials",
                                     "manage/clients/fingerprinting",
                                     "manage/clients/archiving-blocking",
-                                    "manage/clients/firewalls"
+                                    "manage/clients/firewalls",
+                                    {
+                                        "group": "Kubernetes",
+                                        "pages": [
+                                            "manage/clients/kubernetes/deployment"
+                                        ]
+                                    }
                                 ]
                             },
                             "manage/domains",

@@ -4,6 +4,10 @@ description: "Install Newt as a binary or Docker container"
 ---
 Newt can be installed as either a static binary executable or a Docker container. You must first create a site and copy the Newt config in Pangolin before running Newt.
 
+<Note>
+Deploying Newt in Kubernetes instead? See the dedicated [Kubernetes](/manage/sites/kubernetes/helm) docs — install guides for [Helm](/manage/sites/kubernetes/helm) and [Kustomize](/manage/sites/kubernetes/kustomize), a full [Configuration](/manage/sites/kubernetes/configuration) reference, and [Troubleshooting](/manage/sites/kubernetes/troubleshooting).
+</Note>
+
 ## Binary Installation
 
 ### Quick Install (Recommended)
@@ -215,6 +219,25 @@ docker compose up -d
 ```
 
 ## Platform-Specific Installation
+
+### Kubernetes
+
+Running Newt in a Kubernetes cluster is covered separately from the Docker instructions above, since it uses a dedicated Helm chart rather than a plain `docker run` or Compose file. See:
+
+<CardGroup cols={2}>
+	<Card title="Helm" href="/manage/sites/kubernetes/helm" icon="box">
+		Quick-start guide for installing Newt with Helm.
+	</Card>
+	<Card title="Kustomize" href="/manage/sites/kubernetes/kustomize" icon="layer-group">
+		Install Newt with rendered manifests and Kustomize overlays.
+	</Card>
+	<Card title="Configuration" href="/manage/sites/kubernetes/configuration" icon="sliders">
+		Full configuration reference for Helm and Kustomize workflows.
+	</Card>
+	<Card title="Troubleshooting" href="/manage/sites/kubernetes/troubleshooting" icon="circle-question">
+		Debug Newt deployment and connection issues in Kubernetes.
+	</Card>
+</CardGroup>
 
 ### Unraid
 

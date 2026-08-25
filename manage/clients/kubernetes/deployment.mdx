@@ -1,0 +1,126 @@
+---
+title: "Deployment"
+description: "Basic guide for running a Pangolin client in Kubernetes as a sidecar."
+---
+
+This page covers a basic way to run a Pangolin client inside Kubernetes: as a sidecar container that gives a Pod access to your Pangolin resources over the tunnel.
+
+<Note>
+This is a minimal example, not a production chart. There is no official Helm chart for the client at this time — adapt the manifests below to your own deployment, Kustomize overlays, or GitOps workflow.
+</Note>
+
+## Why a sidecar
+
+Containers in the same Pod share a network namespace. Running Pangolin CLI (or Olm) as a sidecar container brings up the WireGuard tunnel inside that shared namespace, so every other container in the Pod can reach your Pangolin resources as if they were on the tunnel directly — no `hostNetwork` required.
+
+This is useful when a workload running in your cluster (a batch job, an internal service, a CI runner) needs to reach private resources behind Pangolin.
+
+## Prerequisites
+
+- A machine client created in Pangolin, with its `Client ID` and `Client Secret`. See [Install Clients](/manage/clients/install-client).
+- A Kubernetes cluster where you can grant the `NET_ADMIN` capability and access to `/dev/net/tun`.
+
+## Step 1: Create a Secret for client credentials
+
+```bash
+kubectl create secret generic pangolin-client \
+  --namespace default \
+  --from-literal=CLIENT_ID=<client-id> \
+  --from-literal=CLIENT_SECRET=<client-secret>
+```
+
+<Warning>
+Do not commit plaintext credentials to Git. For GitOps workflows, use an encrypted or external secret backend such as SOPS, Sealed Secrets, External Secrets Operator, Vault, or Infisical.
+</Warning>
+
+## Step 2: Add the sidecar container
+
+Add a `pangolin-cli` container alongside your application container in the Pod spec. It needs the `NET_ADMIN` capability and access to the host's `/dev/net/tun` device to create the WireGuard interface.
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-app
+  labels:
+    app: my-app
+spec:
+  containers:
+    - name: my-app
+      image: my-app-image:latest
+      # This container can reach Pangolin resources through
+      # the tunnel brought up by the pangolin-cli sidecar below.
+
+    - name: pangolin-cli
+      image: fosrl/pangolin-cli:latest
+      restartPolicy: Always
+      envFrom:
+        - secretRef:
+            name: pangolin-client
+      env:
+        - name: PANGOLIN_ENDPOINT
+          value: "https://pangolin.example.com"
+      securityContext:
+        capabilities:
+          add: ["NET_ADMIN"]
+      volumeMounts:
+        - name: tun
+          mountPath: /dev/net/tun
+
+  volumes:
+    - name: tun
+      hostPath:
+        path: /dev/net/tun
+```
+
+<Note>
+Setting `restartPolicy: Always` on the container makes it a [native sidecar](https://kubernetes.io/docs/concepts/workloads/pods/sidecar-containers/) on Kubernetes 1.29+. It starts before the main container and Kubernetes keeps it running for the life of the Pod. On older clusters, omit `restartPolicy` and the container runs as a regular container instead — the tunnel still comes up, but startup ordering isn't guaranteed.
+</Note>
+
+The `pangolin-cli` image runs `pangolin up --attach` by default, which launches the client as a machine client using the `CLIENT_ID`/`CLIENT_SECRET` from the Secret and keeps it in the foreground so the container stays alive. See [Install Clients](/manage/clients/install-client#pangolin-cli-linux-macos-windows) for the full list of environment variables and flags.
+
+## Step 3: Apply and verify
+
+```bash
+kubectl apply -f pod.yaml
+```
+
+Check that both containers are running:
+
+```bash
+kubectl get pod my-app
+```
+
+Check the tunnel came up in the sidecar's logs:
+
+```bash
+kubectl logs my-app -c pangolin-cli
+```
+
+In the Pangolin dashboard, verify the client shows as connected. Then, from inside the `my-app` container, confirm you can reach a private resource:
+
+```bash
+kubectl exec my-app -c my-app -- curl -s http://internal-resource.example
+```
+
+## Deployments and other workload types
+
+The same sidecar pattern applies to a `Deployment`, `StatefulSet`, `Job`, or `CronJob` — add the `pangolin-cli` container to `spec.template.spec.containers` (or `initContainers` with `restartPolicy: Always` for native sidecar behavior) the same way as shown above.
+
+<Warning>
+Each Pod running the sidecar connects as the same machine client. If you scale a Deployment to multiple replicas, every replica's sidecar authenticates with the same `CLIENT_ID`/`CLIENT_SECRET` and appears as one client in Pangolin. If you need to distinguish traffic per replica, create a separate machine client and Secret for each one.
+</Warning>
+
+## Next steps
+
+<CardGroup cols={2}>
+	<Card title="Install Clients" href="/manage/clients/install-client" icon="download">
+		Review Pangolin CLI and Olm installation options, including Docker.
+	</Card>
+	<Card title="Configure Clients" href="/manage/clients/configure-client" icon="sliders">
+		Review client configuration options.
+	</Card>
+	<Card title="Credentials" href="/manage/clients/credentials" icon="key">
+		Manage machine client credentials.
+	</Card>
+</CardGroup>
