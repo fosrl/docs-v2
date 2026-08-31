@@ -30,7 +30,7 @@ Unmapped types skip Known Models and wildcard expansion against the catalog. Ent
 
 ## Pricing and Budgets
 
-Each catalog entry can include token rates: `in`, `out`, `cache`, and `reasoning`. [Budget](/manage/ai/budgets) enforcement and usage analytics use those rates when the requested model matches a catalog id. Unknown keys have no catalog price, so they do not count toward USD budgets. Add custom models to the catalog if you need cost tracking for them. Token budgets still sum usage for unknown ids.
+Each catalog entry can include token rates: `in`, `out`, `cache`, and `reasoning`. [Budget](/manage/ai/budgets) enforcement and usage analytics use those rates when the requested model matches a catalog id. Unknown keys have no catalog price, so they do not count toward USD budgets. Add custom models to the catalog if you need cost tracking for them. Token budgets still sum usage for unknown ids. Cost is per token.
 
 ## Loading a Custom Catalog
 
@@ -64,9 +64,9 @@ Catalog files and API responses are JSON:
       "model": "gpt-4o",
       "provider": "openai",
       "pricing": {
-        "in": 2.5,
-        "out": 10,
-        "cache": 1.25,
+        "in": 0.0000188,
+        "out": 0.0000188,
+        "cache": null,
         "reasoning": null
       }
     }
