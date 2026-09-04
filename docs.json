@@ -117,6 +117,57 @@
                                     }
                                 ]
                             },
+                            {
+                                "group": "AI Gateway",
+                                "icon": "sparkles",
+                                "pages": [
+                                    "manage/ai/overview",
+                                    "manage/ai/multiple-gateway-resources",
+                                    "manage/ai/virtual-api-keys",
+                                    {
+                                        "group": "Providers",
+                                        "pages": [
+                                            "manage/ai/providers/overview",
+                                            "manage/ai/providers/configuration",
+                                            "manage/ai/providers/model-routing",
+                                            "manage/ai/providers/openai",
+                                            "manage/ai/providers/anthropic",
+                                            "manage/ai/providers/google-gemini",
+                                            "manage/ai/providers/vertex-ai",
+                                            "manage/ai/providers/bedrock",
+                                            "manage/ai/providers/microsoft-foundry",
+                                            "manage/ai/providers/open-router",
+                                            "manage/ai/providers/vercel-ai-gateway",
+                                            {
+                                                "group": "Custom",
+                                                "pages": [
+                                                    "manage/ai/providers/custom",
+                                                    "manage/ai/providers/custom/ollama",
+                                                    "manage/ai/providers/custom/vllm",
+                                                    "manage/ai/providers/custom/bifrost",
+                                                    "manage/ai/providers/custom/cloud-apis-through-a-site"
+                                                ]
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "group": "Configure AI Clients and Agents",
+                                        "pages": [
+                                            "manage/ai/configure-ai-clients/claude",
+                                            "manage/ai/configure-ai-clients/codex",
+                                            "manage/ai/configure-ai-clients/opencode",
+                                            "manage/ai/configure-ai-clients/gemini",
+                                            "manage/ai/configure-ai-clients/open-webui",
+                                            "manage/ai/configure-ai-clients/claude-desktop",
+                                            "manage/ai/configure-ai-clients/openclaw"
+                                        ]
+                                    },
+                                    "manage/ai/budgets",
+                                    "manage/ai/model-catalog",
+                                    "manage/ai/session-logs",
+                                    "manage/ai/usage-analytics"
+                                ]
+                            },
                             "manage/domains",
                             {
                                 "group": "Organizations",
@@ -201,57 +252,6 @@
                                     "manage/remote-node/quick-install-remote",
                                     "manage/remote-node/config-file",
                                     "manage/remote-node/backhaul"
-                                ]
-                            },
-                            {
-                                "group": "AI Gateway",
-                                "icon": "sparkles",
-                                "pages": [
-                                    "manage/ai/overview",
-                                    "manage/ai/multiple-gateway-resources",
-                                    "manage/ai/virtual-api-keys",
-                                    {
-                                        "group": "Providers",
-                                        "pages": [
-                                            "manage/ai/providers/overview",
-                                            "manage/ai/providers/configuration",
-                                            "manage/ai/providers/model-routing",
-                                            "manage/ai/providers/openai",
-                                            "manage/ai/providers/anthropic",
-                                            "manage/ai/providers/google-gemini",
-                                            "manage/ai/providers/vertex-ai",
-                                            "manage/ai/providers/bedrock",
-                                            "manage/ai/providers/microsoft-foundry",
-                                            "manage/ai/providers/open-router",
-                                            "manage/ai/providers/vercel-ai-gateway",
-                                            {
-                                                "group": "Custom",
-                                                "pages": [
-                                                    "manage/ai/providers/custom",
-                                                    "manage/ai/providers/custom/ollama",
-                                                    "manage/ai/providers/custom/vllm",
-                                                    "manage/ai/providers/custom/bifrost",
-                                                    "manage/ai/providers/custom/cloud-apis-through-a-site"
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    {
-                                        "group": "Configure AI Clients and Agents",
-                                        "pages": [
-                                            "manage/ai/configure-ai-clients/claude",
-                                            "manage/ai/configure-ai-clients/codex",
-                                            "manage/ai/configure-ai-clients/opencode",
-                                            "manage/ai/configure-ai-clients/gemini",
-                                            "manage/ai/configure-ai-clients/open-webui",
-                                            "manage/ai/configure-ai-clients/claude-desktop",
-                                            "manage/ai/configure-ai-clients/openclaw"
-                                        ]
-                                    },
-                                    "manage/ai/budgets",
-                                    "manage/ai/model-catalog",
-                                    "manage/ai/session-logs",
-                                    "manage/ai/usage-analytics"
                                 ]
                             },
                             "manage/endpoints-and-pops",
@@ -387,6 +387,10 @@
     "appearance": {
         "default": "light",
         "strict": true
+    },
+    "banner": {
+        "content": "**AI Gateway** is now available. Connect with the Pangolin client to eliminate AI provider API keys, and tunnel to self-hosted models. [Get started](/manage/ai/overview)",
+        "dismissible": true
     },
     "logo": {
         "light": "/logo/light.png",
