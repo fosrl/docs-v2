@@ -13,12 +13,12 @@ As described in [Site credentials](/manage/sites/credentials), each Pangolin sit
 
 The same friction shows up in other scenarios:
 
-- **Golden images and OS images**: You want one trusted image (or cloud-init payload) shared across a class of machines, not a unique secret baked into every build artifact. A single provisioning key in the image, or injected at first boot, lets each instance obtain its own credentials the first time Newt starts.
+- **Golden images and OS images**: You want one trusted image (or cloud-init payload) shared across a class of machines, not a unique secret baked into every build artifact. A single provisioning key in the image, or injected at first boot, lets each instance obtain its own credentials the first time the site starts.
 - **Scripted and CI-driven installs**: Ansible, Terraform, cloud-init, or installer scripts can drop the same provisioning key everywhere (or fetch it from a vault once) instead of coordinating “create site N, copy credentials to host N” for every node.
 - **Developer and lab environments**: Spin up VMs or containers repeatedly without clicking through the dashboard for each site; tear them down and provision again with bounded keys (usage limits and expiry; see below).
 - **MSP and multi-customer rollouts**: Standardize your onboarding bundle (endpoint + provisioning key + blueprint) while still giving each customer site isolated credentials after exchange.
 
-With provisioning keys, you create one long-lived token in Pangolin, embed it in your image or distribute it with a single script, and each Newt instance exchanges that token for its own [site ID and secret](/manage/sites/credentials) on first connect.
+With provisioning keys, you create one long-lived token in Pangolin, embed it in your image or distribute it with a single script, and each site exchanges that token for its own [site ID and secret](/manage/sites/credentials) on first connect.
 
 ## How provisioning works
 

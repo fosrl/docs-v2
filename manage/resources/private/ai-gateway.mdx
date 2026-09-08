@@ -9,7 +9,7 @@ This page covers how the **resource** works: reachability, access, and what you 
 
 ## How It Works
 
-1. You create a private resource with type **AI Gateway** on a Newt site and attach one or more org-level [providers](/manage/ai/providers/overview).
+1. You create a private resource with type **AI Gateway** on a Pangolin Site and attach one or more org-level [providers](/manage/ai/providers/overview).
 2. You grant [users, roles, or machines](/manage/resources/private/authentication) access, the same as any other private resource.
 3. The user connects with the Pangolin client. The machine running the AI client must be on that tunnel.
 4. The agent calls the resource URL. Pangolin attributes the call to the connected user and proxies to the selected provider.
@@ -20,7 +20,7 @@ Clients still need a value in the API key field. Use the literal string `none`. 
 
 Private AI Gateway resources attach providers on the resource's **AI Gateway** tab. They do not use a host or CIDR [destination](/manage/resources/private/destinations) as the model backend. Cloud APIs are called from Pangolin. [Custom](/manage/ai/providers/custom) providers can use **Site Targets** when the model server is on a site network.
 
-Private resources, including this type, can only be created on [Newt sites](/manage/sites/understanding-sites#newt-site-recommended).
+Private resources, including this type, can only be created on [Pangolin Sites](/manage/sites/understanding-sites#pangolin-site-recommended).
 
 ## Authentication and Access Rules
 
