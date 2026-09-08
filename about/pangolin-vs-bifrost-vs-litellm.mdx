@@ -1,0 +1,76 @@
+---
+title: "Pangolin vs. Bifrost vs. LiteLLM"
+description: "What are the similarities and differences between Pangolin's AI Gateway and traditional LLM gateways like Bifrost and LiteLLM?"
+---
+
+Pangolin's [AI Gateway](/manage/ai/overview) does the work you would expect from a traditional LLM gateway: one URL in front of many providers, model routing, usage tracking, and access control. The difference is how it is built. It is a protocol-aware Pangolin resource, so identity, tunnels, and governance are the same system you already use for HTTPS and SSH.
+
+## Why Use a Gateway
+
+Coding agents and AI clients want a provider URL and a key. If every laptop holds the org's OpenAI, Anthropic, or Gemini key, you cannot tell who spent what, you cannot limit which models a contractor may call, and rotating a leaked key means touching every machine.
+
+An AI gateway sits in front of those upstream APIs. Clients call the gateway. The gateway authenticates the caller, picks a provider and model, records usage, and forwards the request with the org's real key. LiteLLM and Bifrost are dedicated products for that job. Pangolin does it as an identity-aware resource on the same platform as the rest of your application and infrastructure access.
+
+## A Protocol-Aware Resource
+
+An [AI Gateway resource](/manage/ai/overview) is not a separate stack. It is a Pangolin resource type, the same way HTTP/HTTPS is a type for web apps and SSH is a type for terminals.
+
+Pangolin already inspects HTTPS to apply identity, access rules, [request logs](/manage/analytics/request), and analytics. An AI Gateway resource does the equivalent for model APIs. Because it understands the LLM protocol, it can attribute each call to a user, record [cost and token usage](/manage/ai/usage-analytics), keep [chat session history](/manage/ai/session-logs), and enforce who can use which [models](/manage/ai/providers/model-routing) and [budgets](/manage/ai/budgets).
+
+That is the justification in Pangolin terms: an identity-aware gateway, not only a model router.
+
+## What Each Solution Provides
+
+**[LiteLLM](https://docs.litellm.ai)** is a dedicated LLM proxy. It presents a unified API in front of many model providers, with virtual keys, spend tracking, fallbacks, and load balancing. Teams often run it as a self-hosted proxy or use its SDK inside applications.
+
+**[Bifrost](https://www.getmaxim.ai/bifrost)** is a dedicated LLM gateway focused on complex routing rules, failover, and performance. For example, you can use it to route requests to different models based on the user's location or the request's content. You can also run it downstream of Pangolin as a [Custom provider](/manage/ai/providers/custom/bifrost) when Pangolin should authenticate callers and Bifrost should pick models.
+
+**Pangolin** provides the same gateway job as a [protocol-aware resource](/about/how-pangolin-works#ai-gateway). Providers, model lists, [virtual API keys](/manage/ai/virtual-api-keys) on public resources, budgets, and session logs are all there. Identity comes from Pangolin users, roles, and (for private AI gateway resources) the [desktop client](/manage/clients/install-client). Site and client tunnels are how you reach self-hosted models and how you keep provider keys off laptops.
+
+## Identity-Aware Gateway
+
+Access follows the resource. You grant [users and roles](/manage/access-control/create-user) the same way you do for other Pangolin resources. Pangolin then decides which models that identity may call and whether a [budget](/manage/ai/budgets) still allows the request.
+
+On a [public AI Gateway](/manage/resources/public/ai-gateway), coding agents send a [virtual API key](/manage/ai/virtual-api-keys). Pangolin identity keys identify the user; you grant the user or role, not the key.
+
+On a [private AI Gateway](/manage/resources/private/ai-gateway), the [Pangolin client](/manage/clients/install-client) running on the end user's device already authenticated that user. Coding agents on that device call over the tunnel fully privately. Pangolin attributes the request to the connected identity. That eliminates provider API keys on the laptop: the upstream key never leaves the provider.
+
+## Virtual API Keys
+
+On other gateways you mint a key for each person, then keep track of who holds which key and which models that key may call. Pangolin [virtual API keys](/manage/ai/virtual-api-keys) work the other way around.
+
+Every user already has an **identity key**. You do not grant the key access to the gateway. You grant the [user or role](/manage/access-control/create-user) access to the AI Gateway resource and its models. The key only identifies the caller as that user. When you change who is on the resource, the key follows. You do not manage a key inventory as the source of access.
+
+Users retrieve their own key:
+
+- Log in at the public gateway URL in a browser, using Pangolin or their [identity provider](/manage/identity-providers/add-an-idp). After login, Pangolin presents the key.
+- Open the Resource Launcher, pick the resource, and copy the key. The launcher also shows which models they can use and how to configure a coding agent to use the key.
+- Admins can [email keys](/manage/ai/virtual-api-keys#email-keys-to-users) to users.
+
+You can still mint **manual keys**, the same way other gateways issue arbitrary virtual keys. Use those for services, machines, CI, or a person if you want a key that is not tied to resource grants. Creating the key grants access to the public gateways you scope it to. See [Identity Keys vs Manual Keys](/manage/ai/virtual-api-keys#identity-keys-vs-manual-keys).
+
+## Tunneling
+
+Tunneling is a Pangolin strength, on both sides of the network.
+
+### Sites: Self-Hosted Models on Remote Networks
+
+A [site connector](/manage/sites/understanding-sites) sits on the network where [Ollama](/manage/ai/providers/custom/ollama), [vLLM](/manage/ai/providers/custom/vllm), or another model server already runs. [Custom providers](/manage/ai/providers/custom) use **Site Targets** so the gateway reaches that API over the tunnel. The model host does not need a public IP or an inbound port. Pangolin can also call cloud providers from the node, so one resource can mix hosted APIs and self-hosted models.
+
+You can put LiteLLM or Bifrost on that same site network and attach them as a Custom provider. Pangolin authenticates; the downstream gateway routes.
+
+### Clients: Remote Access Without Provider Keys
+
+Users connect with the Pangolin client, then reach a private AI Gateway the same way they reach a private host or SSH resource. That is how someone on a laptop uses a self-hosted model on a remote network, or a cloud provider, without holding the upstream key. The client connection is the credential so you don't need to distribute virtual API keys to users.
+
+## When to Use Each Solution
+
+Use **LiteLLM** if you want a dedicated Python proxy or SDK in front of many providers, and you already have a network path and your own identity layer.
+
+Use **Bifrost** if you want a dedicated high-performance LLM gateway for routing and failover. You can run it on its own, or behind Pangolin as a [Custom provider](/manage/ai/providers/custom/bifrost).
+
+Use **Pangolin** if you want LLM access as an identity-aware resource: the same users and roles as the rest of Pangolin, site tunnels to self-hosted models, and client tunnels that authenticate and govern usage at the edge so provider keys stay off devices.
+
+<Card title="AI Gateway Overview" icon="sparkles" href="/manage/ai/overview">
+  Set up providers, resources, and identity-based access for coding agents and AI clients.
+</Card>

@@ -28,7 +28,8 @@
                         "group": "About",
                         "pages": [
                             "about/how-pangolin-works",
-                            "about/pangolin-vs-reverse-proxy-vs-vpn"
+                            "about/pangolin-vs-reverse-proxy-vs-vpn",
+                            "about/pangolin-vs-bifrost-vs-litellm"
                         ]
                     },
                     {
