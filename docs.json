@@ -29,7 +29,8 @@
                         "pages": [
                             "about/how-pangolin-works",
                             "about/pangolin-vs-reverse-proxy-vs-vpn",
-                            "about/pangolin-vs-bifrost-vs-litellm"
+                            "about/pangolin-vs-bifrost-vs-litellm",
+                            "about/pangolin-cloud-vs-self-hosted"
                         ]
                     },
                     {

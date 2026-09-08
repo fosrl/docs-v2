@@ -1,0 +1,60 @@
+---
+title: "Cloud vs. Self-Hosted"
+description: "Choose managed Pangolin Cloud or run the same software on your own infrastructure"
+---
+
+You can run Pangolin as [Pangolin Cloud](https://app.pangolin.net/auth/signup) or [self-host](/self-host/quick-install) the same open-source software. Sites, resources, and clients work the same way in both. The difference is who operates the server: the control plane, DNS, certificates, and the nodes that terminate tunnels.
+
+## Pangolin Cloud
+
+Cloud is the managed control plane. You create an account, install [sites](/manage/sites/install-site) and [clients](/manage/clients/install-client), and define resources. Pangolin runs the dashboard, database, certificates, and globally distributed nodes.
+
+Use Cloud when you want high availability, automatic updates, and less operational work. You can still keep traffic on infrastructure you control with [remote nodes](/manage/remote-node/understanding-nodes).
+
+## Self-Hosted
+
+Self-hosted Pangolin runs on a server you operate. You supply a public IP, a domain, and the listener ports. See [Quick Install](/self-host/quick-install) and [DNS and Networking](/self-host/dns-and-networking). You are responsible for updates, backups, certificates, and uptime.
+
+Two editions:
+
+- **Community Edition** is the core platform.
+- **[Enterprise Edition](/self-host/enterprise-edition)** uses the `ee` image and a license key. It unlocks extra identity, logging, and management features. Compare tiers on the [Self-Hosted pricing page](https://pangolin.net/pricing#Self-Hosted-identity-and-access-management).
+
+<Check>
+Enterprise Edition is **free** for personal use and organizations with less than $100,000 USD gross annual revenue. You still need a license key. Larger organizations need a paid license.
+</Check>
+
+## Remote Nodes (Hybrid)
+
+[Remote nodes](/manage/remote-node/understanding-nodes) are a middle path but are part of Pangolin Cloud. You run the node (tunnels, TLS, relay) on your server and bandwidth. Cloud still handles the dashboard, DNS, certificates, and failover. If your node goes down, traffic can fail over to other nodes or cloud points of presence.
+
+Public TCP/UDP listeners that bind a port on the Pangolin host are a self-hosted-server feature. On Cloud, deploy a remote node for that. See [TCP / UDP](/manage/resources/public/raw-resources).
+
+## Quick Comparison
+
+| | Pangolin Cloud | Self-hosted |
+|---|---|---|
+| **Control plane** | Managed | You run Pangolin, Traefik, and Gerbil |
+| **Traffic path** | Cloud nodes, or your [remote nodes](/manage/remote-node/understanding-nodes) | Your server |
+| **DNS and certificates** | Managed | You configure DNS and Let's Encrypt |
+| **Updates and backups** | Included | You operate them |
+| **High availability** | Included | You design it ([clustering](/self-host/advanced/clustering) on Enterprise) |
+| **Identity and logs** | Cloud plans | Community core; extra IdPs, streaming, and AI session logs on [Enterprise Edition](/self-host/enterprise-edition) |
+| **Data residency** | Cloud regions, or traffic on your remote nodes | Entirely on your infrastructure |
+| **Best for** | Fast start and less ops | Air-gapped networks, full control, compliance that requires self-hosting |
+
+Cloud and self-hosted plans are listed separately on [pricing](https://pangolin.net/pricing). Click "Self-Hosted" at the top to toggle between deployment options.
+
+## When to Use Each
+
+Use **Pangolin Cloud** if you want to start quickly, get HA and certificate management included, and optionally attach remote nodes so tunnel traffic stays on your network.
+
+Use **self-hosted** if the control plane and data must stay on infrastructure you operate, you need an air-gapped or fully isolated deployment, or you already run Pangolin as Community or Enterprise Edition.
+
+<Card title="Start on Pangolin Cloud" icon="cloud" href="https://app.pangolin.net/auth/signup" arrow="true" cta="Sign up">
+  Managed control plane. Install sites and clients, then define resources.
+</Card>
+
+<Card title="Self-host Pangolin" icon="server" href="/self-host/quick-install">
+  Install Community Edition or Enterprise Edition with the quick installer.
+</Card>
