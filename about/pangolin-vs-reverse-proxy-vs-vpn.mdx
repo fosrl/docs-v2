@@ -9,17 +9,18 @@ Pangolin combines the capabilities of both a reverse proxy and a VPN into a sing
 
 ## What Each Solution Provides
 
-**Reverse Proxies** expose web applications to the internet. They handle SSL termination, load balancing, and basic authentication. Users access applications through web browsers using domain names.
+**Reverse Proxies** expose web applications to the internet. They handle SSL termination, load balancing, and basic authentication. Users access applications through web browsers using domain names. They are usually protocol-aware of HTTPS only.
 
-**VPNs** create encrypted tunnels that give users access to entire private networks. Users install client software and connect to a VPN server. Once connected, they can access any resource on the network they have network-level access to.
+**VPNs** create encrypted tunnels that give users access to entire private networks as if they were on the local network. Users install client software and connect to a VPN server. Once connected, they can access any resource on the network they have network-level access to.
 
-**Pangolin** provides both capabilities—and several things neither traditional tool does on its own. Public resources work like a reverse proxy, allowing browser-based access to specific applications. Private resources work like a zero-trust VPN, giving users access to specific hosts or network ranges when connected with a client.
+**Pangolin** provides both capabilities, and several things neither traditional tool does on its own. [Public resources](/manage/resources/understanding-resources#public-resource-types) are publicly served proxies. That is often a website in a browser, but it can also be an API or an [AI Gateway](/manage/ai/overview). [Private resources](/manage/resources/understanding-resources#private-resource-types) work like a zero-trust VPN, giving users access to specific hosts or network ranges when connected with a client.
 
 ## What Pangolin Does Differently
 
 | Capability | Traditional reverse proxy | Traditional VPN | Pangolin |
 |------------|--------------------------|-----------------|----------|
-| Browser access to web apps | Yes | No | Yes — public HTTP/HTTPS |
+| Publicly served proxies | Web apps | No | Yes: HTTP/HTTPS, APIs, [AI Gateway](/manage/ai/overview) |
+| Protocol-aware proxies | HTTPS | No | Yes: HTTPS, SSH, RDP, VNC, AI providers, and more |
 | Browser SSH, RDP, VNC | No | No | Yes — public SSH, RDP, VNC |
 | Client-only private access | No | Yes | Yes — host, CIDR, SSH, private HTTP |
 | Per-resource access control | Limited | Network-wide | Yes — users and roles per resource |
@@ -29,9 +30,11 @@ Pangolin combines the capabilities of both a reverse proxy and a VPN into a sing
 
 ## Reverse Proxy Capabilities
 
-Pangolin's public resources function as reverse proxies—and go further than HTTP alone.
+Pangolin's public resources function as reverse proxies. They are publicly served, not limited to web browsers. A traditional reverse proxy is usually protocol-aware of HTTPS only. Pangolin understands many protocols, including HTTPS, SSH, RDP, VNC, and AI provider APIs, so identity, access rules, and logging apply to each the same way.
 
-**HTTP/HTTPS** resources expose web applications through domain names with automatic SSL certificates. Users access them in a browser with no client installed. Identity-aware access control supports SSO, MFA, and rules based on user identity, roles, geographic location, IP addresses, and URL paths.
+**HTTP/HTTPS** resources expose web applications and APIs through domain names with automatic SSL certificates. A browser is the common client; any HTTP client can call the same FQDN. Identity-aware access control supports SSO, MFA, and rules based on user identity, roles, geographic location, IP addresses, and URL paths.
+
+**AI Gateway** resources are public proxies for LLM APIs. Coding agents call the FQDN instead of the upstream provider. Pangolin authenticates the caller and applies identity, model access, and budgets. See [AI Gateway](/manage/ai/overview).
 
 **SSH, RDP, and VNC** resources render full sessions in the browser. Users get a terminal, Windows desktop, or VNC display without installing SSH clients or remote desktop software—while still passing through Pangolin authentication first.
 
@@ -47,7 +50,7 @@ Pangolin's private resources function like a zero-trust VPN—but with tighter s
 
 **Private HTTP/HTTPS** resources behave like a reverse proxy that only exists on the tunnel. TLS terminates at your [site edge over peer-to-peer transport](/manage/resources/private/private-http)—the application is never reachable from the public internet, only from connected clients with valid access.
 
-**Private SSH** resources provide terminal access via `pangolin ssh`, with optional automatic user provisioning from Pangolin identity—no manual key distribution required.
+**[Private SSH](/manage/resources/private/ssh)** resources provide terminal access via `pangolin ssh`, with optional automatic user provisioning from Pangolin identity—no manual key distribution required.
 
 Clients work transparently with applications. No application configuration is required. Users connect once and can access all their authorized resources. The client handles routing and establishes encrypted tunnels automatically.
 
@@ -55,7 +58,7 @@ Clients work transparently with applications. No application configuration is re
 
 Many organizations need both reverse proxy and VPN capabilities. You might want to expose a customer portal through a browser while also giving developers SSH access to internal servers and a private HTTPS dashboard that never touches the public internet.
 
-With Pangolin, you use one platform for all of these. Public resources handle browser-based access—including SSH, RDP, and VNC when you want sessions without a client. Private resources handle tunnel-only access to hosts, subnets, internal HTTPS apps, and CLI SSH. Both use the same authentication system, access control policies, and infrastructure.
+With Pangolin, you use one platform for all of these. Public resources handle publicly served access: websites in a browser, APIs, [AI Gateway](/manage/ai/overview) resources, and SSH, RDP, and VNC sessions. Private resources handle tunnel-only access to hosts, subnets, internal HTTPS apps, and CLI SSH. Both use the same authentication system, access control policies, and infrastructure.
 
 This unified approach simplifies management. You configure users, roles, and access policies once. Those policies apply to both public and private resources. You do not need to maintain separate systems for reverse proxy and VPN access.
 
@@ -73,4 +76,4 @@ Use a traditional reverse proxy if you only need to expose web applications over
 
 Use a traditional VPN if you need broad network access, you can accept the security risks of flat network visibility, and you do not need application-specific access control.
 
-Use Pangolin if you need both reverse proxy and VPN capabilities, browser-based SSH/RDP/VNC, private HTTPS with edge TLS termination, granular per-resource access control, multi-site routing, high availability, or outbound-only connectivity without open ports on your networks.
+Use Pangolin if you need both reverse proxy and VPN capabilities, publicly served APIs and AI gateways, browser SSH/RDP/VNC, private HTTPS with edge TLS termination, granular per-resource access control, multi-site routing, high availability, or outbound-only connectivity without open ports on your networks.
