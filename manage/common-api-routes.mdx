@@ -121,7 +121,7 @@ Returns values you pass into the create-site endpoint.
 
 ## Create public HTTP resource
 
-You need a **domain ID** before creating a resource. List your org's domains, then create the resource with the chosen domain. For all Resource endpoints, see [Resource API (Swagger)](https://api.pangolin.net/v1/docs/#/Resource).
+You need a **domain ID** before creating a resource. List your org's domains, then create the resource with the chosen domain. For all public resource endpoints, see [Public Resource API (Swagger)](https://api.pangolin.net/v1/docs/#/Public%20Resource).
 
 <Steps>
 <Step title="List domains">
@@ -183,7 +183,7 @@ Returns all domains for the organization. Use `domainId` from a domain when crea
 
 ### Create public HTTP resource
 
-**PUT** `/org/{orgId}/resource`
+**PUT** `/org/{orgId}/public-resource`
 
 **Path**
 - `orgId` (string) — organization ID
@@ -242,9 +242,9 @@ The `subdomain` value is combined with the base domain from `domainId` to form t
 
 ### Add targets to the resource
 
-**PUT** `/resource/{resourceId}/target`
+**PUT** `/public-resource/{resourceId}/target`
 
-Add a target (backend) to a resource. Use the numeric `resourceId` from the create-resource response. The target is the site and address (ip + port) that will receive traffic for the resource. For all Target endpoints, see [Target API (Swagger)](https://api.pangolin.net/v1/docs/#/Target).
+Add a target (backend) to a resource. Use the numeric `resourceId` from the create-resource response. The target is the site and address (ip + port) that will receive traffic for the resource. For all target endpoints, see [Resource Target API (Swagger)](https://api.pangolin.net/v1/docs/#/Resource%20Target).
 
 **Path**
 - `resourceId` (number) — From create-resource response (e.g. `9943`)
@@ -287,11 +287,11 @@ Add a target (backend) to a resource. Use the numeric `resourceId` from the crea
 
 ## Create private resource
 
-In the API Private Resources are called **site resources**. You need an existing site. For more endpoints, see [API docs (Swagger)](https://api.pangolin.net/v1/docs/#/Resource).
+You need an existing site. For more endpoints, see [Private Resource API (Swagger)](https://api.pangolin.net/v1/docs/#/Private%20Resource).
 
-### Create site resource
+### Create private resource
 
-**PUT** `/org/{orgId}/site-resource`
+**PUT** `/org/{orgId}/private-resource`
 
 **Path**
 - `orgId` (string) — organization ID
@@ -364,7 +364,7 @@ If you omit `roleIds`/`userIds`, the org admin role is granted access by default
 
 ## Assign users and roles to a resource (public or private)
 
-You can grant access to a **public resource** or a **private (site) resource** by adding roles or users. First list roles and users in the org to get IDs, then call the add endpoints. The Admin role cannot be assigned via these endpoints.
+You can grant access to a **public resource** or a **private resource** by adding roles or users. First list roles and users in the org to get IDs, then call the add endpoints. The Admin role cannot be assigned via these endpoints.
 
 ### Get role and user IDs
 
@@ -372,18 +372,18 @@ You can grant access to a **public resource** or a **private (site) resource** b
 
 **GET** `/org/{orgId}/users` — Returns users in the org. Use `id` (string) as `userId` when adding a user to a resource. Query: `limit`, `offset` (optional).
 
-### Public resource (HTTP/resources)
+### Public resource
 
-**POST** `/resource/{resourceId}/roles/add` — **Path:** `resourceId` (number, from create-resource). **Body:** `{ "roleId": number }`. Admin role not allowed.
+**POST** `/public-resource/{resourceId}/roles/add` — **Path:** `resourceId` (number, from create public-resource). **Body:** `{ "roleId": number }`. Admin role not allowed.
 
-**POST** `/resource/{resourceId}/users/add` — **Path:** `resourceId` (number). **Body:** `{ "userId": string }`.
+**POST** `/public-resource/{resourceId}/users/add` — **Path:** `resourceId` (number). **Body:** `{ "userId": string }`.
 
 Both return `{ "data": {}, "success": true, "error": false, "message": "...", "status": 201 }`.
 
-### Private resource (site resource)
+### Private resource
 
-**POST** `/site-resource/{siteResourceId}/roles/add` — **Path:** `siteResourceId` (number, from create site-resource). **Body:** `{ "roleId": number }`. Admin role not allowed.
+**POST** `/private-resource/{siteResourceId}/roles/add` — **Path:** `siteResourceId` (number, from create private-resource). **Body:** `{ "roleId": number }`. Admin role not allowed.
 
-**POST** `/site-resource/{siteResourceId}/users/add` — **Path:** `siteResourceId` (number). **Body:** `{ "userId": string }`.
+**POST** `/private-resource/{siteResourceId}/users/add` — **Path:** `siteResourceId` (number). **Body:** `{ "userId": string }`.
 
-Same response shape as above. Role must belong to the same org as the site resource. For more endpoints (list/remove), see [Resource API](https://api.pangolin.net/v1/docs/#/Resource).
+Same response shape as above. Role must belong to the same org as the private resource. For more endpoints (list/remove), see [Public Resource API](https://api.pangolin.net/v1/docs/#/Public%20Resource) and [Private Resource API](https://api.pangolin.net/v1/docs/#/Private%20Resource).

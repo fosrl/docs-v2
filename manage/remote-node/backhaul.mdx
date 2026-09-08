@@ -6,7 +6,7 @@ description: "Turn a remote node into a network concentrator that routes traffic
 	Site to cloud is an advanced [remote node](/manage/remote-node/understanding-nodes) configuration available in [Pangolin Cloud](https://app.pangolin.net/auth/signup).
 </Note>
 
-A standard remote node terminates WireGuard tunnels and proxies HTTP(S) traffic to your resources. A **backhaul** node goes a step further: it acts as an IP router between an entire network, such as a cloud VPC, and your Pangolin sites. Instead of just forwarding individual resource connections, the node forwards whole subnets, letting hosts on either side reach each other without installing Newt on every machine.
+A standard remote node terminates WireGuard tunnels and proxies HTTP(S) traffic to your resources. A **backhaul** node goes a step further: it acts as an IP router between an entire network, such as a cloud VPC, and your Pangolin sites. Instead of just forwarding individual resource connections, the node forwards whole subnets, letting hosts on either side reach each other without installing a site on every machine.
 
 This is useful when you want to bridge a cloud network (for example, an AWS VPC) with your on-prem or office network through Pangolin, using a node running in that VPC as the concentrator.
 
@@ -19,7 +19,7 @@ This is useful when you want to bridge a cloud network (for example, an AWS VPC)
 - **The node routes, it doesn't just proxy.** Gerbil creates the WireGuard interface directly on the host and Docker forwards packets between it and the host's network, rather than isolating traffic inside a container network namespace.
 - **The cloud network learns to route to the node.** You add a route in your VPC (or other network) so that traffic destined for the Pangolin overlay is sent to the node.
 - **The node learns to route to the cloud network.** You register the VPC's CIDR on the node so it's pushed down to your sites as a route.
-- **Sites route natively.** Sites connect with Newt's native routing mode so the tunnel subnet is a real route on the site's host, not just an application-layer proxy.
+- **Sites route natively.** Sites connect with native routing mode so the tunnel subnet is a real route on the site's host, not just an application-layer proxy.
 
 ## Prerequisites
 

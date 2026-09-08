@@ -10,7 +10,7 @@ When a client and site share the same local network, they detect this and connec
 
 Same-network connections typically offer the lowest latency because traffic never leaves the LAN.
 
-Newt collects IP addresses from the host's network interfaces and uses them to send UDP test packets to the client. If Newt runs inside a Docker container, it only sees the container's internal network, so run it on the host itself to ensure it can detect the host's real IP addresses. This detection also works across VLANs—if a client and site are on different VLANs but routing between them is configured correctly, the connection should still succeed.
+The site collects IP addresses from the host's network interfaces and uses them to send UDP test packets to the client. If the site runs inside a Docker container, it only sees the container's internal network, so run it on the host itself to ensure it can detect the host's real IP addresses. This detection also works across VLANs. If a client and site are on different VLANs but routing between them is configured correctly, the connection should still succeed.
 
 ## NAT Hole Punching
 
@@ -27,7 +27,7 @@ Direct connections typically offer:
 
 If the site and client are unable to hole punch, they fall back to relaying through your Pangolin server.
 
-Clients can relay traffic through a Pangolin server—through Gerbil specifically. Gerbil listens on UDP port 21820 for new WireGuard connections and forwards the packets down the Newt site tunnels to the right peers. This means your connections back to your site do not require firewall config and uses the existing NAT hole punching capabilities of Newt.
+Clients can relay traffic through a Pangolin server, through the Gerbil service specifically. Gerbil listens on UDP port 21820 for new WireGuard connections and forwards the packets down the site tunnels to the right peers. This means your connections back to your site do not require firewall config and uses the existing NAT hole punching capabilities of the site.
 
 Relaying is reliable when direct paths are blocked by NAT or firewall rules, but traffic passes through your Pangolin node instead of traveling directly between the client and site.
 
@@ -99,7 +99,7 @@ Use either view when troubleshooting hole punching or verifying that configurati
 
 ## Improve Hole Punching Reliability
 
-Newt supports NAT traversal to allow clients to connect directly to Newt sites without relaying through the Pangolin server, improving performance and reducing latency.
+Pangolin Sites support NAT traversal so clients can connect directly without relaying through the Pangolin server, improving performance and reducing latency.
 
 In some environments, depending on the NAT type and firewall, you may need to tweak settings to get optimal connectivity in the firewall itself. See [Firewall Integrations](/manage/clients/firewalls) for Pangolin-specific guidance for common platforms.
 

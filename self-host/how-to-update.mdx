@@ -1,9 +1,36 @@
 ---
 title: "How to Update"
-description: "Keep your Pangolin deployment up to date with the latest features and security patches"
+description: "Keep your self-hosted Pangolin server up to date with the latest features and security patches"
 ---
 
-Updating Pangolin is straightforward since it's a collection of Docker images. Simply pull the latest images and restart the stack. Migration scripts run automatically to update your database and configuration files when needed.
+Updating Pangolin is straightforward since it's a collection of Docker images. Simply pull the latest images and restart the stack.
+
+This page covers updating your self-hosted Pangolin server. To update sites and clients, see the respective guides:
+
+<CardGroup cols={2}>
+<Card title="Update Sites" icon="plug" href="/manage/sites/update-site">
+  Update sites to the latest version.
+</Card>
+<Card title="Update Clients" icon="desktop" href="/manage/clients/update-client">
+  Update your installed client to the latest version.
+</Card>
+</CardGroup>
+
+## Migration Scripts
+
+When Pangolin starts and detects a version update, it runs migration scripts automatically to update your database and configuration files. Pangolin stores the last successfully run version in the database, so it knows which scripts still need to run. Scripts run in order, starting from the oldest unrun script through the latest.
+
+These are commonly SQL schema updates, and sometimes data migrations.
+
+If a release includes a Badger update, Pangolin also tries to update the Traefik config when it still matches the default Pangolin installer Traefik config. If Pangolin cannot apply that change, it fails silently so you can update Badger yourself.
+
+A failed database migration blocks startup and prevents the server from running.
+
+If you are using SQLite, Pangolin automatically creates a copy of the database file before a migration runs so you can roll back if needed. You can disable this by setting the `DISABLE_BACKUP_ON_MIGRATION` environment variable to `true`.
+
+<Warning>
+Because migrations can change the database schema, downgrading is sometimes impossible and is not recommended. The database may become incompatible with older versions. Always back up your database before updating.
+</Warning>
 
 ## Before You Update
 
@@ -31,7 +58,7 @@ sudo docker compose down
   
   - **Pangolin**: [GitHub Releases](https://github.com/fosrl/pangolin/releases)
   - **Gerbil**: [GitHub Releases](https://github.com/fosrl/gerbil/releases)
-  - **Traefik**: [Docker Hub](https://hub.docker.com/_/traefik)
+  - **Traefik**: [Docker Hub](https://github.com/traefik/traefik/releases)
   - **Badger**: [GitHub Releases](https://github.com/fosrl/badger/releases)
   
   <Info>
@@ -45,15 +72,15 @@ sudo docker compose down
 ```yaml title="docker-compose.yml"
 services:
   pangolin:
-      image: fosrl/pangolin:1.16.0  # Update to latest version
+      image: fosrl/pangolin:1.22.0 # Check GitHub Releases for latest version tag
       # ... rest of config
 
   gerbil:
-      image: fosrl/gerbil:1.5.0   # Update to latest version
+      image: fosrl/gerbil:1.5.1 # Check GitHub Releases for latest version tag
       # ... rest of config
   
     traefik:
-      image: traefik:v3.7         # Update if needed
+      image: traefik:v3.7.12 # Check GitHub Releases for latest version tag
       # ... rest of config
   ```
 
@@ -64,7 +91,7 @@ services:
     plugins:
       badger:
         moduleName: github.com/fosrl/badger
-        version: v1.4.1 # Update to latest version
+        version: v1.7.0 # Check GitHub Releases for latest version tag
   ```
   
   <Warning>
