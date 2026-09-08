@@ -104,5 +104,5 @@ Some registrars — Cloudflare included — only let you delegate NS records at 
 
 - Delegating `*.example.com` moves the entire domain, including email and any other services, to Pangolin's nameservers.
 - Delegating a subdomain instead (e.g. `*.apps.example.com`) avoids this — the root domain and its other records stay with your existing provider untouched.
-- If you must delegate the root and still need other records (MX, TXT, etc.) that your old provider managed, check whether Pangolin's DNS supports adding them directly, or use a subdomain delegation / CNAME setup instead.
+- If you must delegate the root and still need other records (MX, TXT, etc.) that your old provider managed use a subdomain delegation / CNAME setup instead and maintain these records in the root provider.
 </Warning>
