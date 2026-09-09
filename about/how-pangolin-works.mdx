@@ -1,14 +1,14 @@
 ---
 title: "How Pangolin Works"
-description: "Learn about the fundamentals of Pangolin and how they work together to provide simple and secure network access."
+description: "Learn about the fundamentals of Pangolin and how they work together."
 ---
 
-This page explains Pangolin's concepts: the server, sites, resources, and clients. Read it first. For a more technical picture of the software components and how they interact, see [System Architecture](/development/system-architecture) after this page.
+This page explains Pangolin's concepts: the server, sites, resources, users, and clients. Read it first. For a more technical picture of the software components and how they interact, see [System Architecture](/development/system-architecture) after this page.
 
 ## Basic Steps
 
 <Steps>
-<Step title="Access remote networks with sites">
+<Step title="Make remote networks available with sites">
   Access remote networks using site connectors. Pangolin's lightweight connectors use intelligent routing and NAT traversal to make any network anywhere available. Once a site is created, you can access resources on that network from anywhere.
 </Step>
 
@@ -32,7 +32,7 @@ The Pangolin server is the central coordination component for your network. It s
 You can use [Pangolin Cloud](https://app.pangolin.net/auth/signup), which is fully managed, or you can self-host your own Pangolin server for complete control over your infrastructure and data. See [Pangolin Cloud vs. Self-Hosted](/about/pangolin-cloud-vs-self-hosted).
 
 <Card title="Try free on Pangolin Cloud" icon="cloud" href="https://app.pangolin.net/auth/signup" arrow="true" cta="Sign up free">
-  Fastest way to get started with the fully managed control plane. No credit card required.
+  Fastest way to get started with the fully managed control plane.
 </Card>
 
 <Card title="Read about how to self-host Pangolin" icon="server" href="/self-host/quick-install">
@@ -45,7 +45,15 @@ Sites connect remote networks to your Pangolin server. They use Pangolin Site co
 
 Sites are an expected to entirely be managed by administrators and are typically set-and-forget. Users don't need to know about sites, they just access resources that are available on the site.
 
+<Frame caption="Manage Sites in the Pangolin dashboard, with status, uptime, and resource counts per site.">
+  <img src="/images/sites.png" alt="Manage Sites page in the Pangolin dashboard"/>
+</Frame>
+
 Sites run behind firewalls on remote networks. They maintain outbound connections to the Pangolin server. By default, sites block all traffic until you define resources and grant access. This ensures that just [deploying a site](/manage/sites/install-site) does not expose any network resources.
+
+<Frame caption="Creating a site: pick a platform, copy the install command, and run the connector on the remote network.">
+  <img src="/images/create-site.png" alt="Create Site page in the Pangolin dashboard"/>
+</Frame>
 
 When [private resources](/manage/resources/understanding-resources#private-resource-types) (VPN-like access) are used, [clients](/manage/clients/understanding-clients) connect directly to the site connector using peer-to-peer (P2P) [NAT traversal](/manage/clients/nat-traversal). If the client is on the same network as the site connector, it will use the [local network address](/manage/clients/nat-traversal#same-network-detection).
 
@@ -70,21 +78,69 @@ Resources follow different protocols depending on what you are exposing (for exa
 
 The access model stays the same while the protocol changes.
 
-[Public resources](/manage/resources/understanding-resources#public-resource-types) are publically available proxies to your Pangolin server. Often, these are exposed as a public FQDN, like a website available in the web-browser or an API. [Private resources](/manage/resources/understanding-resources#private-resource-types) require a [Pangolin client](/manage/clients/install-client) connection and stay off the public internet. They are for VPN-like, fully private access to resources on your remote network.
+[Public resources](/manage/resources/understanding-resources#public-resource-types) are publically available proxies to your Pangolin server. Often, these are exposed as a public FQDN, like a website available in the web-browser or an API.
+
+<Frame caption="Public resources in the dashboard: HTTPS, SSH, RDP, and VNC with health, uptime, and access URLs.">
+  <img src="/images/public-resources.png" alt="Manage Public Resources page in the Pangolin dashboard"/>
+</Frame>
+
+[Private resources](/manage/resources/understanding-resources#private-resource-types) require a [Pangolin client](/manage/clients/install-client) connection and stay off the public internet. They are for VPN-like, fully private access to resources on your remote network.
+
+<Frame caption="Private resources in the dashboard: hosts, HTTP, SSH, and CIDR ranges with destinations and aliases.">
+  <img src="/images/private-resources.png" alt="Manage Private Resources page in the Pangolin dashboard"/>
+</Frame>
 
 You must define resources and assign access before users can reach them. By default, no resources are available on sites. This ensures that only explicitly defined resources can be accessed.
+
+#### Resource Launcher
+
+The Resource Launcher is the dashboard your users (non-admins) see. It lists every resource they are allowed to access in one place, grouped by site or label, with search and filters. Users open a web app, copy a hostname, or launch a private resource from that hub.
+
+<Frame caption="The Resource Launcher, grouped by site, showing the resources a user can open.">
+  <img src="/images/resource-launcher.png" alt="Resource Launcher in the Pangolin dashboard"/>
+</Frame>
+
+Selecting a resource always expands a panel with the details that matter for that type: URL or alias, how to connect, and any extra setup. The screenshot below is an [AI Gateway](/manage/ai/overview) example. The same panel is used for every resource.
+
+<Frame caption="Resource Launcher detail panel. This example is a private AI Gateway, with models and coding agent setup.">
+  <img src="/images/resource-launcher-expanded.png" alt="Resource Launcher detail panel showing a private AI Gateway as an example"/>
+</Frame>
 
 <Card title="Read more about resources" icon="link" href="/manage/resources/understanding-resources">
   Learn about public and private resources and how to create them.
 </Card>
 
+### Users and Roles
+
+Identity lives in the same control plane as sites and resources. You manage your team in one place: Pangolin users, [identity providers](/manage/identity-providers/add-an-idp), and the [roles](/manage/access-control/create-user#roles) that grant access.
+
+Use Pangolin's built-in users, or bring Google Workspace, Microsoft Entra ID, Okta, or any OIDC provider. Users authenticate once. That identity applies to the dashboard, browser resources, the Pangolin client, the AI Gateway, and everything else.
+
+Roles group people for RBAC. You assign roles on each resource, so access follows the team rather than a separate list per protocol. A user's effective access is the union of what their roles can reach. The same users and roles apply to public resources, private resources, and AI Gateway resources.
+
+<Frame caption="Users in the dashboard, with identity providers and roles managed together.">
+  <img src="/images/users.png" alt="Manage Users page in the Pangolin dashboard"/>
+</Frame>
+
+<Card title="Users and Roles" icon="users" href="/manage/access-control/create-user">
+  Add internal or external users and assign roles for resource access.
+</Card>
+
+<Card title="Add an Identity Provider" icon="key" href="/manage/identity-providers/add-an-idp">
+  Let users sign in with Google, Microsoft Entra ID, Okta, or any OIDC provider.
+</Card>
+
 ### Clients
 
-Clients are software components installed on user devices or machines. They let users and automated systems connect to your Pangolin network and access [private resources](/manage/resources/understanding-resources#private-resource-types) through a secure tunnel.
+Clients are software components installed on user devices or machines. They let users and automated systems connect directly to sites to access [private resources](/manage/resources/understanding-resources#private-resource-types) through a secure tunnel. Clients also enforce access control and security at the edge.
 
 Users authenticate through the client using their [accounts](/manage/access-control/create-user). [Machines](/manage/clients/credentials) connect with credentials. Once connected, users can reach all resources their account has access to. The client handles [routing](/manage/clients/nat-traversal) decisions and establishes encrypted tunnels to the appropriate [sites](/manage/sites/understanding-sites).
 
-Clients are available for [Mac, Windows, and Linux](/manage/clients/install-client). They work transparently with applications, so no application configuration is required.
+<Frame caption="User devices in the dashboard, with identity provider, connection status, and client version.">
+  <img src="/images/user-devices.png" alt="User Devices page in the Pangolin dashboard"/>
+</Frame>
+
+Clients are available on [all major platforms](/manage/clients/install-client). They work transparently with applications, so no application configuration is required.
 
 <Card title="Download Pangolin clients" icon="download" href="https://pangolin.net/downloads" arrow="true">
   Get the client for Mac, Windows, Linux, iOS, and Android.
@@ -98,9 +154,17 @@ Clients are available for [Mac, Windows, and Linux](/manage/clients/install-clie
 
 An [AI Gateway](/manage/ai/overview) is a special resource type for LLM access. It is protocol-aware, in the same way an HTTPS resource understands HTTP.
 
+<Frame caption="Creating a public resource with type set to AI Gateway.">
+  <img src="/images/ai/create-ai-gateway-resource.png" alt="Create Public Resource form with Type set to AI Gateway"/>
+</Frame>
+
 Pangolin already inspects HTTPS traffic to apply identity, access rules, [request logs](/manage/analytics/request), and analytics. An AI Gateway resource does the equivalent for model APIs. Because the gateway understands the LLM protocol, it can attribute each call to a user, record [cost and token usage](/manage/ai/usage-analytics), keep [chat session history](/manage/ai/session-logs), and enforce who can use which [models](/manage/ai/providers/model-routing) and [budgets](/manage/ai/budgets).
 
 Access is identity-based. You grant users and roles on the resource the same way you do for HTTPS or SSH. Pangolin then decides which models that identity may call and whether a budget still allows the request.
+
+<Frame caption="AI Gateway session logs, showing provider, model, resource, and the user who made the call.">
+  <img src="/images/ai/expanded-session-logs.png" alt="AI Gateway session logs in the Pangolin dashboard"/>
+</Frame>
 
 A [private AI Gateway](/manage/resources/private/ai-gateway) uses the [Pangolin client](/manage/clients/install-client) the same way every other private resource does. The client running on the end user's device already authenticated that user. Coding agents on that device call the resource over the tunnel, and Pangolin attributes the request to the connected identity. That eliminates provider API keys on the laptop: the upstream key stays on the [provider](/manage/ai/providers/overview).
 
