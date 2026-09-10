@@ -161,6 +161,142 @@ This section contains the complete reference for all configuration options in `p
   </Expandable>
 </ResponseField>
 
+### DNS Server Configuration
+
+<ResponseField name="dns" type="object">
+  Configuration for Pangolin's built-in authoritative DNS nameserver. This lets Pangolin answer DNS queries directly for domains delegated to it (via CNAME or NS delegation), issue ACME DNS-01 challenge responses, and resolve site tunnel subnet addresses.
+
+  <Expandable title="properties">
+    <ResponseField name="enabled" type="boolean" default="false">
+      Enables the authoritative DNS server. When `false` or omitted, no DNS listener is started.
+
+      ```yaml
+      dns:
+        enabled: true
+      ```
+    </ResponseField>
+
+    <ResponseField name="listen_port" type="number" default="53">
+      UDP port the authoritative DNS server listens on.
+
+      ```yaml
+      dns:
+        listen_port: 53
+      ```
+    </ResponseField>
+
+    <ResponseField name="nameserver_name" type="string" required>
+      The FQDN Pangolin advertises as itself when acting as a nameserver. Used as the `mname` in SOA responses and included in the NS record set returned for zones it is authoritative for. This is the hostname you point your domain's nameservers at when using NS-based domain delegation (e.g. `ns1.pangolin-ns.net`).
+
+      ```yaml
+      dns:
+        nameserver_name: "ns1.pangolin-ns.net"
+      ```
+    </ResponseField>
+
+    <ResponseField name="cname_extension" type="string" required>
+      The domain suffix used for single-domain CNAME delegation. When an org adds a domain using the CNAME delegation type, Pangolin generates `{domainId}.{cname_extension}` and `_acme-challenge.{domainId}.{cname_extension}` targets to point your records at.
+
+      ```yaml
+      dns:
+        cname_extension: "cname.pangolin.net"
+      ```
+    </ResponseField>
+
+    <ResponseField name="site_extension" type="string">
+      Suffix used to resolve a site's WireGuard tunnel subnet address by DNS. A query for `{newtId}.{site_extension}` resolves to the tunnel subnet IP of the site running the Newt agent with that ID. This is used for site-to-cloud networking. 
+
+      ```yaml
+      dns:
+        site_extension: "site.pangolin.net"
+      ```
+    </ResponseField>
+
+    <ResponseField name="cname_alternate_extensions" type="array" default="[]">
+      Additional CNAME suffixes (besides `cname_extension`) that are treated the same way. Useful when Pangolin should respond to more than one CNAME delegation domain, such as for white-label/multi-brand deployments.
+
+      ```yaml
+      dns:
+        cname_alternate_extensions:
+          - "cname.example.com"
+      ```
+    </ResponseField>
+
+    <ResponseField name="alternate_nameservers" type="array" default="[]">
+      Additional nameserver hostnames appended after `nameserver_name` in the NS record set Pangolin returns for a zone, and in the NS records shown when using NS-based domain delegation (e.g. `ns2.pangolin-ns.net`, `ns3.pangolin-ns.net`).
+
+      ```yaml
+      dns:
+        alternate_nameservers:
+          - "ns2.pangolin-ns.net"
+          - "ns3.pangolin-ns.net"
+      ```
+    </ResponseField>
+
+    <ResponseField name="rate_limit" type="object">
+      Per-source-IP rate limiting for DNS queries. Queries exceeding these limits are refused.
+
+      ```yaml
+      dns:
+        rate_limit:
+          enabled: true
+          window_ms: 60000
+          max_requests: 1200
+          max_requests_per_query_type: 600
+      ```
+
+      <Expandable title="properties">
+        <ResponseField name="enabled" type="boolean" default="true">
+          Enables DNS query rate limiting.
+        </ResponseField>
+
+        <ResponseField name="window_ms" type="number" default="60000">
+          The time window, in milliseconds, over which query counts are measured.
+        </ResponseField>
+
+        <ResponseField name="max_requests" type="number" default="1200">
+          Maximum total DNS queries allowed per source IP within `window_ms`.
+        </ResponseField>
+
+        <ResponseField name="max_requests_per_query_type" type="number" default="600">
+          Maximum queries allowed per source IP, per DNS record type (A, TXT, NS, etc.), within `window_ms`.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+
+    <ResponseField name="static_records" type="array" default="[]">
+      Hardcoded DNS answers served by the authoritative DNS server, checked before database-backed lookups. Useful for fixed entries such as domain verification TXT records.
+
+      ```yaml
+      dns:
+        static_records:
+          - domain: "example.com"
+            type: "TXT"
+            value: "v=spf1 include:_spf.example.com ~all"
+            ttl: 300
+      ```
+
+      <Expandable title="properties">
+        <ResponseField name="domain" type="string" required>
+          The domain name to match (case-insensitive).
+        </ResponseField>
+
+        <ResponseField name="type" type="string" required>
+          The DNS record type. One of `TXT`, `CNAME`, `A`, or `NS`.
+        </ResponseField>
+
+        <ResponseField name="value" type="string" required>
+          The value returned for this record.
+        </ResponseField>
+
+        <ResponseField name="ttl" type="number" default="300">
+          Time-to-live, in seconds, for the returned record.
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
 ### Gerbil Tunnel Configuration
 
 <ResponseField name="gerbil" type="object">
@@ -205,11 +341,151 @@ This section contains the complete reference for all configuration options in `p
     </ResponseField>
 
     <ResponseField name="use_pangolin_dns" type="boolean" default="false">
-      Use Pangolin DNS servers for client connections instead of external DNS servers for DNS delegation and CNAME setups. Used for clustering Pangolin nodes. REQUIRES EXTERNAL COMPONENTS. PLEASE CONTACT SUPPORT TO OBTAIN ACCESS BEFORE ENABLING.
+      Allow creating domains using CNAME and NS.
       
       ```yaml
       flags:
         use_pangolin_dns: true
+      ```
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### ACME Certificate Configuration
+
+<ResponseField name="acme" type="object">
+  Configuration for Pangolin's self-hosted ACME client, which issues and renews TLS certificates directly using DNS-01 challenges served by Pangolin's own [authoritative DNS server](#dns-server-configuration), as an alternative to relying on Traefik's built-in ACME resolver.
+
+  <Expandable title="properties">
+    <ResponseField name="cert_mode" type="string" default="traefik">
+      Controls who is responsible for obtaining and renewing TLS certificates.
+
+      Possible values:
+      - `traefik`: (default) Traefik's built-in ACME resolver handles certificate issuance and renewal itself.
+      - `pangolin`: Pangolin issues and manages certificates itself via its self-hosted ACME client, using DNS-01 challenges. Requires `dns.enabled` and `acme.enable_acme_client` to both be `true`. ENSURE ONLY ONE NODE IN A CLUSTER HAS THE `acme.enable_acme_client` FLAG ENABLED, OTHERWISE MULTIPLE NODES WILL TRY TO ISSUE CERTIFICATES SIMULTANEOUSLY.
+
+      ```yaml
+      acme:
+        cert_mode: "pangolin"
+      ```
+    </ResponseField>
+
+    <ResponseField name="enable_acme_client" type="boolean" default="false">
+       Enable the self-hosted ACME client and its certificate issuance/renewal jobs. Must be `true`, along with `cert_mode: "pangolin"`, for the certificate manager to start.
+
+      ```yaml
+      acme:
+        enable_acme_client: true
+      ```
+    </ResponseField>
+
+    <ResponseField name="contact_email" type="string" required>
+      Email address registered with the ACME account, used by the CA for expiry and policy notices.
+
+      ```yaml
+      acme:
+        contact_email: "admin@example.com"
+      ```
+    </ResponseField>
+
+    <ResponseField name="acme_directory_url" type="string" default="https://acme-v02.api.letsencrypt.org/directory">
+      The ACME server directory URL Pangolin's client talks to.
+
+      ```yaml
+      acme:
+        acme_directory_url: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      ```
+    </ResponseField>
+
+    <ResponseField name="acme_account_key_path" type="string" default="./config/account.key">
+      Filesystem path where the ACME account's private key is stored. Generated automatically on first run if it doesn't exist.
+
+      ```yaml
+      acme:
+        acme_account_key_path: "./config/account.key"
+      ```
+    </ResponseField>
+
+    <ResponseField name="challenge_ttl_ms" type="number" default="300000">
+      How long, in milliseconds, a DNS-01 challenge TXT record is considered valid and served by the authoritative DNS server before expiring.
+
+      ```yaml
+      acme:
+        challenge_ttl_ms: 300000
+      ```
+    </ResponseField>
+
+    <ResponseField name="renewal_check_interval_ms" type="number" default="3600000">
+      How often, in milliseconds, Pangolin checks for certificates approaching expiry and renews them.
+
+      ```yaml
+      acme:
+        renewal_check_interval_ms: 3600000
+      ```
+    </ResponseField>
+
+    <ResponseField name="new_cert_check_interval_ms" type="number" default="5000">
+      How often, in milliseconds, Pangolin checks for newly-needed certificates and issues them. Set much lower than `renewal_check_interval_ms` since new certificates are user-facing and blocking.
+
+      ```yaml
+      acme:
+        new_cert_check_interval_ms: 5000
+      ```
+    </ResponseField>
+
+    <ResponseField name="acme_requests_per_second" type="number" default="15">
+      Shared rate limit on outbound calls Pangolin's client makes directly to the ACME server (create order, get authorizations, verify challenge, finalize, get certificate). Kept under Let's Encrypt's ~20 req/s limit. 
+
+      ```yaml
+      acme:
+        acme_requests_per_second: 15
+      ```
+    </ResponseField>
+
+    <ResponseField name="dns_check_interval_ms" type="number" default="60000">
+      How often, in milliseconds, Pangolin checks pending (not-yet-verified) domains' DNS records against live DNS to flip them to verified once the records are in place.
+
+      ```yaml
+      acme:
+        dns_check_interval_ms: 60000
+      ```
+    </ResponseField>
+
+    <ResponseField name="domain_reverification_interval_ms" type="number" default="3600000">
+      How often, in milliseconds, Pangolin runs a periodic pass re-checking already-verified domains, to catch removing or changing their DNS records after the fact.
+
+      ```yaml
+      acme:
+        domain_reverification_interval_ms: 3600000
+      ```
+    </ResponseField>
+
+    <ResponseField name="domain_reverification_window_ms" type="number" default="259200000">
+      Minimum age, in milliseconds, a verified domain's last check must have before it becomes eligible for reverification. A given domain is reverified at most roughly this often, not on every reverification pass.
+
+      ```yaml
+      acme:
+        domain_reverification_window_ms: 259200000
+      ```
+    </ResponseField>
+
+    <ResponseField name="domain_reverification_batch_size" type="number" default="20">
+      Maximum number of verified domains reverified per reverification pass, to bound database and DNS load per tick.
+
+      ```yaml
+      acme:
+        domain_reverification_batch_size: 20
+      ```
+    </ResponseField>
+
+    <ResponseField name="dns_resolvers" type="array" default='["8.8.8.8", "1.1.1.1", "9.9.9.9", "208.67.222.222"]'>
+      Upstream public DNS resolvers used to perform live lookups against real DNS (not Pangolin's own authoritative server) when validating or reverifying domain records. Resolvers are rotated across on each attempt so a single resolver's cache or propagation lag doesn't wrongly fail a check.
+
+      ```yaml
+      acme:
+        dns_resolvers:
+          - "8.8.8.8"
+          - "1.1.1.1"
       ```
     </ResponseField>
   </Expandable>

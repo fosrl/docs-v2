@@ -511,6 +511,18 @@ This section contains the complete reference for all configuration options in `c
       **Default**: `/var/dynamic/router_config.yml`
     </ResponseField>
 
+    <ResponseField name="static_domains" type="array of strings">
+      Additional fully-qualified domains that are always included in the list sent to the SNI proxy, alongside domains discovered from resources.
+
+      **Example**: `["static.example.com"]`
+
+      **Default**: `[]`
+
+      <Note>
+        Useful for domains that need to be routable through the SNI proxy but aren't tied to a resource that Pangolin would otherwise discover automatically.
+      </Note>
+    </ResponseField>
+
     <ResponseField name="site_types" type="array of strings">
       Supported site types for Traefik configuration.
 
@@ -907,6 +919,16 @@ This section contains the complete reference for all configuration options in `c
 
       **Default**: `false`
     </ResponseField> 
+
+    <ResponseField name="disable_virtual_api_keys_ui" type="boolean">
+      Whether to hide the virtual API keys UI.
+
+      **Default**: `false`
+
+      <Note>
+        When enabled, virtual API key management is hidden from the dashboard.
+      </Note>
+    </ResponseField>
   </Expandable>
 </ResponseField>
 
