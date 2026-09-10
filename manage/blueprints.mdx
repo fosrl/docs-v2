@@ -54,7 +54,7 @@ Pangolin supports two blueprint formats:
 
 ### YAML
 
-Use YAML when you want a readable file that can be committed to git, applied through Newt, pasted into the UI, or sent through the API.
+Use YAML when you want a readable file that can be committed to git, applied through a site, pasted into the UI, or sent through the API.
 
 ### Container Labels
 
@@ -70,8 +70,8 @@ Use container labels when the resource definition should live inside your Compos
   </Frame>
 </Card>
 
-<Card title="Newt">
-  Run Newt with `--blueprint-file` to keep the file declarative and continuously applied:
+<Card title="Site">
+  Run a site with `--blueprint-file` to keep the file declarative and continuously applied:
 
   ```bash
   newt --blueprint-file /path/to/blueprint.yaml <other-args>
@@ -140,7 +140,7 @@ Use container labels when the resource definition should live inside your Compos
 </Card>
 
 <Note>
-`--blueprint-file` in Newt and container labels behave as an ongoing source of truth. Dashboard edits can be overwritten the next time the blueprint is applied. UI, API, and CLI applies are typically one-off operations.
+`--blueprint-file` on a site and container labels behave as an ongoing source of truth. Dashboard edits can be overwritten the next time the blueprint is applied. UI, API, and CLI applies are typically one-off operations.
 </Note>
 
 ## Quick Start YAML Example
@@ -229,7 +229,7 @@ public-resources:
 ```
 
 <Note>
-When applying a blueprint via Newt (using `--blueprint-file` or container labels), `site` on each target is optional. If omitted, the target is assigned to the site of the Newt that applied the blueprint.
+When applying a blueprint from a site (using `--blueprint-file` or container labels), `site` on each target is optional. If omitted, the target is assigned to the site that applied the blueprint.
 </Note>
 
 ### Raw TCP Or UDP Example
@@ -364,7 +364,7 @@ Private resources define what Pangolin clients can reach after they connect to y
 - Use **`mode: inference`** for a private [AI Gateway](/manage/ai/overview) resource reachable only by Pangolin clients, not the public internet
 
 <Note>
-When applying a blueprint via Newt (using `--blueprint-file` or container labels), `sites` is optional. If omitted, the resource is assigned to the site of the Newt that applied the blueprint.
+When applying a blueprint from a site (using `--blueprint-file` or container labels), `sites` is optional. If omitted, the resource is assigned to the site that applied the blueprint.
 </Note>
 
 ```yaml
@@ -457,7 +457,7 @@ Container labels are continuously applied. Treat the Compose file as the source 
 
 ### Enable Container Label Discovery
 
-To use container labels, Newt must be able to read the Docker socket:
+To use container labels, the site must be able to read the Docker socket:
 
 ```bash
 newt --docker-socket /var/run/docker.sock <other-args>
@@ -524,7 +524,7 @@ This creates a single Pangolin resource with multiple targets:
 </Card>
 
 <Card title="Site Assignment">
-  If no `site` is specified on a target (public resource) or on a private resource, it is assigned to the site of the Newt that applied the blueprint — whether through container labels or `--blueprint-file`.
+  If no `site` is specified on a target (public resource) or on a private resource, it is assigned to the site that applied the blueprint, whether through container labels or `--blueprint-file`.
 </Card>
 
 <Card title="Merged Configuration">
@@ -1146,7 +1146,7 @@ public-resources:
 
         <Expandable title="Target object">
           <ResponseField name="site" type="string">
-            Site that hosts the target. Optional when deploying from a Newt — if omitted, the target is assigned to the site of the Newt that applied the blueprint.
+            Site that hosts the target. Optional when deploying from a site. If omitted, the target is assigned to the site that applied the blueprint.
 
             YAML: `site: my-site`  
             Container label: `pangolin.public-resources.web-app.targets[0].site=my-site`
@@ -1380,7 +1380,7 @@ private-resources:
       </ResponseField>
 
       <ResponseField name="sites" type="array of strings">
-        Sites that host the resource. Optional when deploying from a Newt — if omitted, the resource is assigned to the site of the Newt that applied the blueprint.
+        Sites that host the resource. Optional when deploying from a site. If omitted, the resource is assigned to the site that applied the blueprint.
 
         Container labels for arrays must include an index (`[0]`, `[1]`, ...).
 

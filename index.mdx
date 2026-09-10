@@ -1,43 +1,82 @@
 ---
 title: "Introduction to Pangolin"
+description: "Connect and protect your users with an open-source networking and security platform"
 ---
-Pangolin is an open-source, identity-based remote access platform built on WireGuard that enables secure, seamless connectivity to private and public resources.
+
+Pangolin is an open-source SASE platform with one mission: connect and protect your users, wherever they are.
+
+It treats networking and security as a single system. Identity, sites, access control, privileged access, and an identity-aware AI gateway share one policy model. The idea is the same as platforms like Cloudflare One, Zscaler, and Prisma Access, but Pangolin is open, self-hostable, and built to stay light enough that administrators actually enjoy running it.
 
 <Frame caption="Screenshot of resources page from the Pangolin Dashboard.">
   <img src="/images/hero.png" alt="Pangolin Dashboard"/>
 </Frame>
 
-Pangolin combines reverse proxy and VPN capabilities into one platform. It provides browser-based access to web applications and client-based access to private resources like databases and SSH servers, all with zero-trust security and granular access control.
+## Why Pangolin Exists
 
-Pangolin connects remote networks using lightweight software connectors called sites. Sites create secure tunnels without requiring public IP addresses or open ports. Admins define specific resources that users can access, not entire networks. This gives users only the access they need while keeping everything else secure.
+Legacy SASE platforms got the idea right: connectivity and security belong together. They delivered it as a heavyweight, closed, cloud-locked stack. Pangolin does that unification in the open, on infrastructure you control, and simple enough to deploy yourself.
 
-Users access public resources through any web browser with authentication. Users access private resources by connecting with a Pangolin client on their device. Both methods use the same identity-based access control, so you manage users and permissions in one place.
+- **Open source and auditable.** You can see how traffic is handled and how access decisions get made.
+- **Networking and security as one platform.** Connecting users and protecting them happen together, with one identity and policy model.
+- **Lightweight by design.** The control plane runs on a modest server. A user-space connector sits in your private networks.
+- **Zero trust from day one.** Access is granted per resource, with identity providers, roles, and audit logs.
+- **Run it your way.** Self-host or use [Pangolin Cloud](https://app.pangolin.net/auth/signup).
 
-<Frame caption="Screenshot of sites page from Pangolin Dashboard">
-  <img src="/images/sites.png" alt="Pangolin Dashboard"/>
-</Frame>
+## Core Concepts
 
-<Frame caption="Screenshot of private network resources page from Pangolin Dashboard">
-  <img src="/images/private-resources.png" alt="Pangolin Dashboard"/>
-</Frame>
+Pangolin is organized around a few pieces you will use everywhere:
+
+1. A **server** is the control plane. It holds identity, policy, and coordination. You can use [Pangolin Cloud](/about/pangolin-cloud-vs-self-hosted) or [self-host](/self-host/quick-install) the same software.
+2. **[Sites](/manage/sites/understanding-sites)** connect the networks where your applications and infrastructure live.
+3. **[Resources](/manage/resources/understanding-resources)** are the specific things users are allowed to reach: web apps, SSH, desktops, private hosts, and AI providers.
+4. **[Clients](/manage/clients/understanding-clients)** give devices a private path to those resources.
+
+<Card title="How Pangolin Works" icon="brain" href="/about/how-pangolin-works">
+  Learn the fundamentals: server, sites, resources, clients, and how they fit together.
+</Card>
+
+## Explore the Platform
+
+<CardGroup cols={2}>
+  <Card title="Sites" icon="plug" href="/manage/sites/understanding-sites">
+    Connect private networks with lightweight connectors so authorized users can reach what lives there.
+  </Card>
+  <Card title="Resources" icon="link" href="/manage/resources/understanding-resources">
+    Define the apps, hosts, SSH sessions, desktops, and AI endpoints users can access.
+  </Card>
+  <Card title="Identity and Access" icon="users" href="/manage/access-control/create-user">
+    Use built-in users or your identity provider. Grant roles per resource and keep an audit trail.
+  </Card>
+  <Card title="AI Gateway" icon="sparkles" href="/manage/ai/overview">
+    Put identity, budgets, and session history in front of cloud and self-hosted model APIs.
+  </Card>
+</CardGroup>
 
 ## Keep Reading
 
-<Card title="How Pangolin Works" icon="brain" href="/about/how-pangolin-works">
-  Learn about the fundamentals of Pangolin and how they work together to provide simple and secure remote access.
-</Card>
-
-<Card title="Pangolin vs. Reverse Proxy vs. VPN" icon="book" href="/about/pangolin-vs-reverse-proxy-vs-vpn">
-  What are the similarities and differences between Pangolin and traditional reverse proxies and VPNs?
-</Card>
+<CardGroup cols={2}>
+  <Card title="Cloud vs. Self-Hosted" icon="server" href="/about/pangolin-cloud-vs-self-hosted">
+    Choose a managed control plane or run the same software on your own infrastructure.
+  </Card>
+  <Card title="Pangolin vs. Proxy vs. VPN" icon="book" href="/about/pangolin-vs-reverse-proxy-vs-vpn">
+    How Pangolin relates to traditional reverse proxies and VPNs, and what it does beyond either.
+  </Card>
+  <Card title="Pangolin vs. Bifrost vs. LiteLLM" icon="sparkles" href="/about/pangolin-vs-bifrost-vs-litellm">
+    How Pangolin's identity-aware AI Gateway compares to dedicated LLM gateways.
+  </Card>
+  <Card title="System Architecture" icon="diagram-project" href="/development/system-architecture">
+    A technical picture of the control plane, nodes, connectors, and how traffic moves.
+  </Card>
+</CardGroup>
 
 ## Deployment Options
 
+See [Cloud vs. Self-Hosted](/about/pangolin-cloud-vs-self-hosted) for the differences, including [remote nodes](/manage/remote-node/understanding-nodes) as a hybrid.
+
 <Columns cols={2}>
   <Card title="Pangolin Cloud" icon="cloud" href="https://app.pangolin.net/auth/signup">
-    Use Cloud for low-maintenance, highly available remote access. Optionally self-host a node to keep your traffic private.
+    A managed control plane. Install sites and clients, then define resources. Optionally self-host a node to keep traffic on your network.
   </Card>
-  <Card title="Self-host Pangolin" icon="server" href="self-host/quick-install">
-    Self-host a fully isolated Pangolin server. Install the Community Edition or Enterprise Edition easily using the quick installer.
+  <Card title="Self-host Pangolin" icon="server" href="/self-host/quick-install">
+    Run a fully isolated Pangolin server. Install Community Edition or Enterprise Edition with the quick installer.
   </Card>
 </Columns>

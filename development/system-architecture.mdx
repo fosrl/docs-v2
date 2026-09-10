@@ -3,15 +3,13 @@ title: "System Architecture"
 description: "A technical overview of how Pangolin's control plane, nodes, connectors, and clients fit together"
 ---
 
-
-
 ## Open Source
 
 Every layer of Pangolin is open source, from the control plane server through site connectors and end-user clients. Each component has its own repository under [fosrl on GitHub](https://github.com/fosrl); the [component reference](#component-reference) at the bottom of this page lists them.
 
-The software that powers [Pangolin Cloud](https://app.pangolin.net) is open source as well. The SaaS control plane runs the same codebase as self-hosted Pangolin, and that code lives in the main [fosrl/pangolin](https://github.com/fosrl/pangolin) repository. Nothing described here is proprietary or hidden behind the managed service.
+The software that powers [Pangolin Cloud](https://app.pangolin.net) is open source as well. The SaaS control plane runs the same codebase as self-hosted Pangolin, and that code lives in the main [fosrl/pangolin](https://github.com/fosrl/pangolin) repository.
 
-Pangolin is split into a **control plane** (configuration, identity, and orchestration) and a **data plane** (encrypted tunnels, ingress, and relay). Sites and clients both initiate **outbound** connections to a Pangolin node, which keeps remote networks behind firewalls reachable without opening inbound ports on those networks.
+Pangolin is split into a **control plane** (configuration, identity, and orchestration) and a **data plane** (encrypted tunnels, ingress, and relay). For [public resources](/manage/resources/understanding-resources#public-resource-types), site connectors initiate **outbound** connections to a Pangolin node so the node can reverse-proxy traffic into the remote network without opening inbound ports there. For [private resources](/manage/resources/understanding-resources#private-resource-types), [clients](/manage/clients/understanding-clients) connect **peer-to-peer** to the site; the node is only in the data path as a relay when a direct path cannot be established. See [Peer-to-Peer and Relay Paths](#peer-to-peer-and-relay-paths).
 
 For a product-level walkthrough of sites, resources, and clients, see [How Pangolin Works](/about/how-pangolin-works). This page focuses on how those pieces are implemented and how traffic moves through the system.
 
@@ -64,16 +62,16 @@ The control plane writes certificates, Traefik router definitions, and WireGuard
 
 ## Site Connectors
 
-A **site connector** runs on a remote network (server, VM, container, or appliance) and maintains persistent **outbound** connections to a Pangolin node. It is the bridge between your private LAN and the platform.
+A **site connector** runs on a remote network (server, VM, container, or appliance) and is the bridge between your private LAN and the platform. For public resources it maintains persistent **outbound** connections to a Pangolin node so ingress can reverse-proxy into the LAN. For private resources, clients form a **peer-to-peer** path to the connector; the node is only in that data path as a relay when hole punching fails.
 
-The primary connector implementation is **Newt** (codename). Newt opens:
+The primary connector is a **Pangolin Site**. In engineering contexts it is referred to as Newt. The site opens:
 
 1. A **WebSocket** to the control plane for configuration, health, and coordination
 2. A **WireGuard** tunnel to the node's tunnel manager (Gerbil) for encrypted data traffic
 
 Site connectors are deny-by-default proxies. Deploying one does not expose hosts on the network; traffic is forwarded only for [resources](/manage/resources/understanding-resources) you define and grant access to. The connector resolves backend targets on the remote network and delivers packets there.
 
-Newt sites support the full feature set: public and private resources, protocol-aware proxies, multi-site routing, health checks, and edge TLS for private HTTP. Other connector types ([local](/manage/sites/understanding-sites#local-site) and [basic WireGuard](/manage/sites/understanding-sites#basic-wireguard-site)) exist for specialized self-hosted cases.
+Pangolin Sites support the full feature set: public and private resources, protocol-aware proxies, multi-site routing, health checks, and edge TLS for private HTTP. Other connector types ([local](/manage/sites/understanding-sites#local-site) and [basic WireGuard](/manage/sites/understanding-sites#basic-wireguard-site)) exist for specialized self-hosted cases.
 
 <Card title="Understanding sites" icon="plug" href="/manage/sites/understanding-sites">
   Site types, deployment models, and connector capabilities.

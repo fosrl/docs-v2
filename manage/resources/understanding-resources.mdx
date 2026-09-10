@@ -5,7 +5,7 @@ description: "Resources are any network address you want to make available to us
 
 
 
-Resources represent the applications, hosts, or ranges you make available for remote access to users. Resources exist on the remote networks of your sites. Users only ever think about connecting to resources and not specific sites.
+Resources represent the applications, hosts, or ranges you make available for remote access to users. Resources exist on the remote networks of your sites. Users only ever think about connecting to resources and not specific sites. They find and open what they can access from the [Resource Launcher](/manage/resource-launcher).
 
 By default, no resources are made available on sites. Admins must define resources with backend targets, and assign specific access policies before any users can gain access.
 
@@ -35,7 +35,7 @@ HTTP/HTTPS, SSH, RDP, and VNC are all **browser-based**. You assign a fully qual
 
 [AI Gateway](/manage/resources/public/ai-gateway) also gets a public FQDN, but coding agents call it as an API. Visiting the URL in a browser is how users retrieve a virtual API key, not how they run the workload.
 
-SSH, RDP, and VNC require a **Newt site**. HTTP/HTTPS, AI Gateway, and TCP/UDP resources can also run on local and basic WireGuard sites.
+SSH, RDP, and VNC require a **Pangolin Site**. HTTP/HTTPS, AI Gateway, and TCP/UDP resources can also run on local and basic WireGuard sites.
 
 TCP and UDP are the exception. They do not receive a FQDN. Instead, they bind to a port on the Pangolin server host and act as simple protocol-agnostic pipes to the downstream resource. Because they are not protocol-aware, they do not enforce Pangolin authentication or access rules.
 
@@ -72,7 +72,7 @@ TCP and UDP are the exception. They do not receive a FQDN. Instead, they bind to
 #### Site Compatibility
 
 <CardGroup cols={3}>
-<Card title="Newt Site" icon="plug" href="/manage/sites/understanding-sites#newt-site-recommended">
+<Card title="Pangolin Site" icon="plug" href="/manage/sites/understanding-sites#pangolin-site-recommended">
   All public resource types supported.
 
   Required for SSH, RDP, and VNC.
@@ -117,7 +117,7 @@ Private resources require users to connect with the Pangolin client before any t
 </Card>
 </CardGroup>
 
-Private resources can only be created on Newt sites.
+Private resources can only be created on Pangolin Sites.
 
 **Private resources function like a zero-trust virtual private network (VPN).** Explicit access to resources must be granted for users and roles to be able to access them. For raw TCP/UDP traffic that does not need a public proxy, prefer a private host or CIDR resource over public TCP/UDP resources.
 
@@ -126,10 +126,10 @@ Private resources support [aliases](/manage/resources/private/alias) for human-r
 #### Site Compatibility
 
 <CardGroup cols={3}>
-<Card title="Newt Site" icon="plug" href="/manage/sites/understanding-sites#newt-site-recommended">
+<Card title="Pangolin Site" icon="plug" href="/manage/sites/understanding-sites#pangolin-site-recommended">
   Supported.
 
-  Private resources require a Newt site.
+  Private resources require a Pangolin Site.
 </Card>
 
 <Card title="Local Site" icon="server" href="/manage/sites/understanding-sites#local-site">

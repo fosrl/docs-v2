@@ -3,7 +3,7 @@ title: "Cloud APIs Through a Site"
 description: "Send OpenAI or Anthropic traffic out through a Pangolin site so the vendor sees a fixed egress IP"
 ---
 
-Typed [OpenAI](/manage/ai/providers/openai) and [Anthropic](/manage/ai/providers/anthropic) providers send requests from the Pangolin node's own egress. A [Custom](/manage/ai/providers/custom) provider with **Site Targets** sends the same APIs out through a chosen site (Newt), so OpenAI or Anthropic see that site's public IP.
+Typed [OpenAI](/manage/ai/providers/openai) and [Anthropic](/manage/ai/providers/anthropic) providers send requests from the Pangolin node's own egress. A [Custom](/manage/ai/providers/custom) provider with **Site Targets** sends the same APIs out through a chosen site, so OpenAI or Anthropic see that site's public IP.
 
 Use this when the vendor allowlists IPs, or all inference must leave from one network. The site is only the egress path. Auth still lives on the provider: paste the real vendor key.
 

@@ -6,9 +6,15 @@ description: "Turn a remote node into a network concentrator that routes traffic
 	Site to cloud is an advanced [remote node](/manage/remote-node/understanding-nodes) configuration available in [Pangolin Cloud](https://app.pangolin.net/auth/signup).
 </Note>
 
-A standard remote node terminates WireGuard tunnels and proxies HTTP(S) traffic to your resources. A **backhaul** node goes a step further: it acts as an IP router between an entire network, such as a cloud VPC, and your Pangolin sites. Instead of just forwarding individual resource connections, the node forwards whole subnets, letting hosts on either side reach each other without installing Newt on every machine.
+A standard remote node terminates WireGuard tunnels and proxies HTTP(S) traffic to your resources. A **backhaul** node goes a step further: it acts as an IP router between an entire network, such as a cloud VPC, and your Pangolin sites. Instead of just forwarding individual resource connections, the node forwards whole subnets, letting hosts on either side reach each other without needing to install site and client on every machine.
 
 This is useful when you want to bridge a cloud network (for example, an AWS VPC) with your on-prem or office network through Pangolin, using a node running in that VPC as the concentrator.
+
+Another common use case is connecting edge devices to a cloud network. Edge devices can send traffic to a service in the cloud, and the cloud can send traffic down to a specific edge device. In both cases, the persistent backhaul tunnel carries the traffic.
+
+<Frame>
+	<img src="/images/basic-backhaul-diagram.png" alt="Diagram of a backhaul remote node in a cloud network with bidirectional tunnels to sites on remote private networks" />
+</Frame>
 
 <Tip>
 	Site to cloud builds on top of a normal remote node install. Read [Remote Nodes](/manage/remote-node/understanding-nodes) and [Quick Install Guide](/manage/remote-node/quick-install-remote) first if you haven't deployed a node yet.
@@ -19,7 +25,7 @@ This is useful when you want to bridge a cloud network (for example, an AWS VPC)
 - **The node routes, it doesn't just proxy.** Gerbil creates the WireGuard interface directly on the host and Docker forwards packets between it and the host's network, rather than isolating traffic inside a container network namespace.
 - **The cloud network learns to route to the node.** You add a route in your VPC (or other network) so that traffic destined for the Pangolin overlay is sent to the node.
 - **The node learns to route to the cloud network.** You register the VPC's CIDR on the node so it's pushed down to your sites as a route.
-- **Sites route natively.** Sites connect with Newt's native routing mode so the tunnel subnet is a real route on the site's host, not just an application-layer proxy.
+- **Sites route natively.** Sites connect with native routing mode so the tunnel subnet is a real route on the site's host, not just an application-layer proxy.
 
 ## Prerequisites
 
@@ -54,7 +60,7 @@ The standard node install runs Gerbil and Traefik on a bridge network, with Trae
 name: pangolin
 services:
   pangolin:
-    image: docker.io/fosrl/pangolin-node:latest
+    image: docker.io/fosrl/pangolin-node:latest # We recommend locking to a specific version for stability.
     container_name: pangolin
     restart: unless-stopped
     network_mode: host
@@ -124,8 +130,8 @@ server:
     internal_port: 3001
     internal_hostname: localhost
 managed:
-    id: "he4g78wevj25msf"
-    secret: "n7sd18twfko0q0vrb7wyclqzbvvnx1fqt7ezv8xewhdb9s7d"
+    id: "he4g78wevj25msf" # REPLACE WITH YOUR NODE'S ID
+    secret: "n7sd18twfko0q0vrb7wyclqzbvvnx1fqt7ezv8xewhdb9s7d" # REPLACE WITH YOUR NODE'S SECRET
 ```
 
 See the [configuration file reference](/manage/remote-node/config-file) for every available option.
@@ -148,7 +154,7 @@ experimental:
   plugins:
     badger:
       moduleName: "github.com/fosrl/badger"
-      version: "v1.3.1"
+      version: "v1.7.0" # Check GitHub Releases for latest version tag
 
 log:
   level: "INFO"
@@ -255,13 +261,7 @@ If you are using Newt on Windows `wintun.dll` is required to run in native mode.
 
 ## Resolving a Site's Address Directly
 
-If something outside of Pangolin's normal resource routing needs to reach a site directly, for example a static route configured elsewhere in your network, you can resolve `<newtId>.site.pangolin.net` to get the site's current routable address.
-
-This is useful with backhaul because a site's traffic can move between exit nodes if one becomes unavailable. The DNS record always follows the site to whichever node it's currently connected through.
-
-<Note>
-	Expect a short gap in resolution when a site moves between nodes while the DNS record updates.
-</Note>
+If something outside of Pangolin's normal resource routing needs to reach a site directly, for example a static route configured elsewhere in your network or a cloud service sending traffic to a specific edge device, you can resolve `<siteId>.site.pangolin.net` (the site ID is the one used in the `--id` argument when running the site) to get the site's current routable address.
 
 ## High Availability
 

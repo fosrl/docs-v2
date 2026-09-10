@@ -3,7 +3,7 @@ title: "AI Gateway Overview"
 description: "Route coding agents and AI clients through Pangolin with centralized providers and access control"
 ---
 
-An AI Gateway resource is a normal Pangolin resource that proxies requests to one or more upstream AI providers (OpenAI, Anthropic, Google Gemini, Bedrock, Vertex AI, or a custom endpoint). Point a client at the resource's URL instead of the provider's, and Pangolin handles auth, access control, and logging in front of it.
+An AI Gateway resource is a normal Pangolin resource that proxies requests to one or more upstream AI providers (OpenAI, Anthropic, Google Gemini, Bedrock, Vertex AI, or a custom endpoint). Point a client at the resource's URL instead of the provider's, and Pangolin handles auth, access control, and logging in front of it. See [Pangolin vs. Bifrost vs. LiteLLM](/about/pangolin-vs-bifrost-vs-litellm) if you are comparing Pangolin to a traditional LLM gateway.
 
 ## How It Fits Together
 
@@ -77,3 +77,7 @@ Each type has its own configuration guide. Capabilities (which API formats a pro
 | Custom | Whatever you select | [Configure](/manage/ai/providers/custom) |
 
 Use [Custom](/manage/ai/providers/custom) for any upstream that isn't in the typed list. Assign whichever capabilities it speaks - OpenAI, Anthropic, Gemini, Vertex, Bedrock, or a mix. A Moonshot AI (Kimi) endpoint is one example: select Anthropic Messages and point at its Anthropic-compatible URL.
+
+<Card title="Pangolin vs. Bifrost vs. LiteLLM" icon="book" href="/about/pangolin-vs-bifrost-vs-litellm">
+  How Pangolin's identity-aware AI Gateway compares to traditional LLM gateways.
+</Card>

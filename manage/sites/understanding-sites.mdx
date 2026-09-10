@@ -2,7 +2,9 @@
 title: "Understanding Sites"
 description: "Create a site to connect to a remote network and expose resources"
 ---
-A site is a connection to a network where your resources live. Pangolin uses sites to make public and private resources available to users. Every resource belongs to one or more sites. Newt is Pangolin's connector that establishes this connection and routes traffic to targets on remote networks.
+A site is a connection to a network where your resources live. Pangolin uses sites to make public and private resources available to users. Every resource belongs to one or more sites.
+
+A Pangolin Site is the software connector that establishes this connection and routes traffic to targets on remote networks. In engineering contexts, and in some install commands, it is sometimes referred to as Newt.
 
 ## The Basics
 
@@ -17,11 +19,11 @@ Pangolin supports three different types of sites, each designed for different us
 
 ### Newt Site (Recommended)
 
-This site type exposes resources on a remote network through a managed tunnel and websocket connection. It requires the Newt connector on the remote network. This is the easiest setup and does not require NAT configuration.
+This site type exposes resources on a remote network through a managed tunnel and websocket connection. It requires the Pangolin Site connector on the remote network. This is the easiest setup and does not require NAT configuration.
 
-Use Newt sites in most deployments. Newt is the primary connector type and supports the broadest feature set.
+Use Pangolin Sites in most deployments. This is the primary site type and supports the broadest feature set.
 
-Newt sites support:
+Pangolin Sites support:
 - Public proxied resources
 - Protocol awareness (HTTP/HTTPS, SSH, RDP, VNC)
 - Private resources (ZTNA)
@@ -44,7 +46,7 @@ Local sites do not support:
 
 ### Basic WireGuard Site
 
-This option is self-hosted only. It uses a raw WireGuard connection without Newt, so there is no websocket control channel and setup is more manual. NAT is required to reach targets on other hosts in the remote network. Without NAT, you can expose only resources on the WireGuard peer host itself.
+This option is self-hosted only. It uses a raw WireGuard connection without a Pangolin Site connector, so there is no websocket control channel and setup is more manual. NAT is required to reach targets on other hosts in the remote network. Without NAT, you can expose only resources on the WireGuard peer host itself.
 
 In general, use Basic WireGuard sites only for specific advanced use cases.
 
