@@ -1,0 +1,555 @@
+---
+title: "Deploy a Cluster"
+description: "Step-by-step walkthrough for deploying a two-node highly available Pangolin cluster"
+---
+
+<Note>
+Clustering is only available in [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+This guide walks through deploying a minimal two-node Pangolin cluster: two Pangolin nodes behind a load balancer, sharing a PostgreSQL database and a Valkey (Redis) server. Read [Understanding Clustering](/self-host/advanced/clustering/understanding-clustering) for the architecture and [Requirements](/self-host/advanced/clustering/requirements) for the hosts, ports, and DNS records you need before starting.
+
+<Card icon="github" arrow="true" cta="View reference configuration" href="https://github.com/fosrl/pangolin/tree/main/config/ha-reference">
+  The complete, working set of files used in this guide lives in the Pangolin repository at [`config/ha-reference`](https://github.com/fosrl/pangolin/tree/main/config/ha-reference). Clone it as a starting point instead of assembling files by hand.
+</Card>
+
+<Warning>
+`server.secret` in `config.yml` must be **identical on every node in the cluster**. It's used to encrypt sensitive data, including the certificates stored in PostgreSQL - if nodes have different secrets, they won't be able to read each other's data.
+</Warning>
+
+Throughout this guide, replace the following placeholders with your own values:
+
+| Placeholder | Description |
+| --- | --- |
+| `NODE1_EXTERNAL_IP` / `NODE2_EXTERNAL_IP` | Public static IP of each Pangolin node |
+| `NODE1_INTERNAL_IP` / `NODE2_INTERNAL_IP` | Internal IP each node uses to address the other |
+| `POSTGRES_INTERNAL_HOST` | Address of your shared PostgreSQL server |
+| `POSTGRES_USERNAME` / `POSTGRES_PASSWORD` | Credentials for that PostgreSQL server |
+| `REDIS_INTERNAL_HOST` | Address of your shared Redis-compatible server |
+| `CONTACT_EMAIL` | Email address used for Let's Encrypt ACME registration |
+| `SECRET` | Shared server secret - identical on every node |
+| `LOAD_BALANCER_IP` | IP address of the load balancer in front of the cluster |
+
+<Steps>
+
+<Step title="Provision the shared database">
+Stand up a PostgreSQL server and a Redis-compatible server that both nodes can reach. They don't need to run together, or even on a dedicated third host - use whatever you already run, including managed cloud offerings. The only hard requirement is that the Redis-compatible server supports **pub/sub**.
+
+For a simple self-hosted starting point:
+
+```yaml title="docker-compose.yml"
+services:
+  postgres:
+    image: postgres:17
+    container_name: postgres
+    environment:
+      POSTGRES_DB: postgres # Default database name
+      POSTGRES_USER: postgres # Default user
+      POSTGRES_PASSWORD: password # Default password (change for production!)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: always
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: always
+
+volumes:
+  postgres_data:
+```
+
+<Warning>
+Change the default PostgreSQL password before running this in production. See [Database Options](/self-host/advanced/database-options) for general PostgreSQL configuration.
+</Warning>
+</Step>
+
+<Step title="Lay out each node's config directory">
+On each of Node 1 and Node 2, create the following directory structure:
+
+```
+node/
+├── docker-compose.yml
+└── config/
+    ├── config.yml
+    ├── privateConfig.yml
+    ├── certificates/        # empty, Pangolin/Traefik populate this
+    ├── dynamic/
+    │   └── dynamic_config.yml
+    └── traefik/
+        └── traefik_config.yml
+```
+
+`config/certificates` and `config/dynamic` are shared volumes between the `pangolin` and `traefik` containers - Pangolin writes router configuration and certificates there for Traefik to read, since Traefik can only load certificates from files, not from the Pangolin API. This is `traefik.file_mode` in `config.yml`, covered below.
+</Step>
+
+<Step title="Write docker-compose.yml">
+Both nodes run the same three containers: `pangolin`, `gerbil`, and `traefik`. Gerbil owns the host networking (WireGuard, relay, DNS, resource ports), and Traefik joins its network namespace so its ports appear alongside Gerbil's.
+
+Each node's `--reachableAt` flag must point at **that node's own** internal address, and `--trusted-upstreams` lists the external IPs of every node in the cluster so Gerbil accepts proxied connections from them.
+
+<CodeGroup>
+```yaml Node 1
+name: pangolin
+services:
+  pangolin:
+    image: docker.io/fosrl/pangolin:ee-latest
+    container_name: pangolin
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./config/certificates:/var/certificates
+      - ./config/dynamic:/var/dynamic
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: "10s"
+      timeout: "10s"
+      retries: 15
+
+  gerbil:
+    image: docker.io/fosrl/gerbil:latest
+    container_name: gerbil
+    restart: unless-stopped
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --reachableAt=http://<NODE1_INTERNAL_IP>:3004
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/
+      - --trusted-upstreams=<NODE1_EXTERNAL_IP>,<NODE2_EXTERNAL_IP> # All trusted nodes in the cluster
+    volumes:
+      - ./config/:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    ports:
+      - 51820:51820/udp # wireguard
+      - 21820:21820/udp # relay
+      - 53:53/udp # DNS
+      - 443:8443 # resources
+      - 80:80 # web
+      - 3004:3004 # gerbil api
+      - 3000:3000 # Pangolin UI
+
+  traefik:
+    image: docker.io/traefik:v3.7.11
+    container_name: traefik
+    restart: unless-stopped
+    network_mode: service:gerbil # Ports appear on the gerbil service
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    volumes:
+      - ./config/traefik:/etc/traefik:ro
+      - ./config/traefik/logs:/var/log/traefik
+      - ./config/certificates:/var/certificates:ro
+      - ./config/dynamic:/var/dynamic:ro
+
+networks:
+  default:
+    driver: bridge
+    name: pangolin
+```
+
+```yaml Node 2
+name: pangolin
+services:
+  pangolin:
+    image: docker.io/fosrl/pangolin:ee-latest
+    container_name: pangolin
+    restart: unless-stopped
+    volumes:
+      - ./config:/app/config
+      - ./config/certificates:/var/certificates
+      - ./config/dynamic:/var/dynamic
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/"]
+      interval: "10s"
+      timeout: "10s"
+      retries: 15
+
+  gerbil:
+    image: docker.io/fosrl/gerbil:latest
+    container_name: gerbil
+    restart: unless-stopped
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --reachableAt=http://<NODE2_INTERNAL_IP>:3004
+      - --generateAndSaveKeyTo=/var/config/key
+      - --remoteConfig=http://pangolin:3001/api/v1/
+      - --trusted-upstreams=<NODE1_EXTERNAL_IP>,<NODE2_EXTERNAL_IP> # All trusted nodes in the cluster
+    volumes:
+      - ./config/:/var/config
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    ports:
+      - 51820:51820/udp # wireguard
+      - 21820:21820/udp # relay
+      - 53:53/udp # DNS
+      - 443:8443 # resources
+      - 80:80 # web
+      - 3004:3004 # gerbil api
+      - 3000:3000 # Pangolin UI
+
+  traefik:
+    image: docker.io/traefik:v3.7.11
+    container_name: traefik
+    restart: unless-stopped
+    network_mode: service:gerbil # Ports appear on the gerbil service
+    depends_on:
+      pangolin:
+        condition: service_healthy
+    command:
+      - --configFile=/etc/traefik/traefik_config.yml
+    volumes:
+      - ./config/traefik:/etc/traefik:ro
+      - ./config/traefik/logs:/var/log/traefik
+      - ./config/certificates:/var/certificates:ro
+      - ./config/dynamic:/var/dynamic:ro
+
+networks:
+  default:
+    driver: bridge
+    name: pangolin
+```
+</CodeGroup>
+
+<Tip>
+If Pangolin can't reach the local Gerbil at the address in `--reachableAt` (a loopback issue), override it in `privateConfig.yml` - see [Troubleshooting](#troubleshooting) below.
+</Tip>
+</Step>
+
+<Step title="Write config.yml">
+`config.yml` holds the settings that legitimately differ per node - `gerbil.base_endpoint` and `gerbil.exit_node_name` - alongside the shared PostgreSQL connection and site-type restrictions. In clustered deployments, only Newt sites are supported, so local and basic WireGuard sites are disabled.
+
+<CodeGroup>
+```yaml Node 1
+# To see all available options, please visit the docs:
+# https://docs.pangolin.net/
+
+gerbil:
+    start_port: 51820
+    base_endpoint: "<NODE1_EXTERNAL_IP>"
+    exit_node_name: "node1"
+
+app:
+    dashboard_url: "https://pangolin.example.com"
+    log_level: "info"
+
+postgres:
+    connection_string: postgresql://<POSTGRES_USERNAME>:<POSTGRES_PASSWORD>@<POSTGRES_INTERNAL_HOST>:5432/postgres
+
+traefik:
+    site_types: ["newt"] # Wireguard and local sites are not supported in clustering
+    file_mode: true # Pangolin will generate and save yaml files in a shared volume
+
+server:
+    secret: "<SECRET>" # Must be identical on every node
+    cors:
+        origins: ["https://pangolin.example.com"]
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        allowed_headers: ["X-CSRF-Token", "Content-Type"]
+        credentials: false
+    maxmind_db_path: "./config/GeoLite2-Country.mmdb" # Download and place into the config dir
+    maxmind_asn_path: "./config/GeoLite2-ASN.mmdb"
+
+flags:
+    require_email_verification: false
+    disable_signup_without_invite: true
+    disable_user_create_org: false
+    allow_raw_resources: false
+    enable_acme_cert_sync: false
+    disable_local_sites: true
+    disable_basic_wireguard_sites: true
+    disable_config_managed_domains: true
+```
+
+```yaml Node 2
+# To see all available options, please visit the docs:
+# https://docs.pangolin.net/
+
+gerbil:
+    start_port: 51820
+    base_endpoint: "<NODE2_EXTERNAL_IP>"
+    exit_node_name: "node2"
+
+app:
+    dashboard_url: "https://pangolin.example.com"
+    log_level: "info"
+
+postgres:
+    connection_string: postgresql://<POSTGRES_USERNAME>:<POSTGRES_PASSWORD>@<POSTGRES_INTERNAL_HOST>:5432/postgres
+
+traefik:
+    site_types: ["newt"] # Wireguard and local sites are not supported in clustering
+    file_mode: true # Pangolin will generate and save yaml files in a shared volume
+
+server:
+    secret: "<SECRET>" # Must be identical on every node
+    cors:
+        origins: ["https://pangolin.example.com"]
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        allowed_headers: ["X-CSRF-Token", "Content-Type"]
+        credentials: false
+    maxmind_db_path: "./config/GeoLite2-Country.mmdb" # Download and place into the config dir
+    maxmind_asn_path: "./config/GeoLite2-ASN.mmdb"
+
+flags:
+    require_email_verification: false
+    disable_signup_without_invite: true
+    disable_user_create_org: false
+    allow_raw_resources: false
+    enable_acme_cert_sync: false
+    disable_local_sites: true
+    disable_basic_wireguard_sites: true
+    disable_config_managed_domains: true
+```
+</CodeGroup>
+
+See the [full configuration reference](/self-host/advanced/config-file) for every available option.
+</Step>
+
+<Step title="Write privateConfig.yml">
+`privateConfig.yml` enables Redis-backed cluster sync and Pangolin's built-in DNS and ACME client. **Only one node** - Node 1 in this example - should have `acme.enable_acme_client` set to `true`. That node issues and renews certificates via DNS-01 challenges and stores them encrypted in PostgreSQL; every other node reads the same certificates from the database.
+
+<Warning>
+Do not enable `acme.enable_acme_client` on more than one node. Multiple nodes issuing certificates simultaneously will conflict with each other.
+</Warning>
+
+<CodeGroup>
+```yaml Node 1 (ACME client enabled)
+app:
+  region: "region1"
+  identity_provider_mode: "org"
+redis:
+  host: "<REDIS_INTERNAL_HOST>"
+  port: 6379
+flags:
+  enable_redis: true
+  use_pangolin_dns: true
+acme:
+  cert_mode: "pangolin"
+  contact_email: "<CONTACT_EMAIL>"
+  enable_acme_client: true
+dns:
+  enabled: true
+  nameserver_name: "ns.example.com"
+  cname_extension: "cname.example.com"
+  site_extension: "site.example.com" # Optional
+```
+
+```yaml Node 2 (ACME client disabled)
+app:
+  region: "region1"
+  identity_provider_mode: "org"
+redis:
+  host: "<REDIS_INTERNAL_HOST>"
+  port: 6379
+flags:
+  enable_redis: true
+  use_pangolin_dns: true
+acme:
+  cert_mode: "pangolin"
+dns:
+  enabled: true
+  nameserver_name: "ns.example.com"
+  cname_extension: "cname.example.com"
+  site_extension: "site.example.com" # Optional
+```
+</CodeGroup>
+
+See the [private configuration reference](/self-host/advanced/private-config-file) for every available option.
+</Step>
+
+<Step title="Write the Traefik configuration">
+`traefik/traefik_config.yml` and `dynamic/dynamic_config.yml` are identical on every node - copy them as-is. Traefik loads router and certificate configuration from the shared `dynamic` volume (`file_mode`) instead of Pangolin's API, and exposes a `:53/udp` DNS entry point that forwards to Pangolin's built-in DNS server.
+
+```yaml title="config/traefik/traefik_config.yml"
+providers:
+  file:
+    directory: "/var/dynamic"
+    watch: true
+
+experimental:
+  plugins:
+    badger:
+      moduleName: "github.com/fosrl/badger"
+      version: "v1.7.0"
+
+log:
+  level: "INFO"
+  format: "common"
+  maxSize: 100
+  maxBackups: 3
+  maxAge: 3
+  compress: true
+
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+    proxyProtocol: # We trust gerbil upstream
+      trustedIPs:
+        - 0.0.0.0/0
+        - ::1/128
+    transport:
+      respondingTimeouts:
+        readTimeout: "30m"
+    http:
+      encodedCharacters:
+        allowEncodedSlash: true
+        allowEncodedQuestionMark: true
+  dashboard:
+    address: ":3000"
+  dns:
+    address: ":53/udp"
+
+serversTransport:
+  insecureSkipVerify: true
+
+ping:
+  entryPoint: "web"
+```
+
+```yaml title="config/dynamic/dynamic_config.yml"
+http:
+  middlewares:
+    badger:
+      plugin:
+        badger:
+          disableForwardAuth: true
+
+  routers:
+    # Next.js router (handles everything except API and WebSocket paths)
+    next-router:
+      rule: "!PathPrefix(`/api/v1`)"
+      service: next-service
+      entryPoints:
+        - dashboard
+      middlewares:
+        - badger
+
+    # API router (handles /api/v1 paths)
+    api-router:
+      rule: "PathPrefix(`/api/v1`)"
+      service: api-service
+      entryPoints:
+        - dashboard
+      middlewares:
+        - badger
+
+    # WebSocket router
+    ws-router:
+      rule: "PathPrefix(`/`)"
+      service: api-service
+      entryPoints:
+        - dashboard
+      middlewares:
+        - badger
+
+  services:
+    next-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3002"  # Next.js server
+
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://pangolin:3000"  # API/WebSocket server
+
+tcp:
+  serversTransports:
+    pp-transport-v1:
+      proxyProtocol:
+        version: 1
+    pp-transport-v2:
+      proxyProtocol:
+        version: 2
+
+udp:
+  routers:
+    dns-router:
+      entryPoints:
+        - dns
+      service: dns-service
+
+  services:
+    dns-service:
+      loadBalancer:
+        servers:
+          - address: "pangolin:53"
+```
+
+This is also where you place the MaxMind databases referenced in `config.yml` - download `GeoLite2-Country.mmdb` and `GeoLite2-ASN.mmdb` into each node's `config/` directory. See [Enable Geo-location](/self-host/advanced/enable-geolocation) and [Enable ASN Lookup](/self-host/advanced/enable-asn-lookup).
+</Step>
+
+<Step title="Point your load balancer at both nodes">
+Configure your load balancer - a cloud load balancer or a self-hosted one such as Traefik - to:
+
+- Route TCP `3000` to both nodes for your Pangolin domain. For example `pangolin.example.com` should resolve to the load balancer, which routes to either node's `:3000` port.
+- Route UDP `53` to both nodes for DNS. For example `ns.example.com` should resolve to the load balancer, which routes to either node's `:53/udp` port.
+- Health-check the `:80/ping` endpoint on each node, and stop routing to a node that fails it. `:3000/api/v1/` can also be monitored for the Pangolin UI and API
+
+This is what makes the cluster appear as a single, consistent domain to users, and what drives failover when a node goes down.
+</Step>
+
+<Step title="Start the cluster">
+Bring the database up first, then start **one** Pangolin node - it initializes the database and prints an init token to its logs.
+
+```bash
+# On the database host
+docker compose up -d
+
+# On Node 1
+docker compose up -d
+docker compose logs -f pangolin
+```
+
+Use the init token from the logs to visit the dashboard and create the first user. Once Node 1 is healthy and you've logged in, bring up Node 2:
+
+```bash
+# On Node 2
+docker compose up -d
+```
+
+Repeat the Node 2 steps for any additional nodes, incrementing the `exit_node_name` and IP placeholders for each.
+</Step>
+
+<Step title="Verify the cluster">
+- Confirm both nodes report healthy: `curl http://<NODE1_EXTERNAL_IP>/ping` and the same for Node 2
+- Confirm DNS delegation resolves: `dig @ns.example.com ns.example.com`
+- Confirm the dashboard is reachable at your `dashboard_url` through the load balancer
+- Confirm you can create a site and it will report connected
+- Create a resource, ensure the certificate generates, and is accessible
+</Step>
+
+</Steps>
+
+## Troubleshooting
+
+### Gerbil loopback addressing
+
+If Pangolin can't reach the local Gerbil instance at the IP configured in `--reachableAt`, force it to address the Docker container directly instead:
+
+```yaml title="privateConfig.yml"
+gerbil:
+    local_exit_node_reachable_at: "http://gerbil:3004"
+```
+
+## Reference Configuration
+
+<Card icon="github" arrow="true" cta="View reference configuration" href="https://github.com/fosrl/pangolin/tree/main/config/ha-reference">
+  A complete, working two-node reference configuration on GitHub - including both nodes' Docker Compose and config files - that you can clone and adapt: [github.com/fosrl/pangolin/tree/main/config/ha-reference](https://github.com/fosrl/pangolin/tree/main/config/ha-reference)
+</Card>

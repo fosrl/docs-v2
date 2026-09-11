@@ -34,7 +34,7 @@ You can run the control plane yourself ([self-hosted](/self-host/quick-install))
 
 A **node** is the networking edge of your Pangolin deployment. It terminates inbound traffic from the public internet, manages WireGuard tunnels, and relays client traffic when a direct peer path is unavailable.
 
-On a self-hosted deployment, your Pangolin server runs as a single node by default. [Enterprise clustering](/self-host/advanced/clustering) spreads multiple nodes behind a load balancer with shared database state. On [Pangolin Cloud](/manage/remote-node/understanding-nodes), you can add **remote nodes**: infrastructure you operate that still receives configuration from the cloud control plane.
+On a self-hosted deployment, your Pangolin server runs as a single node by default. [Enterprise clustering](/self-host/advanced/clustering/understanding-clustering) spreads multiple nodes behind a load balancer with shared database state. On [Pangolin Cloud](/manage/remote-node/understanding-nodes), you can add **remote nodes**: infrastructure you operate that still receives configuration from the cloud control plane.
 
 Each node runs several cooperating processes:
 
@@ -51,7 +51,7 @@ The control plane writes certificates, Traefik router definitions, and WireGuard
   Required listener ports, firewall rules, and DNS records for a node.
 </Card>
 
-<Card title="Clustering for high availability" icon="server" href="/self-host/advanced/clustering">
+<Card title="Clustering for high availability" icon="server" href="/self-host/advanced/clustering/understanding-clustering">
   Multi-node Enterprise deployments with shared state and failover.
 </Card>
 

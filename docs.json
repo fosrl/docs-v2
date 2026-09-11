@@ -318,7 +318,15 @@
                                     "self-host/advanced/observability",
                                     "self-host/advanced/enable-geolocation",
                                     "self-host/advanced/enable-asn-lookup",
-                                    "self-host/advanced/clustering",
+                                    {
+                                        "group": "Clustering",
+                                        "icon": "server",
+                                        "pages": [
+                                            "self-host/advanced/clustering/understanding-clustering",
+                                            "self-host/advanced/clustering/requirements",
+                                            "self-host/advanced/clustering/deploy-a-cluster"
+                                        ]
+                                    },
                                     "self-host/advanced/traefik-log-rotation",
                                     "self-host/telemetry"
                                 ]
@@ -504,6 +512,11 @@
         ]
     },
     "redirects": [
+        {
+            "source": "/self-host/advanced/clustering",
+            "destination": "/self-host/advanced/clustering/understanding-clustering",
+            "permanent": true
+        },
         {
             "source": "/self-host/advanced/enable-geoblocking",
             "destination": "/self-host/advanced/enable-geolocation"
