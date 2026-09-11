@@ -474,15 +474,15 @@ DOCKER_SOCKET=/var/run/docker.sock
 ```yaml
 services:
   newt:
-    image: fosrl/newt
-    container_name: newt
+    image: fosrl/pangolin-cli
+    container_name: pangolin-site
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - PANGOLIN_ENDPOINT=https://app.pangolin.net
-      - NEWT_ID=h1rbsgku89wf9z3
-      - NEWT_SECRET=z7g54mbcwkglpx1aau9gb8mzcccoof2fdbs97keoakg2pp5z
+      - SITE_ID=h1rbsgku89wf9z3
+      - SITE_SECRET=z7g54mbcwkglpx1aau9gb8mzcccoof2fdbs97keoakg2pp5z
       - DOCKER_SOCKET=/var/run/docker.sock
 
   nginx1:
