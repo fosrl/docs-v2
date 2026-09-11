@@ -11,9 +11,6 @@ To get started, create a basic configuration file with the essential settings:
 Minimal Pangolin configuration:
 
 ```yaml title="config.yml"
-# To see all available options, please visit the docs:
-# https://docs.pangolin.net/
-
 gerbil:
     start_port: 51820
     base_endpoint: "pangolin.example.com" # REPLACE WITH YOUR DOMAIN
@@ -1190,5 +1187,6 @@ Some configuration values can be set using environment variables for enhanced se
 | PostgreSQL Connection String | `POSTGRES_CONNECTION_STRING` | `postgres.connection_string` |
 | PostgreSQL Replica Connection Strings | `POSTGRES_REPLICA_CONNECTION_STRINGS` | `postgres.replicas` (comma-separated list of connection strings) |
 | PostgreSQL Logs Connection String | `POSTGRES_LOGS_CONNECTION_STRING` | `postgres_logs.connection_string` |
+| PostgreSQL Logs Replica Connection Strings | `POSTGRES_LOGS_REPLICA_CONNECTION_STRINGS` | `postgres_logs.replicas` (comma-separated list of connection strings) |
 | Enable SQLite WAL Mode | `ENABLE_SQLITE_WAL_MODE` | *(SQLite only)* Set to `true` to enable [WAL mode](https://www.sqlite.org/wal.html) for improved SQLite concurrency |
 | Enable AI Gateway Client IP Header | `ENABLE_AI_GATEWAY_CLIENT_IP_HEADER` | `server.enable_ai_gateway_client_ip_header` |

@@ -7,7 +7,7 @@ description: "Step-by-step walkthrough for deploying a two-node highly available
 Clustering is only available in [Enterprise Edition](/self-host/enterprise-edition).
 </Note>
 
-This guide walks through deploying a minimal two-node Pangolin cluster: two Pangolin nodes behind a load balancer, sharing a PostgreSQL database and a Valkey (Redis) server. Read [Understanding Clustering](/self-host/advanced/clustering/understanding-clustering) for the architecture and [Requirements](/self-host/advanced/clustering/requirements) for the hosts, ports, and DNS records you need before starting.
+This guide walks through deploying a minimal two-node Pangolin cluster: two Pangolin nodes behind a load balancer, sharing a PostgreSQL database and a Valkey (Redis) server. Read [Understanding Clustering](/self-host/clustering/understanding-clustering) for the architecture and [Requirements](/self-host/clustering/requirements) for the hosts, ports, and DNS records you need before starting.
 
 <Card icon="github" arrow="true" cta="View reference configuration" href="https://github.com/fosrl/pangolin/tree/main/config/ha-reference">
   The complete, working set of files used in this guide lives in the Pangolin repository at [`config/ha-reference`](https://github.com/fosrl/pangolin/tree/main/config/ha-reference). Clone it as a starting point instead of assembling files by hand.
@@ -31,7 +31,7 @@ Throughout this guide, replace the following placeholders with your own values:
 | `LOAD_BALANCER_IP` | IP address of the load balancer in front of the cluster |
 | `pangolin.example.com` | Your dashboard domain - DNS points at the load balancer, not at either node |
 
-You need a domain for the Pangolin UI and API (`pangolin.example.com` in this guide), pointed at your load balancer. **The load balancer is responsible for TLS on this domain** - terminate HTTPS there and forward plain HTTP to the nodes' dashboard port. The nodes' built-in ACME client only issues certificates for resource domains under the delegated nameserver zone, not for the dashboard domain itself. See [Requirements](/self-host/advanced/clustering/requirements#dashboard-domain).
+You need a domain for the Pangolin UI and API (`pangolin.example.com` in this guide), pointed at your load balancer. **The load balancer is responsible for TLS on this domain** - terminate HTTPS there and forward plain HTTP to the nodes' dashboard port. The nodes' built-in ACME client only issues certificates for resource domains under the delegated nameserver zone, not for the dashboard domain itself. See [Requirements](/self-host/clustering/requirements#dashboard-domain).
 
 <Steps>
 
@@ -239,9 +239,6 @@ Set `app.dashboard_url` and `server.cors.origins` to your dashboard domain (the 
 
 <CodeGroup>
 ```yaml Node 1
-# To see all available options, please visit the docs:
-# https://docs.pangolin.net/
-
 gerbil:
     start_port: 51820
     base_endpoint: "<NODE1_EXTERNAL_IP>"
@@ -280,9 +277,6 @@ flags:
 ```
 
 ```yaml Node 2
-# To see all available options, please visit the docs:
-# https://docs.pangolin.net/
-
 gerbil:
     start_port: 51820
     base_endpoint: "<NODE2_EXTERNAL_IP>"

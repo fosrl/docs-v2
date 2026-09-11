@@ -512,8 +512,8 @@
     },
     "redirects": [
         {
-            "source": "/self-host/advanced/clustering",
-            "destination": "/self-host/advanced/clustering/understanding-clustering"
+            "source": "/self-host/clustering",
+            "destination": "/self-host/clustering/understanding-clustering"
         },
         {
             "source": "/self-host/advanced/enable-geoblocking",

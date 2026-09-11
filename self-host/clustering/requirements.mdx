@@ -7,13 +7,13 @@ description: "Hosts, networking, and DNS delegation needed before deploying a Pa
 Clustering is only available in [Enterprise Edition](/self-host/enterprise-edition).
 </Note>
 
-Review these requirements before you start deploying. They cover the hosts you need, the ports that must be open, and the DNS records you need to delegate ahead of time. For background on why each piece exists, see [Understanding Clustering](/self-host/advanced/clustering/understanding-clustering).
+Review these requirements before you start deploying. They cover the hosts you need, the ports that must be open, and the DNS records you need to delegate ahead of time. For background on why each piece exists, see [Understanding Clustering](/self-host/clustering/understanding-clustering).
 
 ## Hosts
 
 You need a minimum of **three hosts**:
 
-- **Node 1** -- runs Pangolin, Gerbil, and Traefik
+- **Node 1** - runs Pangolin, Gerbil, and Traefik
 - **Node 2** - runs Pangolin, Gerbil, and Traefik
 - **A database host** - runs PostgreSQL and a Redis-compatible server (Valkey, Redis, etc.)
 
@@ -23,13 +23,13 @@ The database host doesn't need to be a dedicated instance. You can run PostgreSQ
 
 You can add more Pangolin nodes beyond two for additional capacity or regional distribution. The two-node topology in this guide is the minimum for high availability.
 
-For sizing information, see [Choosing a VPS](/self-host/choosing-a-vps) - the same sizing from single pangolin node deployments applies to each node in a cluster.
+For sizing information, see [Choosing a VPS](/self-host/choosing-a-vps) - the same sizing from single Pangolin node deployments applies to each node in a cluster.
 
 ## Networking
 
 - **Node 1 and Node 2 each need a public, static IP address**, reachable from the internet
 - **Node 1 and Node 2 need to be able to address each other** over an internal network
-- **You must provide your own HA load balancer** in front of both nodes. It needs to route to both nodes and health-check the `/ping` endpoint on each, removing any node that fails the check
+- **You must provide your own HA load balancer** in front of both nodes. It needs to terminate HTTPS for the Pangolin UI and accept UDP port 53 for DNS and route to both nodes
 
 ### Dashboard Domain
 
@@ -37,7 +37,7 @@ You also need a domain for the Pangolin UI and API itself (e.g. `pangolin.exampl
 
 Point this domain's DNS record at your **load balancer**, not at either node directly. The load balancer is also responsible for obtaining and serving the TLS certificate for this domain - the nodes' built-in ACME client only issues certificates for resource domains under the delegated nameserver zone, not for the dashboard domain. Terminate TLS at the load balancer and forward plain HTTP to the nodes.
 
-You must also set this domain as `app.dashboard_url` and add it to `server.cors.origins` in every node's `config.yml`. See [Deploy a Cluster](/self-host/advanced/clustering/deploy-a-cluster).
+You must also set this domain as `app.dashboard_url` and add it to `server.cors.origins` in every node's `config.yml`. See [Deploy a Cluster](/self-host/clustering/deploy-a-cluster).
 
 ### Required Ports
 
@@ -89,7 +89,7 @@ Pangolin's built-in DNS server needs to be delegated authority for a nameserver 
 </Step>
 </Steps>
 
-These three hostnames map directly to the `dns` section of `privateConfig.yml`, covered in [Deploy a Cluster](/self-host/advanced/clustering/deploy-a-cluster):
+These three hostnames map directly to the `dns` section of `privateConfig.yml`, covered in [Deploy a Cluster](/self-host/clustering/deploy-a-cluster):
 
 ```yaml
 dns:
@@ -105,6 +105,6 @@ dns:
 - **GeoIP databases** - download and keep up to date the MaxMind `GeoLite2-Country.mmdb` and `GeoLite2-ASN.mmdb` databases, placed in each node's `config/` directory. See [Enable Geo-location](/self-host/advanced/enable-geolocation) and [Enable ASN Lookup](/self-host/advanced/enable-asn-lookup)
 - **Site type support** - in clustered deployments, only Newt sites are supported. Local sites and basic WireGuard sites are not supported
 
-<Card title="Deploy a Cluster" href="/self-host/advanced/clustering/deploy-a-cluster" icon="server">
+<Card title="Deploy a Cluster" href="/self-host/clustering/deploy-a-cluster" icon="server">
   Once these requirements are met, follow the full deployment walkthrough.
 </Card>
