@@ -15,44 +15,12 @@ In a clustered configuration, multiple Pangolin instances operate together, shar
 
 A Pangolin cluster consists of several coordinated components that work together to provide high availability and seamless failover.
 
-```mermaid
-flowchart TB
-    Users(["Users / Browsers"])
-    Sites(["Site Connectors (Newt)"])
-
-    LB["Load Balancer<br/>(your own)<br/>TCP 80 · 443 · 3000 · UDP 53"]
-
-    subgraph Node1["Node 1"]
-        direction TB
-        G1["Gerbil<br/>WireGuard + SNI proxy"]
-        T1["Traefik<br/>TLS termination"]
-        P1["Pangolin<br/>UI · API · DNS · ACME client"]
-        G1 --- T1 --- P1
-    end
-
-    subgraph Node2["Node 2"]
-        direction TB
-        G2["Gerbil<br/>WireGuard + SNI proxy"]
-        T2["Traefik<br/>TLS termination"]
-        P2["Pangolin<br/>UI · API · DNS"]
-        G2 --- T2 --- P2
-    end
-
-    PG[("PostgreSQL<br/>shared state + certs")]
-    RD[("Valkey / Redis<br/>pub/sub + sessions")]
-
-    Users --> LB
-    LB --> G1
-    LB --> G2
-    Sites -. WireGuard tunnel .-> G1
-    Sites -. WireGuard tunnel .-> G2
-    G1 <-. cross-node request routing .-> G2
-
-    P1 <--> PG
-    P2 <--> PG
-    P1 <--> RD
-    P2 <--> RD
-```
+<Frame>
+    <img
+        src="/images/ha-deployment-diagram.png"
+        alt="Diagram showing the cluster deployment"
+    />
+</Frame>
 
 ### Pangolin Instances
 

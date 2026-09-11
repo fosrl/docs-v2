@@ -303,6 +303,14 @@
                                     "self-host/manual/podman-quadlets"
                                 ]
                             },
+                            {
+                                "group": "Clustering",
+                                "pages": [
+                                    "self-host/clustering/understanding-clustering",
+                                    "self-host/clustering/requirements",
+                                    "self-host/clustering/deploy-a-cluster"
+                                ]
+                            },
                             "self-host/dns-and-networking",
                             {
                                 "group": "Advanced Configuration",
@@ -318,15 +326,6 @@
                                     "self-host/advanced/observability",
                                     "self-host/advanced/enable-geolocation",
                                     "self-host/advanced/enable-asn-lookup",
-                                    {
-                                        "group": "Clustering",
-                                        "icon": "server",
-                                        "pages": [
-                                            "self-host/advanced/clustering/understanding-clustering",
-                                            "self-host/advanced/clustering/requirements",
-                                            "self-host/advanced/clustering/deploy-a-cluster"
-                                        ]
-                                    },
                                     "self-host/advanced/traefik-log-rotation",
                                     "self-host/telemetry"
                                 ]
@@ -514,8 +513,7 @@
     "redirects": [
         {
             "source": "/self-host/advanced/clustering",
-            "destination": "/self-host/advanced/clustering/understanding-clustering",
-            "permanent": true
+            "destination": "/self-host/advanced/clustering/understanding-clustering"
         },
         {
             "source": "/self-host/advanced/enable-geoblocking",

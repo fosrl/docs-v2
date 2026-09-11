@@ -6,7 +6,7 @@ description: "Deploy your own remote Pangolin node in under 10 minutes with our 
 
 Before you begin, ensure you have:
 
-- **Pangolin Cloud** account. You can [create a free account here](https://app.pangolin.net/auth/signup). No subscription required.
+- **Pangolin Cloud** account. You can [create a free account here](https://app.pangolin.net/auth/signup) OR a [clustered self-hosted Pangolin Enterprise deployment](/self-host/clustering/understanding-clustering).
 - **Linux server** with root access and public IP address.
 - **Open ports on firewall** for 80 (TCP), 443 (TCP), 51820 (UDP), and 21820 (UDP for clients).
 
@@ -43,6 +43,14 @@ Before installing Pangolin, ensure you've opened the required port on your firew
   ```
   
   The installer places all files in the current directory. Move the installer to your desired installation directory before running it.
+
+  <Note>
+    If you're not using Pangolin Cloud (`app.pangolin.net`) and instead have a self-hosted Pangolin Enterprise deployment, pass its URL with the `--pangolin-endpoint` flag so the installer requests node credentials from your instance instead:
+
+    ```bash
+    sudo ./installer --pangolin-endpoint https://pangolin.example.com
+    ```
+  </Note>
 </Step>
 
 <Step title="Do you already have credentials from the dashboard?">
@@ -64,7 +72,7 @@ If you don't have them yet you can just select no when asked and we will create 
     </Note>
 
     <Warning>
-      If you choose to use a domain keep in mind this just resolves your node on the internet while the actual subdomains for resources will be managed in the cloud.
+      If you choose to use a domain keep in mind this just resolves your node on the internet while the actual subdomains for resources will be managed in the server.
     </Warning>
 
 </Step>
@@ -79,7 +87,7 @@ Your managed credentials have been obtained successfully.
         Secret: n7sd18twfko0q0vrb7wyclqzbvvnx1fqt7ezv8xewhdb9s7d
 ```
 
-Go to the [Pangolin dashboard](https://app.pangolin.net/) and log in. Navigate to the "Self-hosted" section and add a new node. Select the adopt method. Use this ID and secret to register your node.
+Go to the [Pangolin dashboard](https://app.pangolin.net/) (or your own panel's URL if you passed `--pangolin-endpoint`) and log in. Navigate to the "Self-hosted" section and add a new node. Select the adopt method. Use this ID and secret to register your node.
 
 <Tip>
 More than one account can use the same node credentials. This is useful for teams.
@@ -97,6 +105,4 @@ Once installation completes successfully, you'll see:
 Installation complete!
 ```
 
-Navigate to the [Pangolin dashboard](https://app.pangolin.net/) and create sites, resources, and targets for your remote node.
-
-{/* ## Video Walkthrough */}
+Navigate to the [Pangolin dashboard](https://app.pangolin.net/) (or your own dashboard if self-hosted) and create sites, resources, and targets for your remote node.

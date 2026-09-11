@@ -35,11 +35,9 @@ For sizing information, see [Choosing a VPS](/self-host/choosing-a-vps) - the sa
 
 You also need a domain for the Pangolin UI and API itself (e.g. `pangolin.example.com`) - this is separate from the nameserver domain above, which is the nameserver to resolve resource DNS.
 
-<Warning>
 Point this domain's DNS record at your **load balancer**, not at either node directly. The load balancer is also responsible for obtaining and serving the TLS certificate for this domain - the nodes' built-in ACME client only issues certificates for resource domains under the delegated nameserver zone, not for the dashboard domain. Terminate TLS at the load balancer and forward plain HTTP to the nodes.
 
 You must also set this domain as `app.dashboard_url` and add it to `server.cors.origins` in every node's `config.yml`. See [Deploy a Cluster](/self-host/advanced/clustering/deploy-a-cluster).
-</Warning>
 
 ### Required Ports
 

@@ -1,9 +1,10 @@
 ---
-title: "Site to Cloud"
-description: "Turn a remote node into a network concentrator that routes traffic between a cloud VPC and your Pangolin sites"
+title: "Site to Cloud Backhaul"
+description: "Turn a remote node into a network concentrator that routes traffic between a cloud VPC and your Pangolin sites for edge to cloud backhaul"
 ---
+
 <Note>
-	Site to cloud is an advanced [remote node](/manage/remote-node/understanding-nodes) configuration available in [Pangolin Cloud](https://app.pangolin.net/auth/signup).
+	Site to cloud is an advanced [remote node](/manage/remote-node/understanding-nodes) configuration available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
 </Note>
 
 A standard remote node terminates WireGuard tunnels and proxies HTTP(S) traffic to your resources. A **backhaul** node goes a step further: it acts as an IP router between an entire network, such as a cloud VPC, and your Pangolin sites. Instead of just forwarding individual resource connections, the node forwards whole subnets, letting hosts on either side reach each other without needing to install site and client on every machine.
