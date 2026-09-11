@@ -97,3 +97,47 @@ This example is not necessarily production-ready. Adjust the configuration accor
 Do not use `latest` tags in production. Use specific version tags for stability.
 </Note>
 
+### Read Replicas
+
+Pangolin can distribute read queries across one or more PostgreSQL read replicas while always sending writes to the primary database. This is useful for scaling read-heavy workloads.
+
+<Note>
+Replicas are chosen at random for each read query (not round-robin). Writes (`insert`, `update`, `delete`) always go to the primary database. A small number of time-sensitive reads (where the app must see its own recent writes) are also routed directly to the primary database regardless of replicas being configured.
+</Note>
+
+#### Using the Configuration File
+
+Add a `replicas` array under `postgres` in your `config.yml`, with one entry per replica:
+
+```yaml title="config.yml"
+postgres:
+  connection_string: postgresql://<user>:<password>@<primary-host>:<port>/<database>
+  replicas:
+    - connection_string: postgresql://<user>:<password>@<replica-host-1>:<port>/<database>
+    - connection_string: postgresql://<user>:<password>@<replica-host-2>:<port>/<database>
+```
+
+#### Using Environment Variables
+
+You can instead provide replica connection strings with the `POSTGRES_REPLICA_CONNECTION_STRINGS` environment variable, as a comma-separated list. This must be used together with `POSTGRES_CONNECTION_STRING` for the primary database — the two env vars replace the entire `postgres.connection_string` / `postgres.replicas` config as a unit.
+
+```bash title=".env"
+POSTGRES_CONNECTION_STRING=postgresql://<user>:<password>@<primary-host>:<port>/<database>
+POSTGRES_REPLICA_CONNECTION_STRINGS=postgresql://<user>:<password>@<replica-host-1>:<port>/<database>,postgresql://<user>:<password>@<replica-host-2>:<port>/<database>
+```
+
+```yaml title="docker-compose.yml"
+services:
+  pangolin:
+    image: fosrl/pangolin:postgresql-latest # Don't use latest in production
+    environment:
+      POSTGRES_CONNECTION_STRING: postgresql://<user>:<password>@<primary-host>:<port>/<database>
+      POSTGRES_REPLICA_CONNECTION_STRINGS: "postgresql://<user>:<password>@<replica-host-1>:<port>/<database>,postgresql://<user>:<password>@<replica-host-2>:<port>/<database>"
+```
+
+<Note>
+The same pattern applies to the optional dedicated logs database: `postgres_logs.replicas` in the config file, or the `POSTGRES_LOGS_REPLICA_CONNECTION_STRINGS` environment variable (comma-separated) alongside `POSTGRES_LOGS_CONNECTION_STRING`.
+</Note>
+
+See the [`postgres.replicas` reference](/self-host/advanced/config-file#database-configuration) for the full config schema, and the [Environment Variables reference](/self-host/advanced/config-file#environment-variables) for all supported variables.
+
