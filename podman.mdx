@@ -1,0 +1,217 @@
+---
+title: "Podman Rootless"
+description: "Deploy Pangolin manually using Podman without the automated installer"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+<Note>
+This is a community guide and is not officially supported. If you have any issues, please reach out to the [author](https://github.com/stulle123).
+</Note>
+
+This guide walks you through setting up Pangolin manually using Podman without the automated installer.
+
+This guide assumes you already have a Linux server with Podman installed. If you don't, please refer to the [official Podman documentation](https://podman.io/docs/installation) for installation instructions.
+
+## Prerequisites
+
+Check out the [quick install guide](/self-host/quick-install) for more info regarding what is needed before you install Pangolin.
+
+This setup was tested on Ubuntu 24.04 with Podman 5.8.2.
+
+<Note>
+Make sure to use at least Podman 5.0 which uses [pasta](https://passt.top/passt/about/#pasta) for rootless networking.
+</Note>
+
+## Limitations
+
+Be aware of the [limitation when running Podman in rootless mode](https://github.com/containers/podman/blob/main/rootless.md).
+
+Find more tips and tricks in [Podman's rootless guide](https://github.com/containers/podman/blob/main/docs/tutorials/rootless_tutorial.md) if you run into troubles.
+
+## Create an Unprivileged User
+
+```bash
+sudo useradd -m -s /usr/sbin/nologin my-user
+# This keeps Podman up and running when 'my-user' logs out
+sudo loginctl enable-linger my-user
+sudo apt install -y systemd-container
+sudo machinectl shell my-user@ /bin/bash
+curl -fsSL https://static.pangolin.net/get-installer.sh | bash
+# Run installer script and point installation path to /home/my-user/pangolin
+# Select "No" when asked "Would you like to install and start the containers?"
+./installer
+mkdir -p /home/my-user/pangolin/config/traefik/logs
+mkdir -p /home/my-user/.config/containers/systemd
+```
+
+The file structure should look like this (`ls -l /home/my-user/pangolin`):
+
+```bash
+.
+├── GeoLite2-Country_20260519/
+├── config/
+│   ├── GeoLite2-Country.mmdb
+│   ├── config.yml
+│   ├── db/
+│   │   └── db.sqlite
+│   ├── key
+│   ├── letsencrypt/
+│   │   └── acme.json
+│   ├── logs/
+│   └── traefik/
+│       ├── logs/
+│       ├── traefik_config.yml
+│       └── dynamic_config.yml
+└── docker-compose.yml
+```
+
+## Create Podman Quadlet Pack
+
+<Tip>
+For all available options please look up the [official Podman Quadlet documentation](https://docs.podman.io/en/latest/markdown/podman-systemd.unit.5.html).
+</Tip>
+
+Put the following Quadlet files into the `/home/my-user/.config/containers/systemd/` folder:
+
+#### pangolin.pod
+
+```ini
+[Pod]
+PodName=pangolin
+PublishPort=51820:51820/udp
+PublishPort=21820:21820/udp
+PublishPort=443:443
+PublishPort=80:80
+```
+
+#### pangolin.container
+
+```ini
+[Unit]
+Description=Pangolin
+
+[Container]
+Pod=pangolin.pod
+ContainerName=pangolin
+Image=docker.io/fosrl/pangolin:latest
+Volume=%h/pangolin/config:/app/config
+Volume=pangolin-data:/var/certificates
+Volume=pangolin-data:/var/dynamic
+Notify=healthy
+HealthCmd="/usr/bin/curl -f http://localhost:3001/api/v1/"
+HealthInterval=3s
+HealthRetries=15
+HealthTimeout=15s
+AutoUpdate=registry
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+#### gerbil.container
+
+```ini
+[Unit]
+Description=Gerbil
+After=pangolin.service
+Requires=pangolin.service
+
+[Container]
+Pod=pangolin.pod
+ContainerName=gerbil
+AddCapability=NET_ADMIN SYS_MODULE
+Image=docker.io/fosrl/gerbil:latest
+Volume=%h/pangolin/config:/var/config
+Exec='--reachableAt=http://gerbil:3003' \
+     '--generateAndSaveKeyTo=/var/config/key' \
+     '--remoteConfig=http://pangolin:3001/api/v1/'
+AutoUpdate=registry
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+#### traefik.container
+
+```ini
+[Unit]
+Description=Traefik
+After=pangolin.service
+Requires=pangolin.service
+
+[Container]
+Pod=pangolin.pod
+AutoUpdate=registry
+ContainerName=traefik
+Exec='--configFile=/etc/traefik/traefik_config.yml'
+Image=docker.io/traefik:latest
+Volume=%h/pangolin/config/traefik:/etc/traefik:ro
+Volume=%h/pangolin/config/letsencrypt:/letsencrypt
+Volume=%h/pangolin/config/traefik/logs:/var/log/traefik
+Volume=pangolin-data:/var/certificates
+Volume=pangolin-data:/var/dynamic
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
+```
+
+Next, check for any syntax errors with:
+
+```bash
+/usr/libexec/podman/quadlet -dryrun -user
+```
+
+Now you need to inform systemd about the new unit files:
+
+```bash
+systemctl --user daemon-reload
+```
+
+## Check Permissions
+
+Check that the following files are only readable and writable by `my-user`. Otherwise run a `chmod 600` on all of them.
+
+```bash
+/home/my-user/pangolin/config/letsencrypt/acme.json
+/home/my-user/pangolin/config/key
+/home/my-user/pangolin/config/db/db.sqlite
+```
+
+## Start the Stack
+
+Start your stack and check the status:
+
+```bash
+systemctl --user start pangolin-pod.service
+systemctl --user status pangolin-pod.service
+```
+
+Also run `podman ps` to see all four containers up and running.
+
+Grab the setup token:
+
+```bash
+podman logs pangolin
+```
+
+Finally, access your dashboard by going to `https://<your-dashboard-domain>/auth/initial-setup`.
+
+## Update Containers Manually
+
+Run `podman auto-update` manually which pulls the latest images available:
+
+```bash
+podman auto-update
+```
