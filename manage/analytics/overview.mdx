@@ -1,0 +1,43 @@
+---
+title: "Analytics"
+description: "Use request analytics to understand traffic volume, blocked requests, and geographic distribution"
+---
+
+import PangolinCloudTocCta from "/snippets/pangolin-cloud-toc-cta.mdx";
+
+<PangolinCloudTocCta />
+
+Analytics gives you a high-level view of request traffic across your Pangolin resources. Use it to spot traffic changes, review what Pangolin is blocking, and identify where requests are coming from before drilling into logs.
+
+## What It Shows
+
+- Total requests for the selected time window
+- Requests blocked by Pangolin, including percentage
+- Daily request volume split between allowed and blocked traffic
+- Country-based traffic distribution
+
+## Filters
+
+Filter the page by:
+
+- Start time
+- End time
+- Resource
+
+## When To Use It
+
+- Check for spikes or drops in request volume
+- See whether a rule change is blocking more traffic than expected
+- Review which countries are generating traffic to a resource
+- Decide when you need to pivot into request logs for more detail
+
+<Warning>
+Country analytics depends on GeoIP data. If GeoIP is not configured, geo location data will not appear in the country views.
+</Warning>
+
+## Related Documentation
+
+- [Request Logs](/manage/analytics/request)
+- [Access Logs](/manage/analytics/access)
+- [Action Logs](/manage/analytics/action)
+- [Rules](/manage/access-control/rules)
