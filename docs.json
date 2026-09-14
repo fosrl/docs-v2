@@ -2,7 +2,7 @@
     "$schema": "https://mintlify.com/docs.json",
     "theme": "mint",
     "name": "Pangolin Docs",
-    "description": "Zero trust access to all your infrastructure, self-hosted applications, and SaaS tools. Easy to deploy and scale. Better than your existing VPN.",
+    "description": "Modern networking and security platform providing secure access and connectivity to apps, infrastructure, and AI workloads. Connect and protect your users.",
     "colors": {
         "primary": "#202020",
         "light": "#202020",
@@ -399,7 +399,7 @@
         "strict": true
     },
     "banner": {
-        "content": "**AI Gateway** is now available. Connect with the Pangolin client to eliminate AI provider API keys, and tunnel to self-hosted models. [Get started](/manage/ai/overview)",
+        "content": "**AI Gateway** is now available. Identity-aware access to any AI provider, eliminate API keys, and tunnel to self-hosted models. [Get started](/manage/ai/overview)",
         "dismissible": true
     },
     "logo": {
