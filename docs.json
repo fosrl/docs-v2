@@ -422,7 +422,6 @@
     },
     "footer": {
         "socials": {
-            "slack": "https://pangolin.net/slack",
             "github": "https://github.com/fosrl/pangolin",
             "linkedin": "https://linkedin.com/company/pangolin-net",
             "youtube": "https://youtube.com/@pangolin-net"
@@ -453,10 +452,6 @@
                         "href": "https://docs.pangolin.net/careers/join-us"
                     },
                     {
-                        "label": "Partners",
-                        "href": "https://docs.pangolin.net/partners"
-                    },
-                    {
                         "label": "Contact",
                         "href": "mailto:contact@pangolin.net"
                     },
@@ -480,10 +475,6 @@
                     {
                         "label": "Terms of Service",
                         "href": "https://pangolin.net/tos"
-                    },
-                    {
-                        "label": "Commercial License",
-                        "href": "https://pangolin.net/fcl"
                     }
                 ]
             }
