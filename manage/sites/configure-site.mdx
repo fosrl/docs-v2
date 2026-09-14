@@ -213,7 +213,7 @@ Almost every setting below can also be set via an environment variable (**Env va
 </ResponseField>
 
 <ResponseField name="health-file" type="string">
-  Check if connection to WireGuard server (Pangolin) is ok. Creates a file if ok, removes it if not ok. Can be used with Docker healthcheck to restart Newt.
+  Check if connection to WireGuard server (Pangolin) is ok. Creates a file if ok, removes it if not ok. Can be used with Docker healthcheck to restart the site.
 
   **Example**: `/tmp/healthy`
 
@@ -233,7 +233,7 @@ Almost every setting below can also be set via an environment variable (**Env va
 </ResponseField>
 
 <ResponseField name="blueprint-file" type="string">
-  Path to a blueprint file that defines Pangolin resources and settings. This mode is declarative: Newt keeps applying the file, and it remains the source of truth (dashboard changes can be overwritten on the next apply). For a one-time bootstrap blueprint with provisioning keys, use `--provisioning-blueprint-file` instead.
+  Path to a blueprint file that defines Pangolin resources and settings. This mode is declarative: the site keeps applying the file, and it remains the source of truth (dashboard changes can be overwritten on the next apply). For a one-time bootstrap blueprint with provisioning keys, use `--provisioning-blueprint-file` instead.
 
   **Example**: `/path/to/blueprint.yaml`
 
@@ -462,18 +462,18 @@ Almost every setting below can also be set via an environment variable (**Env va
 
 ## Config File
 
-Newt can be configured entirely with a JSON config file instead of (or in addition to) CLI flags and environment variables. Almost every flag documented above has a matching camelCase key in this file — see the **Config file key** on each flag for its exact name.
+The site can be configured entirely with a JSON config file instead of (or in addition to) CLI flags and environment variables. Almost every flag documented above has a matching camelCase key in this file — see the **Config file key** on each flag for its exact name.
 
-You can use `--config-file` or the `CONFIG_FILE` environment variable to point Newt at a specific path. Newt also writes to this file: when [site provisioning](/manage/sites/site-provisioning) succeeds, the resolved `id` and `secret` are persisted here so you don't need to pass `--id`/`--secret` (or a provisioning key) on every subsequent run.
+You can use `--config-file` or the `CONFIG_FILE` environment variable to point the site at a specific path. The site also writes to this file: when [site provisioning](/manage/sites/site-provisioning) succeeds, the resolved `id` and `secret` are persisted here so you don't need to pass `--id`/`--secret` (or a provisioning key) on every subsequent run.
 
 ### Default locations
 
-If `--config-file`/`CONFIG_FILE` isn't set, Newt reads and writes the config file at a platform-specific default path:
+If `--config-file`/`CONFIG_FILE` isn't set, the site reads and writes the config file at a platform-specific default path:
 
 | Platform | Default path |
 | --- | --- |
 | macOS | `~/.config/pangolin/site.json` |
-| Windows | `~/.config/pangolin/site.json` |
+| Windows | `C:\Users\<Username>\.config\pangolin\site.json` |
 | Linux / others | `~/.config/pangolin/site.json` |
 
 ### Example
@@ -487,7 +487,7 @@ If `--config-file`/`CONFIG_FILE` isn't set, Newt reads and writes the config fil
 
   "dns": "9.9.9.9",
   "logLevel": "INFO",
-  "interface": "newt",
+  "interface": "pangolin",
   "mtu": 1280,
   "port": 34534,
 
@@ -512,7 +512,7 @@ If `--config-file`/`CONFIG_FILE` isn't set, Newt reads and writes the config fil
 ```
 
 <Note>
-You only need to include the keys you want to set — anything omitted falls back to an environment variable, then its built-in default. Run `newt --show-config` to see every resolved setting alongside where it came from (config file, environment, CLI, or default), which is useful for confirming what a config file actually loaded.
+You only need to include the keys you want to set — anything omitted falls back to an environment variable, then its built-in default. Run `pangolin --show-config` to see every resolved setting alongside where it came from (config file, environment, CLI, or default), which is useful for confirming what a config file actually loaded.
 </Note>
 
 <Warning>
@@ -521,16 +521,16 @@ Fields like `secret`, `tlsClientKey`, and `adPreSharedKey` are sensitive. Restri
 
 ## Docker Socket Integration
 
-Newt can integrate with the Docker socket to provide remote inspection of Docker containers. This allows Pangolin to query and retrieve detailed information about containers running on the Newt client, including metadata, network configuration, port mappings, and more.
+The site can integrate with the Docker socket to provide remote inspection of Docker containers. This allows Pangolin to query and retrieve detailed information about containers running on the site, including metadata, network configuration, port mappings, and more.
 
 **Configuration:**
 
-You can specify the Docker socket path using the `--docker-socket` CLI argument or by setting the `DOCKER_SOCKET` environment variable. If the Docker socket is not available or accessible, Newt will gracefully disable Docker integration and continue normal operation.
+You can specify the Docker socket path using the `--docker-socket` CLI argument or by setting the `DOCKER_SOCKET` environment variable. If the Docker socket is not available or accessible, the site will gracefully disable Docker integration and continue normal operation.
 
 Supported values include:
 
 -   Local UNIX socket (default):
-    >You must mount the socket file into the container using a volume, so Newt can access it.
+    >You must mount the socket file into the container using a volume, so the site can access it.
 
     `unix:///var/run/docker.sock`
 
@@ -563,12 +563,12 @@ services:
 ```
 
 <Note>
-If the Docker socket is not available or accessible, Newt will gracefully disable Docker integration and continue normal operation.
+If the Docker socket is not available or accessible, the site will gracefully disable Docker integration and continue normal operation.
 </Note>
 
 **Hostnames vs IPs**
 
-When the Docker Socket Integration is used, depending on the network which Newt is run with, either the hostname (generally considered the container name) or the IP address of the container will be sent to Pangolin:
+When the Docker Socket Integration is used, depending on the network which the site is run with, either the hostname (generally considered the container name) or the IP address of the container will be sent to Pangolin:
 
 - **Running in Network Mode 'host'**: IP addresses will be used
 - **Running in Network Mode 'bridge'**: IP addresses will be used
@@ -577,17 +577,17 @@ When the Docker Socket Integration is used, depending on the network which Newt 
 
 **Docker Enforce Network Validation**
 
-When run as a Docker container, Newt can validate that the target being provided is on the same network as the Newt container and only return containers directly accessible by Newt. Validation will be carried out against either the hostname/IP Address and the Port number to ensure the running container is exposing the ports to Newt.
+When run as a Docker container, the site can validate that the target being provided is on the same network as the site container and only return containers directly accessible by the site. Validation will be carried out against either the hostname/IP Address and the Port number to ensure the running container is exposing the ports to the site.
 
 Validation is `false` by default. It can be enabled via setting the `--docker-enforce-network-validation` CLI argument or by setting the `DOCKER_ENFORCE_NETWORK_VALIDATION` environment variable.
 
 <Warning>
-If the Newt container is run with a network mode of `host`, this feature will not work. Running in `host` mode causes the container to share its resources with the host machine, making it impossible to retrieve specific host container information for network validation.
+If the site container is run with a network mode of `host`, this feature will not work. Running in `host` mode causes the container to share its resources with the host machine, making it impossible to retrieve specific host container information for network validation.
 </Warning>
 
 ## Updown Scripts
 
-You can pass in an updown script for Newt to call when it is adding or removing a target:
+You can pass in an updown script for the site to call when it is adding or removing a target:
 
 ```bash
 --updown "python3 test.py"
@@ -610,7 +610,7 @@ You can look at `updown.py` as a reference script to get started!
 
 ## mTLS Authentication
 
-Newt supports mutual TLS (mTLS) authentication if the server is configured to request a client certificate. You can use either a PKCS12 (.p12/.pfx) file or split PEM files for the client cert, private key, and CA.
+The site supports mutual TLS (mTLS) authentication if the server is configured to request a client certificate. You can use either a PKCS12 (.p12/.pfx) file or split PEM files for the client cert, private key, and CA.
 
 ### Option 1: PKCS12 (Legacy)
 
