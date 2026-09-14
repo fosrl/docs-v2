@@ -64,7 +64,7 @@ The control plane writes certificates, Traefik router definitions, and WireGuard
 
 A **site connector** runs on a remote network (server, VM, container, or appliance) and is the bridge between your private LAN and the platform. For public resources it maintains persistent **outbound** connections to a Pangolin node so ingress can reverse-proxy into the LAN. For private resources, clients form a **peer-to-peer** path to the connector; the node is only in that data path as a relay when hole punching fails.
 
-The primary connector is a **Pangolin Site**. In engineering contexts it is referred to as Newt. The site opens:
+The primary connector is a **Pangolin Site**. The site opens:
 
 1. A **WebSocket** to the control plane for configuration, health, and coordination
 2. A **WireGuard** tunnel to the node's tunnel manager (Gerbil) for encrypted data traffic

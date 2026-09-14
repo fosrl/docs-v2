@@ -5,13 +5,9 @@ description: "Install the site connector as a binary or Docker container"
 
 The site connector can be installed as either a static binary executable or a Docker container via the CLI. You must first create a site and copy the ID and secret config from Pangolin before running it.
 
-<Note>
-Deploying a site in Kubernetes? See the dedicated [Kubernetes](/manage/sites/kubernetes/helm) docs - install guides for [Helm](/manage/sites/kubernetes/helm) and [Kustomize](/manage/sites/kubernetes/kustomize), a full [Configuration](/manage/sites/kubernetes/configuration) reference, and [Troubleshooting](/manage/sites/kubernetes/troubleshooting).
-</Note>
-
 ## Binary Installation
 
-### Quick Install (Recommended)
+### Install
 
 Use this command to automatically install the CLI. It detects your system architecture automatically and always pulls the latest version, adding the CLI to your PATH:
 
@@ -19,11 +15,7 @@ Use this command to automatically install the CLI. It detects your system archit
 curl -fsSL https://static.pangolin.net/get-cli.sh | bash
 ```
 
-#### Windows
-
-To run a site on Windows, use the latest installer from [GitHub releases](https://github.com/fosrl/cli/releases/latest).
-
-### Manual Download
+To run a site on Windows, [download the latest installer](https://github.com/fosrl/cli/releases/latest/download/pangolin-cli_windows_installer.msi).
 
 Binaries for Linux, macOS, and Windows are available in the [GitHub releases](https://github.com/fosrl/cli/releases/latest) for ARM and AMD64 (x86_64) architectures.
 
@@ -38,9 +30,9 @@ pangolin up site \
 --endpoint https://app.pangolin.net
 ```
 
-### Systemd Service (Recommended)
+### Run as a Service
 
-The CLI can install and manage the systemd service for you:
+The CLI can install and manage a service on your host machine for you. This supports Windows services, MacOS's launchd, and Linux's systemd to create a persistent site connection from that host. 
 
 ```bash
 sudo pangolin service install site \
@@ -53,6 +45,12 @@ Check the service status:
 
 ```bash
 sudo pangolin service status site
+```
+
+And to get the logs: 
+
+```bash
+sudo pangolin service logs site
 ```
 
 ### Manual Systemd Service
@@ -98,11 +96,7 @@ WantedBy=multi-user.target
 ```
 
 <Warning>
-Make sure the binary exists at `/usr/local/bin/pangolin` before daemon reload and starting the service:
-
-```bash
-which pangolin
-```
+Make sure the binary exists at `/usr/local/bin/pangolin` before daemon reload and starting the service: `~$ which pangolin`
 </Warning>
 
 Reload systemd and enable the service:
@@ -255,41 +249,6 @@ Newt is available in the Unraid Community Applications store. Search for "Newt" 
 <Frame caption="Newt available in Unraid Community Applications store">
 <img src="/images/unraid_store.png" alt="Newt on CA" />
 </Frame>
-
-### Portainer and Other UIs
-
-Container management UIs like Portainer typically allow passing commands and environment variables to containers similar to Docker Compose. Look for a commands or arguments configuration section and follow the relevant guides.
-
-### Windows Service
-
-On Windows, the site connector can be run as a service or normally as a binary in a session.
-
-When running as a binary and not installing the service, you can use the same CLI arguments as you would on any other platform.
-
-If you are installing the service, we recommend writing the config into the config file location first, following the [config file format](/manage/sites/install-site#config-file-injected-as-compose-secret), with the provisioning key. Since the service runs under the `SYSTEM` account, its config lives under that account's profile at `C:\WINDOWS\system32\config\systemprofile\.config\pangolin\site.json`. Alternatively, you can install the service and start it with CLI args, which will also work. For example:
-
-```
-pangolin.exe service install site
-pangolin.exe service start site --endpoint https://app.pangolin.net --provisioning-key <provisioning-key>
-```
-
-This will provision a new service, start it, and create the config file for future starts.
-
-#### Service Management Commands
-
-```
-# Install the service
-pangolin.exe service install site --id <id> --secret <secret> --endpoint https://app.pangolin.net
-
-# Stop the service
-pangolin.exe service logs site
-
-# Check service status
-pangolin.exe service status site
-
-# Remove the service
-pangolin.exe service uninstall site
-```
 
 ### Advantech Router App
 

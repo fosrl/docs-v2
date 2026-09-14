@@ -114,31 +114,17 @@ Pangolin CLI can run on Windows, but the CLI VPN functionality is not supported.
 
 Pangolin CLI supports running as user device with authentication or a machine client.
 
-
-### Quick Install (Recommended) — Linux and macOS
+### Install
 
 Use this command to automatically install Pangolin CLI. It detects your system architecture automatically and always pulls the latest version, adding `pangolin` to your PATH:
 
 ```bash
 curl -fsSL https://static.pangolin.net/get-cli.sh | bash
 ```
-### Windows
 
-Go to [GitHub releases](https://github.com/fosrl/cli/releases) and download the latest **MSI installer** or **EXE** for Windows.
-
-### Manual Download
+On Windows, [download the latest installer](https://github.com/fosrl/cli/releases/latest/download/pangolin-cli_windows_installer.msi), or choose to install the CLI from menu bar of the desktop app by choosing the "Install Pangolin CLI" option.
 
 Binaries for all platforms are available in the [GitHub releases](https://github.com/fosrl/cli/releases) for ARM and AMD64 (x86_64) architectures.
-
-Download and install manually:
-
-```bash
-wget -O pangolin "https://github.com/fosrl/cli/releases/download/{version}/pangolin-cli_{architecture}" && chmod +x ./pangolin
-```
-
-<Note>
-Replace `{version}` with the desired version and `{architecture}` with your architecture. Check the [release notes](https://github.com/fosrl/cli/releases) for the latest information.
-</Note>
 
 ### Installation Steps
 
@@ -177,6 +163,33 @@ Replace `{version}` with the desired version and `{architecture}` with your arch
    </Tip>
 
 Pangolin CLI can be installed as a systemd service or run in a container. See the sections below for advanced setups.
+
+## Machine Clients
+
+Machine clients don't require a login and are built for machines like services to be able to connect to private resources. Like sites, they have an ID and a secret.
+
+### Run as a Service
+
+The CLI can install and manage a service on your host machine for you. This supports Windows services, MacOS's launchd, and Linux's systemd to create a persistent site connection from that host. 
+
+```bash
+sudo pangolin service install client \
+--id 31frd0uzbjvp721 \
+--secret h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6 \
+--endpoint https://app.pangolin.net
+```
+
+Check the service status:
+
+```bash
+sudo pangolin service status client
+```
+
+And to get the logs: 
+
+```bash
+sudo pangolin service logs client
+```
 
 ### Systemd Service (Pangolin CLI)
 
