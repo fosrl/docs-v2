@@ -399,7 +399,7 @@
         "strict": true
     },
     "banner": {
-        "content": "**AI Gateway** is now available. Identity-aware access to any AI provider, eliminate API keys, and tunnel to self-hosted models. [Get started](/manage/ai/overview)",
+        "content": "**AI Gateway** is now available: identity-aware access to any AI provider, eliminate API keys, and tunnel to self-hosted models. [Get started](/manage/ai/overview)",
         "dismissible": true
     },
     "logo": {
