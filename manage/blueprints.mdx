@@ -402,7 +402,7 @@ private-resources:
 
 ## Resource Labels
 
-Attach labels to public and private resources to organize and filter them in the dashboard. These are the same labels manageable from **Settings > Labels** — not to be confused with the [Docker container labels](#container-labels-format) used to define blueprints from Compose.
+Attach labels to public and private resources to organize and filter them in the dashboard. These are the same labels manageable from **Settings > Labels** - not to be confused with the [Docker container labels](#container-labels-format) used to define blueprints from Compose.
 
 ```yaml
 public-resources:
@@ -423,7 +423,7 @@ public-resources:
 - Label names are matched case-insensitively against existing labels in the organization.
 - If a label with that name doesn't already exist yet, Pangolin creates it automatically.
 - Each apply replaces the resource's full label list with the list in the blueprint.
-- Labels are not synced for [targets-only](#targets-only-resources) public resources — omitting `labels` on a targets-only update leaves existing labels untouched.
+- Labels are not synced for [targets-only](#targets-only-resources) public resources - omitting `labels` on a targets-only update leaves existing labels untouched.
 
 ## Container Labels Format
 

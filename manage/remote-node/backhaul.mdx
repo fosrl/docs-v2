@@ -199,7 +199,7 @@ This section uses AWS as an example, but the same steps apply to any VPC-style n
 </Step>
 
 <Step title="Route the Pangolin overlay through the node">
-	Add a route in the VPC's route table for the WireGuard overlay subnet assigned to your node (shown as the node's **Address** on its page in the [Pangolin dashboard](https://app.pangolin.net)), targeting the node's instance or network interface. This tells the rest of the VPC to send anything destined for the Pangolin overlay — other sites and clients — to the node.
+	Add a route in the VPC's route table for the WireGuard overlay subnet assigned to your node (shown as the node's **Address** on its page in the [Pangolin dashboard](https://app.pangolin.net)), targeting the node's instance or network interface. This tells the rest of the VPC to send anything destined for the Pangolin overlay - other sites and clients - to the node.
 
 	<Frame>
 		<img src="/images/subnet_in_route_table.png" alt="AWS route table entry routing the overlay subnet to the node" />
