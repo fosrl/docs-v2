@@ -106,6 +106,8 @@ This section contains the complete reference for all configuration options in `p
 
     <ResponseField name="password" type="string">
       Redis authentication password.
+
+      **Environment Variable**: `REDIS_PASSWORD` (or `REDIS_PASSWORD_FILE` to read the value from a file — see [Reading secrets from a file](/self-host/advanced/config-file#reading-secrets-from-a-file-_file-suffix))
       
       ```yaml
       redis:
@@ -494,3 +496,13 @@ This section contains the complete reference for all configuration options in `p
 ### Branding Configuration
 
 Please refer to the [branding configuration documentation](/manage/branding).
+
+## Environment Variables
+
+Some configuration values can be set using environment variables for enhanced security:
+
+| Name | Variable | Config | Supports `_FILE` |
+|------|----------|--------|:---:|
+| Redis Password | `REDIS_PASSWORD` | `redis.password` | ✅ |
+
+Any variable marked "Supports `_FILE`" can also be set as `<VARIABLE>_FILE`, pointing to a file on disk whose (trimmed) contents are used as the value instead — see [Reading secrets from a file](/self-host/advanced/config-file#reading-secrets-from-a-file-_file-suffix) in the main configuration file docs for details and a Docker Compose example.
