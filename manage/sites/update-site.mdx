@@ -1,10 +1,10 @@
 ---
 title: "Update Sites"
-description: "Update Newt to the latest version"
+description: "Update your site to the latest version"
 ---
-The update process depends on how you originally installed Newt.
+The update process depends on how you originally installed the site.
 
-Find the latest version in the [GitHub releases](https://github.com/fosrl/newt/releases).
+Find the latest version in the [GitHub releases](https://github.com/fosrl/cli/releases).
 
 ## Docker Installation
 
@@ -12,16 +12,16 @@ Update the image version in your `docker-compose.yml`:
 
 ```yaml title="docker-compose.yml"
 services:
-  newt:
-    image: fosrl/newt:{version} #  Replace {version} with the latest version tag
+  pangolin-site:
+    image: fosrl/pangolin-cli:{version} #  Replace {version} with the latest version tag
     # ... rest of config
 ```
 
 Then pull and restart:
 
 ```bash
-docker compose pull newt
-docker compose up -d newt
+docker compose pull pangolin-site
+docker compose up -d pangolin-site
 ```
 
 ## Binary Installation
@@ -31,17 +31,9 @@ docker compose up -d newt
 If you used the auto installer, simply run it again.
 
 ```bash
-curl -fsSL https://static.pangolin.net/get-newt.sh | bash
+curl -fsSL https://static.pangolin.net/get-cli.sh | bash
 ```
 
 ### Manual Installation
 
-Download the latest binary for your system from [GitHub releases](https://github.com/fosrl/newt/releases) and replace your existing binary.
-
-```bash
-wget -O newt "https://github.com/fosrl/newt/releases/download/{version}/newt_{architecture}" && chmod +x ./newt
-```
-
-<Note>
-Replace `{version}` with the desired version and `{architecture}` with your architecture. Check the [release notes](https://github.com/fosrl/newt/releases) for the latest information.
-</Note>
+Download the latest binary for your system from [GitHub releases](https://github.com/fosrl/cli/releases) and replace your existing binary.

@@ -1,27 +1,25 @@
 ---
 title: "Automatic Site Updates"
-description: "Let Newt sites check for and install updates on their own"
+description: "Let sites check for and install updates on their own"
 ---
-
-
 
 <Note>
 Only available in [Pangolin Cloud](https://app.pangolin.net/auth/signup) and [Enterprise Edition](/self-host/enterprise-edition).
 </Note>
 
-Newt sites can automatically check for new versions, download the latest release, and restart to begin using it. This is useful when you manage many remote connectors and do not want to update each one by hand.
+Sites can automatically check for new versions, download the latest release, and restart to begin using it. This is useful when you manage many remote connectors and do not want to update each one by hand.
 
 ## Supported Installation Methods
 
 Automatic updates are only supported for sites installed with the [binary installation method](/manage/sites/install-site).
 
-If you run Newt in Docker, Kubernetes, or another container orchestration platform, updates are handled by that platform. Pangolin cannot coordinate automatic updates for containerized deployments.
+If you run a site in Docker, Kubernetes, or another container orchestration platform, updates are handled by that platform. Pangolin cannot coordinate automatic updates for containerized deployments.
 
 ## How It Works
 
-When automatic updates are enabled, Newt periodically checks for a newer version. If one is available, it downloads the latest release and restarts itself. After the restart, the site reconnects to Pangolin on the new version.
+When automatic updates are enabled, the site periodically checks for a newer version. If one is available, it downloads the latest release and restarts itself. After the restart, the site reconnects to Pangolin on the new version.
 
-For safety, Pangolin waits **24 hours** after a release is published before sites pull that version. This gives time for early issues to surface before a fleet of connectors updates.
+For safety, Pangolin waits **24 hours** after a release is published before sites pull that version. This gives time for early issues to surface before a fleet of sites updates.
 
 ## Enable Automatic Updates
 
@@ -41,7 +39,7 @@ These settings work together:
 
 ## Fleet Deployments
 
-Automatic updates are especially useful when you run many sites across edge networks. For example, if you have dozens or hundreds of Raspberry Pis or other edge devices running Newt, you would otherwise need to update each connector every time a new release ships.
+Automatic updates are especially useful when you run many sites across edge networks. For example, if you have dozens or hundreds of Raspberry Pis or other edge devices running a site, you would otherwise need to update each site every time a new release ships.
 
 With automatic updates enabled, each site in the fleet checks for new versions on its own, downloads the latest release after the 24-hour safety window, restarts, and reconnects to Pangolin without manual intervention.
 

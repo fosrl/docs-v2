@@ -119,7 +119,7 @@ postgres:
 
 #### Using Environment Variables
 
-You can instead provide replica connection strings with the `POSTGRES_REPLICA_CONNECTION_STRINGS` environment variable, as a comma-separated list. This must be used together with `POSTGRES_CONNECTION_STRING` for the primary database — the two env vars replace the entire `postgres.connection_string` / `postgres.replicas` config as a unit.
+You can instead provide replica connection strings with the `POSTGRES_REPLICA_CONNECTION_STRINGS` environment variable, as a comma-separated list. This must be used together with `POSTGRES_CONNECTION_STRING` for the primary database - the two env vars replace the entire `postgres.connection_string` / `postgres.replicas` config as a unit.
 
 ```bash title=".env"
 POSTGRES_CONNECTION_STRING=postgresql://<user>:<password>@<primary-host>:<port>/<database>
