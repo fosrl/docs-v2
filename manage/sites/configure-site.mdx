@@ -88,56 +88,6 @@ Almost every setting below can also be set via an environment variable (**Env va
   **Env var**: `CONFIG_FILE`
 </ResponseField>
 
-<ResponseField name="port" type="integer">
-  Port for the peers to connect to the site on. This can be used to keep a static port open in firewalls instead of default random ports.
-
-  **Example**: `34534`
-
-  **Env var**: `PORT`
-
-  **Config file key**: `port`
-</ResponseField>
-
-<ResponseField name="native" type="boolean">
-  Use a native WireGuard interface for client tunnels instead of the userspace netstack implementation.
-
-  **Default**: `false`
-
-  **Env var**: `USE_NATIVE_INTERFACE`
-
-  **Config file key**: `native`
-</ResponseField>
-
-<ResponseField name="native-main" type="boolean">
-  Use a native WireGuard interface for the main tunnel (instead of netstack).
-
-  **Default**: `false`
-
-  **Env var**: `USE_NATIVE_MAIN_INTERFACE`
-
-  **Config file key**: `nativeMain`
-</ResponseField>
-
-<ResponseField name="interface-main" type="string">
-  Name of the native main tunnel WireGuard interface (used with `--native-main`).
-
-  **Default**: `pangolin`
-
-  **Env var**: `INTERFACE_MAIN`
-
-  **Config file key**: `interfaceMain`
-</ResponseField>
-
-<ResponseField name="mtu" type="integer">
-  MTU for the internal WireGuard interface.
-
-  **Default**: `1280`
-
-  **Env var**: `MTU`
-
-  **Config file key**: `mtu`
-</ResponseField>
-
 <ResponseField name="dns" type="string">
   DNS server to use for resolving the endpoint.
 
@@ -270,16 +220,6 @@ Almost every setting below can also be set via an environment variable (**Env va
   **Env var**: `DISABLE_SSH`
 
   **Config file key**: `disableSsh`
-</ResponseField>
-
-<ResponseField name="interface" type="string">
-  Name of the WireGuard interface.
-
-  **Default**: `pangolin`
-
-  **Env var**: `INTERFACE`
-
-  **Config file key**: `interface`
 </ResponseField>
 
 <ResponseField name="metrics" type="boolean">
@@ -458,6 +398,83 @@ Almost every setting below can also be set via an environment variable (**Env va
   **Example**: `https://preferred.endpoint.com`
 
   **Config file key**: `preferEndpoint`
+</ResponseField>
+
+
+<ResponseField name="interface" type="string">
+  Name of the WireGuard interface.
+
+  **Default**: `pangolin`
+
+  **Env var**: `INTERFACE`
+
+  **Config file key**: `interface`
+</ResponseField>
+
+<ResponseField name="port" type="integer">
+  Port for the peers to connect to the site on. This can be used to keep a static port open in firewalls instead of default random ports.
+
+  **Example**: `34534`
+
+  **Env var**: `PORT`
+
+  **Config file key**: `port`
+</ResponseField>
+
+<ResponseField name="native" type="boolean">
+  Use a native WireGuard interface for client tunnels instead of the userspace netstack implementation.
+
+  <Note>
+    Most users should not use this feature.
+  </Note>
+
+  **Default**: `false`
+
+  **Env var**: `USE_NATIVE_INTERFACE`
+
+  **Config file key**: `native`
+</ResponseField>
+
+<ResponseField name="native-main" type="boolean">
+  Use a native WireGuard interface for the main tunnel (instead of netstack).
+
+  <Note>
+    Most users should not use this feature.
+  </Note>
+
+  **Default**: `false`
+
+  **Env var**: `USE_NATIVE_MAIN_INTERFACE`
+
+  **Config file key**: `nativeMain`
+</ResponseField>
+
+<ResponseField name="interface-main" type="string">
+  Name of the native main tunnel WireGuard interface (used with `--native-main`).
+
+  <Note>
+    Most users should not use this feature.
+  </Note>
+
+  **Default**: `pangolin`
+
+  **Env var**: `INTERFACE_MAIN`
+
+  **Config file key**: `interfaceMain`
+</ResponseField>
+
+<ResponseField name="mtu" type="integer">
+  MTU for the internal WireGuard interface. 
+
+  <Note>
+    Most users should not use this feature.
+  </Note>
+
+  **Default**: `1280`
+
+  **Env var**: `MTU`
+
+  **Config file key**: `mtu`
 </ResponseField>
 
 ## Config File
