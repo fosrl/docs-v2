@@ -599,13 +599,13 @@ This section contains the complete reference for all configuration options in `c
     </ResponseField>
 
     <ResponseField name="start_port" type="integer">
-      Starting port for WireGuard tunnels.
+      Starting port for WireGuard tunnels. When changing, a full stack restart including sites and clients is required.
 
       **Example**: `51820`
     </ResponseField>
 
     <ResponseField name="clients_start_port" type="integer">
-      Starting port for client WireGuard relay and hole punch port.
+      Starting port for client WireGuard relay and hole punch port. When changing, a full stack restart including sites and clients is required.
 
       **Example**: `21820`
     </ResponseField>
