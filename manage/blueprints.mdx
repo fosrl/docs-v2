@@ -74,7 +74,7 @@ Use container labels when the resource definition should live inside your Compos
   Run a site with `--blueprint-file` to keep the file declarative and continuously applied:
 
   ```bash
-  newt --blueprint-file /path/to/blueprint.yaml <other-args>
+  pangolin up site --blueprint-file /path/to/blueprint.yaml --id <id> --secret <secret> --endpoint https://app.pangolin.net
   ```
 
   If you only want a one-time bootstrap during provisioning, use [`--provisioning-blueprint-file`](/manage/sites/site-provisioning) instead.
@@ -460,7 +460,7 @@ Container labels are continuously applied. Treat the Compose file as the source 
 To use container labels, the site must be able to read the Docker socket:
 
 ```bash
-newt --docker-socket /var/run/docker.sock <other-args>
+pangolin up site --docker-socket /var/run/docker.sock --id <id> --secret <secret> --endpoint https://app.pangolin.net
 ```
 
 Or with an environment variable:
@@ -473,7 +473,7 @@ DOCKER_SOCKET=/var/run/docker.sock
 
 ```yaml
 services:
-  newt:
+  pangolin-site:
     image: fosrl/pangolin-cli
     container_name: pangolin-site
     restart: unless-stopped
