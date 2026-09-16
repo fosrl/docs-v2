@@ -54,7 +54,7 @@ By default, when match domains are not set, all DNS queries are sent to the conf
 
 #### MTU
 
-You can set the maximum transmission unit (MTU) for the client’s internal WireGuard interface. This value is client-wide: every site the client connects to must use the same MTU on the site (Newt) side, or you can see fragmentation, failed handshakes, or unstable tunnels. See the **mtu** option on [Configure Sites](/manage/sites/configure-site) and set the same value on each of those sites.
+You can set the maximum transmission unit (MTU) for the client’s internal WireGuard interface. This value is client-wide: every site the client connects to must use the same MTU on the site side, or you can see fragmentation, failed handshakes, or unstable tunnels. See the **mtu** option on [Configure Sites](/manage/sites/configure-site) and set the same value on each of those sites.
 
 <Warning>
 Changing MTU is advanced and not recommended for most users. Only change it when you have a specific, well-understood reason (for example, a constrained network path or a requirement from your infrastructure team). If you do change it, you must update every connected site to the identical value.

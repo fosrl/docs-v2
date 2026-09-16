@@ -35,7 +35,7 @@ SSH public resources do **not** use [targets](/manage/resources/public/targets).
 2. Enter the backend host and port—unless you selected **Pangolin SSH** mode, which executes sessions on the site connector host and does not require a host or port.
 
 <Warning>
-**Pangolin SSH mode requires root.** Newt must run as root on the site connector host. Use `sudo newt ...` or run the Newt systemd service as root. See [Install a site](/manage/sites/install-site).
+**Pangolin SSH mode requires root.** The Pangolin Site must run as root on the site connector host. Use `sudo pangolin up site ...` or run the site service as root. See [Install Sites](/manage/sites/install-site).
 </Warning>
 
 Pangolin routes through the site that is online and healthiest, using the same intelligent multi-site routing model as [private resources](/manage/resources/private/multi-site-routing).

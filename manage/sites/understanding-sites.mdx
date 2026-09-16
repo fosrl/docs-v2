@@ -4,7 +4,7 @@ description: "Create a site to connect to a remote network and expose resources"
 ---
 A site is a connection to a network where your resources live. Pangolin uses sites to make public and private resources available to users. Every resource belongs to one or more sites.
 
-A Pangolin Site is the software connector that establishes this connection and routes traffic to targets on remote networks. In engineering contexts, and in some install commands, it is sometimes referred to as Newt.
+A Pangolin Site is the software connector that establishes this connection and routes traffic to targets on remote networks. In engineering contexts, and in some install commands, it is sometimes referred to as Newt. New installs should use the [Pangolin CLI](/manage/sites/install-site). Newt remains available as a [standalone connector](/manage/sites/install-newt) if you want a smaller binary or container.
 
 ## The Basics
 
@@ -17,13 +17,13 @@ A Pangolin Site is the software connector that establishes this connection and r
 
 Pangolin supports three different types of sites, each designed for different use cases and deployment scenarios.
 
-### Site Connector (Recommended)
+### Pangolin Site (Recommended)
 
 This site type exposes resources on a remote network through a managed tunnel and websocket connection. It requires the Pangolin Site connector on the remote network. This is the easiest setup and does not require NAT configuration.
 
 Use Pangolin Sites in most deployments. This is the primary site type and supports the broadest feature set.
 
-Pangolin Sites support:
+Pangolin Sites support (not limited to):
 - Public proxied resources
 - Protocol awareness (HTTP/HTTPS, SSH, RDP, VNC)
 - Private resources (ZTNA)
@@ -31,7 +31,6 @@ Pangolin Sites support:
 - Health checking
 - Docker socket scanning
 - And more
-
 
 ### Local Site
 

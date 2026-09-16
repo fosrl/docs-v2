@@ -176,6 +176,7 @@
                                 "group": "Organizations",
                                 "icon": "building",
                                 "pages": [
+                                    "manage/organizations/manage-organizations",
                                     "manage/organizations/org-id",
                                     "manage/labels"
                                 ]

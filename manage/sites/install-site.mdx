@@ -5,7 +5,11 @@ description: "Install the site connector as a binary or Docker container"
 
 The site connector can be installed as either a static binary executable or a Docker container via the CLI. You must first create a site and copy the ID and secret config from Pangolin before running it.
 
-## Binary Installation
+<Note>
+The Pangolin CLI is the recommended way to install a new site. Existing Newt deployments keep working. For Newt-specific install commands, see [Install Newt](/manage/sites/install-newt).
+</Note>
+
+## Binary Installation (Linux, macOS, Windows)
 
 ### Install
 
@@ -195,7 +199,8 @@ services:
       - --endpoint https://app.pangolin.net
 ```
 
-#### Docker healthcheck
+#### Docker Healthcheck
+
 The site connector supports healthchecks as described in [Configure Sites](/manage/sites/configure-site#param-health-file). This file can be used to do a
 healthcheck from within docker (compose file).
 
@@ -242,28 +247,6 @@ Running a site in a Kubernetes cluster is covered separately from the Docker ins
 	</Card>
 </CardGroup>
 
-### Unraid
+### Newt
 
-Newt is available in the Unraid Community Applications store. Search for "Newt" and follow the installation prompts. Enter the ID, secret, and endpoint from Pangolin in the template fields.
-
-<Frame caption="Newt available in Unraid Community Applications store">
-<img src="/images/unraid_store.png" alt="Newt on CA" />
-</Frame>
-
-### Advantech Router App
-
-Download the correct version of the router app for your device from the [GitHub releases](https://github.com/fosrl/newt/releases/latest). You can find more information about router apps along with the right version information for your hardware on the the [Advantech engineering portal](https://icr.advantech.com/products/software/router-apps).
-
-To install the router app, log into your Advantech router and navigate to the Router Apps section. Upload the downloaded `.tgz` file and follow the prompts to install. 
-
-<Frame caption="Screenshot of installing the router app on an Advantech router UI">
-  <img src="/images/advantech_router_app_install.png" alt="Advantech router UI showing site router app installation" width="400" centered/>
-</Frame>
-
-After installation, click on the router app link at the top of the page to configure the app with your site credentials from Pangolin. Once you have entered the credentials, save and start the app. The router will now be connected to your Pangolin site and you can manage it like any other site in the dashboard.
-
-<Frame caption="Screenshot of configuring the router app on an Advantech router UI">
-  <img src="/images/advantech_router_app_configure.png" alt="Advantech router UI showing site credential configuration" width="400" centered/>
-</Frame>
-
-A complete config file is located at `/etc/newt/settings` on the router. You can edit this file directly to change credentials or add additional configuration options. After making changes, restart the router app to apply the new configuration. An example settings file can be found at: https://github.com/fosrl/newt/blob/main/packages/advantech/merge/etc/defaults
+Unraid, Advantech routers, Windows services, and other Newt-only install methods are documented on [Install Newt](/manage/sites/install-newt). Use Newt when you want the smaller standalone connector instead of the Pangolin CLI.

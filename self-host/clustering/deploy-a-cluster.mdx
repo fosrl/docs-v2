@@ -233,7 +233,7 @@ If Pangolin can't reach the local Gerbil at the address in `--reachableAt` (a lo
 </Step>
 
 <Step title="Write config.yml">
-`config.yml` holds the settings that legitimately differ per node - `gerbil.base_endpoint` and `gerbil.exit_node_name` - alongside the shared PostgreSQL connection and site-type restrictions. In clustered deployments, only Newt sites are supported, so local and basic WireGuard sites are disabled.
+`config.yml` holds the settings that legitimately differ per node - `gerbil.base_endpoint` and `gerbil.exit_node_name` - alongside the shared PostgreSQL connection and site-type restrictions. In clustered deployments, only Pangolin Sites are supported, so local and basic WireGuard sites are disabled.
 
 Set `app.dashboard_url` and `server.cors.origins` to your dashboard domain (the one pointed at your load balancer, not at either node) - both must match on every node.
 

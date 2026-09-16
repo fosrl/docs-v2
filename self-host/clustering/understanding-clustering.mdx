@@ -76,7 +76,7 @@ A Pangolin cluster consists of several coordinated components that work together
 
 **How It Works**:
 - Each Pangolin instance runs alongside its own Gerbil tunnel manager
-- Handles WireGuard VPN connections from site connectors (Newt)
+- Handles WireGuard VPN connections from Pangolin Site connectors
 - Site connectors can establish tunnels to any available Gerbil instance
 - Every Gerbil instance is made aware of the other trusted nodes in the cluster
 - When a request lands on the node that isn't holding the relevant tunnel, Gerbil routes it to the correct node instead of dropping it - this covers the case where DNS caching sends a client to the "wrong" node

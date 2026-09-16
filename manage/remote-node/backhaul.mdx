@@ -231,15 +231,19 @@ This section uses AWS as an example, but the same steps apply to any VPC-style n
 
 ## Enable Native Routing on Your Sites
 
-For the VPC and a site's network to route to each other, the tunnel needs to be a real route on the site's host, not just something Newt proxies at the application layer. Start Newt with `--native-main` so it creates the network interface and routes directly on the host:
+For the VPC and a site's network to route to each other, the tunnel needs to be a real route on the site's host, not just something the Pangolin Site proxies at the application layer. Start the site with `--native-main` so it creates the network interface and routes directly on the host:
 
 ```bash
-sudo newt --id 34s48my8iba5wsl --secret ts1v7480qqw01j7ba4uiw5y7l58skw7anpji2ndludhgzloh --endpoint https://app.pangolin.net --native-main
+sudo pangolin up site \
+--id 34s48my8iba5wsl \
+--secret ts1v7480qqw01j7ba4uiw5y7l58skw7anpji2ndludhgzloh \
+--endpoint https://app.pangolin.net \
+--native-main
 ```
 
-On Windows, set `nativeMain` in the Newt client's `config.json` instead:
+On Windows, set `nativeMain` in `C:\Users\<Username>\.config\pangolin\site.json` instead:
 
-```json title="%PROGRAMDATA%/newt/newt-client/config.json"
+```json title="C:\Users\<Username>\.config\pangolin\site.json"
 {
 	"id": "34s48my8iba5wsl",
 	"secret": "ts1v7480qqw01j7ba4uiw5y7l58skw7anpji2ndludhgzloh",
@@ -249,7 +253,7 @@ On Windows, set `nativeMain` in the Newt client's `config.json` instead:
 ```
 
 <Warning>
-If you are using Newt on Windows `wintun.dll` is required to run in native mode. If not already provided by the installer, you can download from https://www.wintun.net/
+If you are using a Pangolin Site on Windows, `wintun.dll` is required to run in native mode. If not already provided by the installer, you can download from https://www.wintun.net/
 </Warning>
 
 <Warning>
