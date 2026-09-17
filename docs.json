@@ -374,6 +374,10 @@
                 "href": "https://github.com/fosrl/pangolin"
             },
             {
+                "tab": "Releases",
+                "href": "https://pangolin.net/news/tags/release"
+            },
+            {
                 "tab": "Trust Center",
                 "href": "https://trust.pangolin.net/"
             }

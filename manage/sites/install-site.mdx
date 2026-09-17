@@ -227,6 +227,22 @@ docker compose up -d
 
 ## Platform-Specific Installation
 
+### Unraid
+
+Pangolin Site is available in the Unraid Community Applications store. This template runs the Pangolin CLI (`fosrl/pangolin-cli`) and is the recommended way to install a site on Unraid. Use it instead of the Newt Community Applications listing for new sites.
+
+Search for **Pangolin Site** and install the listing from **Fossorial's Repository**. That is the officially supported template.
+
+<Frame caption="Pangolin Site in the Unraid Community Applications store">
+  <img src="/images/pangolin-site-community-apps.png" alt="Pangolin Site in the Unraid Community Applications store from Fossorial's Repository" />
+</Frame>
+
+Follow the installation prompts, then enter the site ID, secret, and endpoint from Pangolin in the template fields.
+
+<Frame caption="Pangolin Site Unraid template with site credentials">
+  <img src="/images/pangolin-site-template.png" alt="Unraid Pangolin Site template showing PANGOLIN_ENDPOINT, SITE_ID, and SITE_SECRET" />
+</Frame>
+
 ### Kubernetes
 
 <Note>
@@ -252,4 +268,4 @@ Running a site in a Kubernetes cluster is covered separately from the Docker ins
 
 ### Newt
 
-Unraid, Advantech routers, Windows services, and other Newt-only install methods are documented on [Install Newt](/manage/sites/install-newt). Use Newt when you want the smaller standalone connector instead of the Pangolin CLI.
+Advantech routers, Windows services, and other Newt-only install methods are documented on [Install Newt](/manage/sites/install-newt). Use Newt when you want the smaller standalone connector instead of the Pangolin CLI.
