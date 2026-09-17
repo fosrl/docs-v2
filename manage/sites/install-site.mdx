@@ -159,7 +159,7 @@ A safer but slightly more complex way is to use [Compose Secrets](https://docs.d
 {
   "id": "2ix2t8xk22ubpfy",
   "secret": "nnisrfsdfc7prqsp9ewo1dvtvci50j5uiqotez00dgap0ii2",
-  "endpoint": "https://app.pangolin.net",
+  "endpoint": "https://app.pangolin.net"
 }
 ```
 
@@ -171,6 +171,9 @@ services:
     image: fosrl/pangolin-cli
     container_name: pangolin-site
     restart: unless-stopped
+    command:
+      - up
+      - site
     environment:
       - CONFIG_FILE=/run/secrets/pangolin-site-config
     secrets:
