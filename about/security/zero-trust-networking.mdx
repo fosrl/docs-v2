@@ -9,26 +9,21 @@ Zero trust networking starts from an uncomfortable assumption: the network your 
 
 For a long time, network security was designed like a building: a hardened perimeter - the firewall - kept threats out, and everything inside that boundary was implicitly trusted. VPNs extended that same trusted interior out to remote workers. It's sometimes described as a hard shell around a soft interior.
 
-That model breaks down once you account for how internal networks actually get compromised. Well-documented breaches at major technology companies have shown attackers reaching deep into "internal" infrastructure once they cleared the perimeter once. Add unencrypted internal DNS traffic and employees working from coffee shop Wi-Fi, and the idea that anything inside the firewall is automatically safe stops being credible. If the perimeter is the only thing enforcing security, one gap anywhere in it compromises everything behind it.
+That model breaks down once you account for how internal networks actually get compromised. Well-documented breaches at major technology companies have shown attackers reaching deep into "internal" infrastructure once they cleared the perimeter. Add unencrypted internal DNS traffic and employees working from coffee shop Wi-Fi, and the idea that anything inside the firewall is automatically safe stops being credible. If the perimeter is the only thing enforcing security, one gap anywhere in it compromises everything behind it.
 
 ## What replaces trusting the wire
 
-The fix is removing the network itself from the trust decision entirely:
-
-- **Encrypt every connection, always**, regardless of whether the traffic is "internal" or "external." There's no privileged segment where encryption gets dropped because it's assumed to be safe.
-- **Authorize by identity, not location.** What a connection is allowed to reach should depend on who or what established it, not which subnet it originated from.
-- **Contain compromise at the peer.** If a device is breached, restricting which encrypted peers it's authorized to reach means the attacker can't simply pivot to whatever else happens to share that network segment.
+The fix is removing the network itself from the trust decision entirely. Every connection gets encrypted, always, regardless of whether the traffic is "internal" or "external" - there's no privileged segment where encryption gets dropped because it's assumed to be safe. Authorization is based on identity, not location: what a connection is allowed to reach depends on who or what established it, not which subnet it originated from. And compromise gets contained at the peer - if a device is breached, restricting which encrypted peers it's authorized to reach means the attacker can't simply pivot to whatever else happens to share that network segment.
 
 Even if someone gains physical or logical access to the network itself, all they find is encrypted traffic between authorized peers - nothing to sniff, and no ability to move laterally without valid credentials of their own.
 
 ## How this shows up in Pangolin's architecture
 
-Pangolin is built around this model rather than having it added on top:
+Pangolin is built around this model rather than having it added on top. Every tunnel is encrypted by default, with no exceptions: site connectors and clients build their tunnels on WireGuard, coordinated by Pangolin's tunnel manager ([Gerbil](/development/system-architecture#nodes)) on the node side and the shared client stack ([Olm](/development/system-architecture#shared-client-stack-olm)) on the device side. There's no unencrypted "trusted internal" path anywhere in the data plane.
 
-- **Every tunnel is encrypted, by default, with no exceptions.** Site connectors and clients build their tunnels on WireGuard, coordinated by Pangolin's tunnel manager ([Gerbil](/development/system-architecture#nodes)) on the node side and the shared client stack ([Olm](/development/system-architecture#shared-client-stack-olm)) on the device side. There's no unencrypted "trusted internal" path anywhere in the data plane.
-- **Site connectors are deny-by-default proxies.** Installing a [site](/manage/sites/understanding-sites) doesn't expose anything on that network. Nothing is reachable until you explicitly define a [resource](/manage/resources/understanding-resources) and grant a role access to it - the network being reachable is never itself the authorization.
-- **Authentication happens per request, not per network.** Public resources are enforced through forward-auth middleware ([Badger](/development/system-architecture#nodes)) sitting in front of every request, and private resources are only reachable by clients that already hold a valid, role-scoped tunnel - being on the same LAN as a site connector grants nothing on its own.
-- **Access follows the user, not the connection point.** [Roles](/manage/access-control/create-user#roles) determine which resources a client is authorized to reach, and that access control list travels with the identity whether they're connecting from the office, home, or a coffee shop.
+Site connectors are also deny-by-default proxies - installing a [site](/manage/sites/understanding-sites) doesn't expose anything on that network. Nothing is reachable until you explicitly define a [resource](/manage/resources/understanding-resources) and grant a role access to it; the network being reachable is never itself the authorization. Authentication happens per request, not per network: public resources are enforced through forward-auth middleware ([Badger](/development/system-architecture#nodes)) sitting in front of every request, and private resources are only reachable by clients that already hold a valid, role-scoped tunnel - being on the same LAN as a site connector grants nothing on its own.
+
+Access follows the user rather than the connection point. [Roles](/manage/access-control/create-user#roles) determine which resources a client is authorized to reach, and that access control list travels with the identity whether they're connecting from the office, home, or a coffee shop.
 
 ## Rolling this out without a flag day
 

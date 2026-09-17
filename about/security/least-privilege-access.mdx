@@ -13,21 +13,13 @@ The practical goal isn't "as little access as physically possible" - it's a narr
 
 ## What tight scoping actually buys you
 
-- **Smaller blast radius.** If an account is compromised, the attacker inherits only what that account could reach - not the whole organization.
-- **Fewer moving parts per environment.** Fewer people with standing access to a given system means fewer unexpected changes and a more predictable environment.
-- **Faster incident response.** When access is scoped by role, you can immediately narrow "who could have done this" to the handful of people who actually had the ability to.
-- **Clearer ownership.** Access mapped to job function makes it obvious who's responsible for what, instead of everyone having a bit of everything.
-- **Easier onboarding and offboarding.** Assigning and removing a role is simpler than auditing an individual's sprawling permission history.
-- **Regulatory alignment.** Many compliance frameworks specifically expect access to be scoped to job function - this is one of the easier boxes to check when it's built in from the start rather than bolted on.
+If an account is compromised, tight scoping means the attacker inherits only what that account could reach - not the whole organization. It also means fewer people hold standing access to any given system, so there are fewer unexpected changes and a more predictable environment overall. When an incident does happen, scoping by role lets you immediately narrow "who could have done this" to the handful of people who actually had the ability to, instead of auditing everyone.
+
+There's an ownership benefit too: access mapped to job function makes it obvious who's responsible for what, instead of everyone having a bit of everything. Onboarding and offboarding get simpler, since assigning or removing a role beats auditing an individual's sprawling permission history one entry at a time. And a lot of compliance frameworks specifically expect access to be scoped to job function - this is one of the easier boxes to check when it's built in from the start rather than bolted on afterward.
 
 ## How narrow scope limits real attacks
 
-Most breaches don't start with an attacker breaking into everything at once - they start with one foothold, then depend on that foothold being able to reach more than it should. Tight scoping directly blunts this:
-
-- **Escalation attempts stall out.** Whether an attacker is trying to climb from a low-privileged account into an administrative one, or hijack a peer's similarly-scoped credentials, there's simply less to climb into if roles are narrow to begin with.
-- **A single stolen credential goes less far.** Passwords get phished, reused, or leaked in unrelated breaches constantly. If that credential only unlocks one role's resources, the damage is contained.
-- **Malware can't pivot as easily.** Software that hijacks a session or a device inherits whatever that session could reach - nothing more.
-- **Insider risk shrinks.** A disgruntled or careless employee, whether acting deliberately or by mistake, can only affect the systems their role actually touches.
+Most breaches don't start with an attacker breaking into everything at once - they start with one foothold, then depend on that foothold being able to reach more than it should. Tight scoping blunts this at every step. An attacker trying to climb from a low-privileged account into an administrative one, or hijack a peer's similarly-scoped credentials, simply has less to climb into if roles are narrow to begin with. A single stolen credential goes less far, too: passwords get phished, reused, or leaked in unrelated breaches constantly, and if that credential only unlocks one role's resources, the damage is contained. Malware that hijacks a session or a device inherits whatever that session could reach and nothing more. And insider risk shrinks - a disgruntled or careless employee, whether acting deliberately or by mistake, can only affect the systems their role actually touches.
 
 ## Applying least privilege with Pangolin
 

@@ -34,6 +34,7 @@
                             {
                                 "group": "Security",
                                 "pages": [
+                                    "about/security/wireguard",
                                     "about/security/zero-trust-networking",
                                     "about/security/least-privilege-access",
                                     "about/security/fips-fedramp"
