@@ -1,0 +1,8 @@
+---
+title: "Pangolin Uses WireGuard"
+description: "How Pangolin uses WireGuard to create secure, encrypted connections"
+---
+
+WireGuard is an open source network tunneling protocol for creating encrypted communication channels. It's designed to replace other VPN protocols, such as OpenVPN and IPsec, as a simpler and lighter-weight alternative. The protocol maintains concurrent connections with minimal overhead per session. Independent cryptographers have reviewed the WireGuard protocol, and security auditors have examined the code implementation, identifying and allowing for the correction of minor issues. For more about WireGuard's technical details, review their whitepaper.
+
+Pangolin builds on top of WireGuard and adds additional components such as NAT traversal, relay fallback, and access control policies. Pangolin's implementation differs from standard WireGuard implementations in several ways. For example, where WireGuard provides encrypted tunnels between endpoints, Pangolin constructs a hub-and-spoke network topology with additional network services and authentication mechanisms. Pangolin uses the open source wireguard-go package running in userspace, which comes with Pangolin's Newt and Olm clients.

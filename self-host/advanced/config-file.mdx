@@ -310,7 +310,7 @@ This section contains the complete reference for all configuration options in `c
 
       **Default**: `false`
 
-      **Environment Variable**: `ENABLE_AI_GATEWAY_CLIENT_IP_HEADER` (or `ENABLE_AI_GATEWAY_CLIENT_IP_HEADER_FILE` to read the value from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `ENABLE_AI_GATEWAY_CLIENT_IP_HEADER` (or `ENABLE_AI_GATEWAY_CLIENT_IP_HEADER_FILE` to read the value from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
 
       <Note>
         Useful when an intermediary proxy sits between Traefik and the AI Gateway and overwrites `X-Forwarded-For`/`X-Real-Ip` instead of appending to them. Requires a Badger version that supports `realIpHeader`.
@@ -336,7 +336,7 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="secret" type="string" required>
       Secret key for encrypting sensitive data.
 
-      **Environment Variable**: `SERVER_SECRET` (or `SERVER_SECRET_FILE` to read the value from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `SERVER_SECRET` (or `SERVER_SECRET_FILE` to read the value from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
 
       **Minimum Length**: 8 characters
 
@@ -765,7 +765,7 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="smtp_user" type="string">
       SMTP username.
 
-      **Environment Variable**: `EMAIL_SMTP_USER` (or `EMAIL_SMTP_USER_FILE` to read the value from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `EMAIL_SMTP_USER` (or `EMAIL_SMTP_USER_FILE` to read the value from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
 
       **Example**: `no-reply@example.com`
     </ResponseField>
@@ -773,7 +773,7 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="smtp_pass" type="string">
       SMTP password.
 
-      **Environment Variable**: `EMAIL_SMTP_PASS` (or `EMAIL_SMTP_PASS_FILE` to read the value from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `EMAIL_SMTP_PASS` (or `EMAIL_SMTP_PASS_FILE` to read the value from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
     </ResponseField>
 
     <ResponseField name="smtp_secure" type="boolean">
@@ -938,7 +938,7 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="connection_string" type="string" required>
       PostgreSQL connection string.
 
-      **Environment Variable**: `POSTGRES_CONNECTION_STRING` (or `POSTGRES_CONNECTION_STRING_FILE` to read the value from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `POSTGRES_CONNECTION_STRING` (or `POSTGRES_CONNECTION_STRING_FILE` to read the value from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
 
       **Example**: `postgresql://user:password@host:port/database`
 
@@ -950,7 +950,7 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="replicas" type="array of objects">
       Read-only replica database configurations for load balancing.
 
-      **Environment Variable**: `POSTGRES_REPLICA_CONNECTION_STRINGS`, a comma-separated list of connection strings (or `POSTGRES_REPLICA_CONNECTION_STRINGS_FILE` to read the same comma-separated list from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `POSTGRES_REPLICA_CONNECTION_STRINGS`, a comma-separated list of connection strings (or `POSTGRES_REPLICA_CONNECTION_STRINGS_FILE` to read the same comma-separated list from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
 
       <Expandable title="Replica Configuration">
         <ResponseField name="connection_string" type="string" required>
@@ -1020,7 +1020,7 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="connection_string" type="string">
       Connection string for the dedicated logs database.
 
-      **Environment Variable**: `POSTGRES_LOGS_CONNECTION_STRING` (or `POSTGRES_LOGS_CONNECTION_STRING_FILE` to read the value from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `POSTGRES_LOGS_CONNECTION_STRING` (or `POSTGRES_LOGS_CONNECTION_STRING_FILE` to read the value from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
 
       **Example**: `postgresql://user:password@host:port/logs_database`
 
@@ -1032,7 +1032,7 @@ This section contains the complete reference for all configuration options in `c
     <ResponseField name="replicas" type="array of objects">
       Read-only replica configurations for the logs database.
 
-      **Environment Variable**: `POSTGRES_LOGS_REPLICA_CONNECTION_STRINGS`, a comma-separated list of connection strings (or `POSTGRES_LOGS_REPLICA_CONNECTION_STRINGS_FILE` to read the same comma-separated list from a file — see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
+      **Environment Variable**: `POSTGRES_LOGS_REPLICA_CONNECTION_STRINGS`, a comma-separated list of connection strings (or `POSTGRES_LOGS_REPLICA_CONNECTION_STRINGS_FILE` to read the same comma-separated list from a file - see [Reading secrets from a file](#reading-secrets-from-a-file-_file-suffix))
 
       <Expandable title="Replica Configuration">
         <ResponseField name="connection_string" type="string" required>
@@ -1199,7 +1199,7 @@ Some configuration values can be set using environment variables for enhanced se
 
 ### Reading secrets from a file (`_FILE` suffix)
 
-For any variable marked "Supports `_FILE`" above, you can set `<VARIABLE>_FILE` instead of `<VARIABLE>` to a path on disk, and Pangolin will read that file and use its (trimmed) contents as the value. This is the standard way to consume [Docker/Swarm secrets](https://docs.docker.com/engine/swarm/secrets/) — for example a secret mounted at `/run/secrets/server_secret` — without ever putting the raw value in `config.yml`, a `.env` file, or the container's visible environment.
+For any variable marked "Supports `_FILE`" above, you can set `<VARIABLE>_FILE` instead of `<VARIABLE>` to a path on disk, and Pangolin will read that file and use its (trimmed) contents as the value. This is the standard way to consume [Docker/Swarm secrets](https://docs.docker.com/engine/swarm/secrets/) - for example a secret mounted at `/run/secrets/server_secret` - without ever putting the raw value in `config.yml`, a `.env` file, or the container's visible environment.
 
 Setting both `<VARIABLE>` and `<VARIABLE>_FILE` at the same time is an error.
 

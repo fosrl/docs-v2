@@ -30,7 +30,15 @@
                             "about/how-pangolin-works",
                             "about/pangolin-vs-reverse-proxy-vs-vpn",
                             "about/pangolin-vs-bifrost-vs-litellm",
-                            "about/pangolin-cloud-vs-self-hosted"
+                            "about/pangolin-cloud-vs-self-hosted",
+                            {
+                                "group": "Security",
+                                "pages": [
+                                    "about/security/zero-trust-networking",
+                                    "about/security/least-privilege-access",
+                                    "about/security/fips-fedramp"
+                                ]
+                            }
                         ]
                     },
                     {
