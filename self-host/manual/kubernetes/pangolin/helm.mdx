@@ -179,13 +179,43 @@ helm repo add fossorial https://charts.fossorial.io
 helm repo update fossorial
 ```
 
+<Warning>
+  The Pangolin chart is published as a pre-release (currently `0.1.0-alpha.2`). Helm hides
+  pre-release versions from `helm search` and refuses to install them unless you pass
+  `--devel` or name an exact version, so the commands below need `--devel`. Without it,
+  `helm search repo fossorial` lists only the Newt chart and the install fails with
+  `no chart version found`.
+
+  This applies only to Pangolin. The Newt chart has stable releases and needs no flag.
+</Warning>
+
+List the available charts:
+
+```bash
+helm search repo fossorial --devel
+```
+
 Install Pangolin:
 
 ```bash
-helm upgrade --install pangolin fossorial/pangolin \
+helm upgrade --install pangolin fossorial/pangolin --devel \
   --namespace pangolin \
   --values values-pangolin.yaml
 ```
+
+<Tip>
+  Prefer pinning the exact version instead of tracking the newest pre-release, so an
+  upgrade never picks up a new alpha unintentionally:
+
+  ```bash
+  helm upgrade --install pangolin fossorial/pangolin \
+    --version 0.1.0-alpha.2 \
+    --namespace pangolin \
+    --values values-pangolin.yaml
+  ```
+
+  An explicit `--version` makes `--devel` unnecessary.
+</Tip>
 
 Do not use `--create-namespace` here. The namespace was created and labeled before installation.
 
@@ -264,7 +294,7 @@ The chart routes `/api/v1` to the Pangolin external/API port and the dashboard r
 If you installed with `gerbil.startupMode=delayed`, switch Gerbil to normal mode after the initial setup is complete:
 
 ```bash
-helm upgrade pangolin fossorial/pangolin \
+helm upgrade pangolin fossorial/pangolin --devel \
   --namespace pangolin \
   --reuse-values \
   --set gerbil.startupMode=normal
@@ -288,10 +318,16 @@ helm repo update fossorial
 Upgrade the release:
 
 ```bash
-helm upgrade pangolin fossorial/pangolin \
+helm upgrade pangolin fossorial/pangolin --devel \
   --namespace pangolin \
   --values values-pangolin.yaml
 ```
+
+<Note>
+  `--devel` is required here for the same reason as during install: without it Helm will
+  not resolve a pre-release version and the upgrade fails. Drop it once the chart has a
+  stable release, or replace it with an explicit `--version`.
+</Note>
 
 Check upgrade status:
 
@@ -314,14 +350,14 @@ Pull the chart:
 
 ```bash
 helm pull oci://ghcr.io/fosrl/helm-charts/pangolin \
-  --version 0.1.0-alpha.0
+  --version 0.1.0-alpha.2
 ```
 
 Install from OCI:
 
 ```bash
 helm upgrade --install pangolin oci://ghcr.io/fosrl/helm-charts/pangolin \
-  --version 0.1.0-alpha.0 \
+  --version 0.1.0-alpha.2 \
   --namespace pangolin \
   --values values-pangolin.yaml
 ```
