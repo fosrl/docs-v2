@@ -221,9 +221,11 @@ Use these steps if you're setting up Enterprise Edition for the first time (incl
 
 <AccordionGroup>
 <Accordion title="How many license keys do I need?">
-  **One key per Pangolin server instance**
+  **At least one key per Pangolin server instance**
 
   Each host (server) running Pangolin requires its own license key. You cannot share a single key across multiple servers. A server is considered to be a single database instance.
+
+  You can activate more than one key on the same server to increase its user and site capacity — see [Adding Capacity with Multiple Licenses](#adding-capacity-with-multiple-licenses).
 </Accordion>
 
 <Accordion title="Can I get a trial license?">
@@ -236,6 +238,28 @@ Use these steps if you're setting up Enterprise Edition for the first time (incl
   If you're uncertain whether you qualify for free licensing or need a commercial license, reach out to [sales@pangolin.net](mailto:sales@pangolin.net) with your organization details.
 </Accordion>
 </AccordionGroup>
+
+## Adding Capacity with Multiple Licenses
+
+If your server needs more user or site capacity than a single license provides, you can generate and activate additional license keys on the same server instead of purchasing a larger plan. Alternatively reach out to support to update your contract. 
+
+- **Capacity stacks**: The user and site limits from every valid key activated on the server are added together.
+- **Highest tier wins**: Feature access is based on the highest tier among your active keys. For example, activating a Scale-tier key alongside a Starter-tier key unlocks Scale-tier features across the whole server.
+- **Personal keys can't combine with paid keys**: If a paid (non-personal) key is active on the server, any personal-use keys are automatically excluded and stop counting toward capacity.
+
+<Steps>
+<Step title="Generate an additional license">
+  Purchase or generate another license key from [app.pangolin.net](https://app.pangolin.net) — see [Purchase a license key](/self-host/purchase-license-key).
+</Step>
+
+<Step title="Add it to your server">
+  Log in with server admin credentials, open the Server Admin panel, and go to the License section at `/admin/license`. Use **Add** to activate the additional key — it's added alongside your existing key(s) rather than replacing them.
+</Step>
+
+<Step title="Verify combined capacity">
+  The License section shows your combined user and site limits across all activated keys.
+</Step>
+</Steps>
 
 ## FAQ
 
