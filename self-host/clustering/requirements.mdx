@@ -9,6 +9,10 @@ Clustering is only available in [Enterprise Edition](/self-host/enterprise-editi
 
 Review these requirements before you start deploying. They cover the hosts you need, the ports that must be open, and the DNS records you need to delegate ahead of time. For background on why each piece exists, see [Understanding Clustering](/self-host/clustering/understanding-clustering).
 
+<Tip>
+Pangolin can support tens of thousands of sites. Ensure you size your cluster properly for the amount of sites you plan to include and their throughput. In general, for low bandwidth sites ~1,000 can fit on a standard single node. [Ensure you choose subnets for your nodes that support the desired number of sites](/self-host/advanced/increasing-subnet-capacity).  
+</Tip>
+
 ## Hosts
 
 You need a minimum of **three hosts**:

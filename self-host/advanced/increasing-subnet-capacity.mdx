@@ -5,6 +5,10 @@ description: "Understand the Gerbil subnet hierarchy and how to raise the number
 
 Every Gerbil exit node hands out its own persistent WireGuard subnet, and every site or client that connects to that exit node gets its own smaller subnet carved out of it. By default this hierarchy only leaves room for a limited number of sites and clients per exit node. If you're running a large deployment and are hitting that ceiling, you can raise it by changing three related settings in `config.yml`.
 
+<Note>
+Pangolin can support tens of thousands of sites. As you scale the amount of sites, ensure you have sufficient subnet space on your exit nodes and [deploy clustered versions of Pangolin to enable expansion](/self-host/clustering/understanding-clustering).
+</Note>
+
 ## How the subnet hierarchy works
 
 There are three [`gerbil`](/self-host/advanced/config-file#gerbil-tunnel-controller) settings that work together, each nested inside the one before it:
