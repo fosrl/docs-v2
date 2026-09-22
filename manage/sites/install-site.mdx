@@ -266,6 +266,79 @@ Running a site in a Kubernetes cluster is covered separately from the Docker ins
 	</Card>
 </CardGroup>
 
+### Alpine Linux (OpenRC)
+
+Alpine Linux uses OpenRC instead of systemd, so `pangolin service install site` is not available there — it looks for `systemctl` and exits with an error if it isn't found. On Alpine you install the OpenRC service by hand.
+
+<Note>
+Alpine ships without `bash` by default. If `curl -fsSL https://static.pangolin.net/get-cli.sh | bash` fails because `bash` is missing, run `apk add bash` first, or download the binary directly from the [GitHub releases](https://github.com/fosrl/cli/releases/latest).
+</Note>
+
+Install the CLI the same way as other Linux distributions:
+
+```bash
+curl -fsSL https://static.pangolin.net/get-cli.sh | bash
+```
+
+Create `/etc/conf.d/pangolin-site` with your site's credentials. Unlike systemd's `EnvironmentFile`, OpenRC sources this file as a shell script, so the variables must be `export`ed to reach the `pangolin` process:
+
+```bash title="/etc/conf.d/pangolin-site"
+export SITE_ID=31frd0uzbjvp721
+export SITE_SECRET=h51mmlknrvrwv8s4r1i210azhumt6isgbpyavxodibx1k2d6
+export PANGOLIN_ENDPOINT=https://app.pangolin.net
+```
+
+Restrict its permissions, since it contains your site secret:
+
+```bash
+sudo chmod 600 /etc/conf.d/pangolin-site
+```
+
+Create the OpenRC init script. It uses `supervise-daemon` to keep `pangolin up site` running in the background and restart it if it exits:
+
+```bash title="/etc/init.d/pangolin-site"
+#!/sbin/openrc-run
+
+name="pangolin-site"
+description="Pangolin Site"
+
+command="/usr/local/bin/pangolin"
+command_args="up site"
+command_background="yes"
+supervisor="supervise-daemon"
+
+pidfile="/run/pangolin-site.pid"
+output_log="/var/log/pangolin-site.log"
+error_log="/var/log/pangolin-site.err"
+
+depend() {
+    need net
+    after firewall
+}
+```
+
+Make it executable, then enable and start the service:
+
+```bash
+sudo chmod +x /etc/init.d/pangolin-site
+sudo rc-update add pangolin-site default
+sudo rc-service pangolin-site start
+```
+
+Check the status and logs:
+
+```bash
+sudo rc-service pangolin-site status
+cat /var/log/pangolin-site.log
+cat /var/log/pangolin-site.err
+```
+
+<Warning>
+Do not pass `--id` and `--secret` as command-line arguments in `command_args` for a long-running service. Any local user can read them from the process list (`ps aux`). Use the `export`ed environment variables in `/etc/conf.d/pangolin-site` instead, as shown above.
+</Warning>
+
+If you later change `/etc/conf.d/pangolin-site`, restart the service to pick up the new values: `sudo rc-service pangolin-site restart`.
+
 ### Newt
 
 Advantech routers, Windows services, and other Newt-only install methods are documented on [Install Newt](/manage/sites/install-newt). Use Newt when you want the smaller standalone connector instead of the Pangolin CLI.
