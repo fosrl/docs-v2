@@ -424,7 +424,7 @@ ping:
 ```yaml title="config/dynamic/dynamic_config.yml"
 http:
   middlewares:
-    badger:
+    badger-noauth:
       plugin:
         badger:
           disableForwardAuth: true
@@ -437,7 +437,7 @@ http:
       entryPoints:
         - dashboard
       middlewares:
-        - badger
+        - badger-noauth
 
     # API router (handles /api/v1 paths)
     api-router:
@@ -446,7 +446,7 @@ http:
       entryPoints:
         - dashboard
       middlewares:
-        - badger
+        - badger-noauth
 
     # WebSocket router
     ws-router:
@@ -455,7 +455,7 @@ http:
       entryPoints:
         - dashboard
       middlewares:
-        - badger
+        - badger-noauth
 
   services:
     next-service:
