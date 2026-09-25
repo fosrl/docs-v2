@@ -12,7 +12,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: { template: `%s - ${appName}`, default: appName },
+  title: { template: `%s | ${appName}`, default: appName },
   description: siteDescription,
   appleWebApp: { title: appName },
   openGraph: { siteName: appName, images: '/images/home-social-graph.png' },
