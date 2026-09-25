@@ -1,0 +1,1753 @@
+---
+title: "Blueprints"
+description: "Define Pangolin resources and site settings declaratively with YAML or container labels"
+---
+
+Blueprints let you define Pangolin resources as code. Instead of configuring every site, target, and access rule manually in the dashboard, you describe the desired state in YAML or container labels and let Pangolin apply it consistently.
+
+Use blueprints when you want:
+
+- Repeatable rollouts across many sites
+- Version control for infrastructure and access settings
+- A source of truth that can be reviewed, templated, and automated
+
+<Note type="info">
+Some features in this documentation are marked with **(EE)**, which means they require [Enterprise Edition](/self-host/enterprise-edition).
+</Note>
+
+## Blueprint Mental Model
+
+A blueprint can contain up to four top-level sections:
+
+- **`public-resources`**: Internet-facing HTTP, TCP, UDP, SSH, RDP, or VNC resources
+- **`private-resources`**: Client-only access to hosts or CIDR ranges
+- **`public-policies`**: Reusable authentication and access policy objects
+- **`sites`**: Site-level settings such as container label discovery
+
+```yaml
+public-resources:
+  <resource_key>:
+    ...
+
+private-resources:
+  <resource_key>:
+    ...
+
+public-policies:
+  <policy_key>:
+    ...
+
+sites:
+  <site_key>:
+    ...
+```
+
+Think of the resource key as your stable ID inside the blueprint. The fields under that key describe what Pangolin should create or maintain.
+
+These keys are the same idea as the **Identifier** shown in the Pangolin app, called `niceId` in the API. Choose readable, stable keys such as `warehouse-west` or `web-app`; blueprints use them to match and update the same sites and resources on later applies. For more detail, see [What is an identifier?](/manage/common-api-routes#what-is-an-identifier).
+
+## Choose A Format
+
+Pangolin supports two blueprint formats:
+
+### YAML
+
+Use YAML when you want a readable file that can be committed to git, applied through a site, pasted into the UI, or sent through the API.
+
+### Container Labels
+
+Use container labels when the resource definition should live inside your Compose stack. This is especially useful when a container and its Pangolin resource should be managed together.
+
+## How YAML Blueprints Are Applied
+
+<Card title="UI">
+  Paste YAML into **Settings > Blueprints** in the Pangolin dashboard.
+
+  <Frame>
+    <img src="/images/create_blueprint.png" alt="Blueprint creation page in the Pangolin dashboard" width="400"/>
+  </Frame>
+</Card>
+
+<Card title="Site">
+  Run a site with `--blueprint-file` to keep the file declarative and continuously applied:
+
+  ```bash
+  pangolin up site --blueprint-file /path/to/blueprint.yaml --id <id> --secret <secret> --endpoint https://app.pangolin.net
+  ```
+
+  If you only want a one-time bootstrap during provisioning, use [`--provisioning-blueprint-file`](/manage/sites/site-provisioning) instead.
+</Card>
+
+<Card title="API">
+  Apply a blueprint through the Pangolin API with an API key. See the [API documentation](https://api.pangolin.net/v1/docs/#/Organization/put_org__orgId__blueprint).
+
+  `PUT /org/{orgId}/blueprint`
+
+  ```json
+  {
+    "blueprint": "base64-encoded-json-content"
+  }
+  ```
+
+  [Python example](https://github.com/fosrl/pangolin/blob/dev/blueprint.py)
+</Card>
+
+<Card title="CLI">
+  Apply a blueprint directly from the Pangolin CLI when you want a one-off apply from a terminal, CI job, or local automation.
+
+  **Using your logged-in user account**
+
+  First log in and select the organization you want the blueprint applied to:
+
+  ```bash
+  pangolin login
+  pangolin select org --org <org_id>
+  ```
+
+  Then apply the file:
+
+  ```bash
+  pangolin apply blueprint --file /path/to/blueprint.yaml
+  ```
+
+  The CLI uses your active account and selected organization. You can optionally set the saved blueprint name:
+
+  ```bash
+  pangolin apply blueprint --file /path/to/blueprint.yaml --name production
+  ```
+
+  **Using an Integration API key**
+
+  For non-interactive automation, pass an Integration API key, API endpoint, and organization ID together:
+
+  ```bash
+  pangolin apply blueprint \
+    --file /path/to/blueprint.yaml \
+    --api-key <api_key_id.api_key_secret> \
+    --endpoint https://api.example.com \
+    --org <org_id>
+  ```
+
+  For Pangolin Cloud, use `https://api.pangolin.net` as the endpoint. For self-hosted Pangolin, use your API host, for example `https://api.your-domain.com`. See [Integration API](/manage/integration-api) for creating API keys and enabling the API on self-hosted deployments.
+
+  You can also pipe a blueprint through stdin. When using stdin, provide `--name` because there is no filename to derive it from:
+
+  ```bash
+  render-blueprint | pangolin apply blueprint --file - --name production
+  ```
+</Card>
+
+<Note>
+`--blueprint-file` on a site and container labels behave as an ongoing source of truth. Dashboard edits can be overwritten the next time the blueprint is applied. UI, API, and CLI applies are typically one-off operations.
+</Note>
+
+## Quick Start YAML Example
+
+This example shows three common top-level sections in one file:
+
+```yaml
+public-resources:
+  web-app:
+    name: Web App
+    mode: http
+    full-domain: app.example.com
+    auth:
+      sso-enabled: true
+      whitelist-users:
+        - admin@example.com
+    targets:
+      - site: my-site
+        hostname: app
+        port: 8080
+        method: http
+        healthcheck:
+          hostname: app
+          port: 8080
+          path: /health
+
+private-resources:
+  ssh-host:
+    name: SSH Host
+    mode: host
+    sites:
+      - my-site
+    destination: 192.168.1.10
+    tcp-ports: "22"
+    roles:
+      - DevOps
+
+sites:
+  my-site:
+    name: My Site
+    docker-socket-enabled: true
+```
+
+## Public Resources
+
+Public resources expose services through Pangolin.
+
+- Use **`http`** for websites, APIs, and dashboards
+- Use **`tcp`** or **`udp`** for raw public services bound to a port on the Pangolin server
+- Use **`ssh`**, **`rdp`**, or **`vnc`** for protocol-specific resources
+- Use **`inference`** for an [AI Gateway](/manage/ai/overview) resource that proxies requests to one or more attached AI providers
+
+<Note>
+Use `mode` for new blueprints. `protocol` is still accepted for backward compatibility and is normalized to `mode`.
+</Note>
+
+### HTTP Resource Example
+
+```yaml
+public-resources:
+  app:
+    name: App
+    mode: http
+    full-domain: app.example.com
+    host-header: app.internal
+    tls-server-name: app.internal
+    headers:
+      - name: X-Env
+        value: production
+    rules:
+      - action: allow
+        match: country
+        value: US
+      - action: deny
+        match: path
+        value: /admin
+    auth:
+      sso-enabled: true
+      whitelist-users:
+        - admin@example.com
+    targets:
+      - site: my-site
+        hostname: app
+        port: 8080
+        method: http
+```
+
+<Note>
+When applying a blueprint from a site (using `--blueprint-file` or container labels), `site` on each target is optional. If omitted, the target is assigned to the site that applied the blueprint.
+</Note>
+
+### Raw TCP Or UDP Example
+
+```yaml
+public-resources:
+  mqtt:
+    name: Mosquitto MQTT
+    mode: tcp
+    proxy-port: 1883
+    targets:
+      - site: my-site
+        hostname: mqtt-server
+        port: 1883
+```
+
+For raw resources:
+
+- `proxy-port` is required
+- Target `method` must not be set
+- `auth` is not supported
+
+### Targets-Only Resources
+
+A public resource can contain only `targets`. This is useful when you want to add or manage targets for an existing resource definition without repeating all resource-level fields.
+
+```yaml
+public-resources:
+  extra-targets:
+    targets:
+      - site: secondary-site
+        hostname: app-2
+        port: 8080
+        method: http
+      - site: tertiary-site
+        hostname: app-3
+        port: 8080
+        method: http
+```
+
+When a resource is targets-only, `name` and `mode` are not required.
+
+### Authentication Example
+
+Authentication is configured inside `auth` and is supported only for HTTP resources.
+
+```yaml
+public-resources:
+  secure-app:
+    name: Secure App
+    mode: http
+    full-domain: secure.example.com
+    auth:
+      pincode: 123456
+      password: strong-password
+      basic-auth:
+        user: demo
+        password: change-me
+      sso-enabled: true
+      sso-roles:
+        - Member
+      sso-users:
+        - user@example.com
+      whitelist-users:
+        - admin@example.com
+```
+
+### Maintenance Page **(EE)**
+
+The `maintenance` object lets you present a maintenance page for a public HTTP resource.
+
+```yaml
+public-resources:
+  app:
+    name: App
+    mode: http
+    full-domain: app.example.com
+    maintenance:
+      enabled: true
+      type: automatic
+      title: Scheduled Maintenance
+      message: We are upgrading the service.
+      estimated-time: 2 hours
+    targets:
+      - site: my-site
+        hostname: app
+        port: 8080
+        method: http
+```
+
+Maintenance `type` values:
+
+- **`forced`**: Always show the maintenance page
+- **`automatic`**: Show it only when all targets are unhealthy or the sites are offline
+
+### AI Gateway (Inference) Example
+
+Set `mode: inference` to turn a public resource into an [AI Gateway](/manage/ai/overview) that proxies requests to one or more AI providers already configured in the organization. Inference resources do not take `targets`.
+
+```yaml
+public-resources:
+  ai-gateway:
+    name: AI Gateway
+    mode: inference
+    full-domain: ai.example.com
+    ai-providers:
+      - provider: openai-prod
+        access-mode: select
+        models:
+          - gpt-4o
+      - provider: anthropic-prod
+        access-mode: inherit
+    ai-budget:
+      - amount: 100
+        unit: usd
+        period: monthly
+        enforcement: hard
+```
+
+- `ai-providers` references AI providers by their identifier and is only allowed when `mode: inference`.
+- `access-mode: select` limits the resource to the listed `models`, which must already be on the provider's allow list. `access-mode: inherit` uses the provider's own allow and block lists. See [Model Routing](/manage/ai/providers/model-routing) for details.
+- `ai-budget` is a list of spend or usage limits enforced on the resource. Only one budget per `unit`/`period` combination is allowed.
+
+## Private Resources
+
+Private resources define what Pangolin clients can reach after they connect to your organization.
+
+- Use **`mode: host`** for a single host or DNS name
+- Use **`mode: cidr`** for an entire network range
+- Use **`mode: http`** to expose an internal HTTP endpoint to clients via a private domain
+- Use **`mode: ssh`** for SSH access workflows (including native auth-daemon mode)
+- Use **`mode: inference`** for a private [AI Gateway](/manage/ai/overview) resource reachable only by Pangolin clients, not the public internet
+
+<Note>
+When applying a blueprint from a site (using `--blueprint-file` or container labels), `sites` is optional. If omitted, the resource is assigned to the site that applied the blueprint.
+</Note>
+
+```yaml
+private-resources:
+  internal-net:
+    name: Internal Network
+    mode: cidr
+    destination: 10.0.0.0/24
+    sites:
+      - my-site
+    tcp-ports: "22,443,8000-9000"
+    udp-ports: "53,123"
+    disable-icmp: false
+    alias: "*.internal.example.com"
+    roles:
+      - Developer
+    users:
+      - user@example.com
+    machines:
+      - machine-id-1
+
+  internal-app:
+    name: Internal App
+    mode: http
+    destination: 10.0.0.5
+    destination-port: 8080
+    sites:
+      - my-site
+    full-domain: app.internal.example.com
+    ssl: true
+    scheme: https
+    roles:
+      - Member
+```
+
+## Resource Labels
+
+Attach labels to public and private resources to organize and filter them in the dashboard. These are the same labels manageable from **Settings > Labels** - not to be confused with the [Docker container labels](#container-labels-format) used to define blueprints from Compose.
+
+```yaml
+public-resources:
+  app:
+    name: App
+    mode: http
+    full-domain: app.example.com
+    labels:
+      - production
+      - team-infra
+    targets:
+      - site: my-site
+        hostname: app
+        port: 8080
+        method: http
+```
+
+- Label names are matched case-insensitively against existing labels in the organization.
+- If a label with that name doesn't already exist yet, Pangolin creates it automatically.
+- Each apply replaces the resource's full label list with the list in the blueprint.
+- Labels are not synced for [targets-only](#targets-only-resources) public resources - omitting `labels` on a targets-only update leaves existing labels untouched.
+
+## Container Labels Format
+
+Container labels are the same blueprint schema flattened into dot-separated keys:
+
+- Start every label with `pangolin.`
+- Keep the same object path as YAML
+- Use array indexes for lists, such as `[0]`
+
+Example YAML:
+
+```yaml
+public-resources:
+  my-app:
+    headers:
+      - name: X-Env
+        value: prod
+```
+
+Equivalent Compose labels:
+
+```yaml
+labels:
+  - pangolin.public-resources.my-app.headers[0].name=X-Env
+  - pangolin.public-resources.my-app.headers[0].value=prod
+```
+
+<Note>
+Container labels are continuously applied. Treat the Compose file as the source of truth because dashboard edits can be overwritten.
+</Note>
+
+### Enable Container Label Discovery
+
+To use container labels, the site must be able to read the Docker socket:
+
+```bash
+pangolin up site --docker-socket /var/run/docker.sock --id <id> --secret <secret> --endpoint https://app.pangolin.net
+```
+
+Or with an environment variable:
+
+```bash
+DOCKER_SOCKET=/var/run/docker.sock
+```
+
+### Docker Compose Example
+
+```yaml
+services:
+  pangolin-site:
+    image: fosrl/pangolin-cli
+    container_name: pangolin-site
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PANGOLIN_ENDPOINT=https://app.pangolin.net
+      - SITE_ID=h1rbsgku89wf9z3
+      - SITE_SECRET=z7g54mbcwkglpx1aau9gb8mzcccoof2fdbs97keoakg2pp5z
+      - DOCKER_SOCKET=/var/run/docker.sock
+
+  nginx1:
+    image: nginxdemos/hello
+    container_name: nginx1
+    labels:
+      - pangolin.public-resources.nginx.name=nginx
+      - pangolin.public-resources.nginx.full-domain=nginx.fosrl.io
+      - pangolin.public-resources.nginx.protocol=http
+      - pangolin.public-resources.nginx.headers[0].name=X-Example-Header
+      - pangolin.public-resources.nginx.headers[0].value=example-value
+      - pangolin.public-resources.nginx.targets[0].method=http
+      - pangolin.public-resources.nginx.targets[0].path=/path
+      - pangolin.public-resources.nginx.targets[0].path-match=prefix
+
+  nginx2:
+    image: nginxdemos/hello
+    container_name: nginx2
+    labels:
+      - pangolin.public-resources.nginx.targets[1].method=http
+      - pangolin.public-resources.nginx.targets[1].hostname=nginx2
+      - pangolin.public-resources.nginx.targets[1].port=80
+
+networks:
+  default:
+    name: pangolin_default
+```
+
+This creates a single Pangolin resource with multiple targets:
+
+<Frame caption="Pangolin UI showing Docker Compose blueprint example">
+  <img src="/images/docker-compose-blueprint-example.png" alt="Example resource"/>
+</Frame>
+
+### Container Label Behavior
+
+<Card title="Automatic Discovery">
+  If `hostname` or `port` are not set explicitly, Pangolin can detect them from the container configuration. The hostname typically defaults to the container name, and port detection is based on the container's `expose` configuration.
+</Card>
+
+<Card title="Site Assignment">
+  If no `site` is specified on a target (public resource) or on a private resource, it is assigned to the site that applied the blueprint, whether through container labels or `--blueprint-file`.
+</Card>
+
+<Card title="Merged Configuration">
+  Labels from multiple containers can be merged into one logical resource, which is useful when different containers contribute different targets.
+</Card>
+
+## Configuration Reference
+
+Use this section when you need the full schema. The order below mirrors the blueprint structure rather than the dashboard UI.
+
+### Top-Level Object
+
+```yaml
+public-resources:
+  app:
+    name: App
+    mode: http
+    full-domain: app.example.com
+    targets:
+      - hostname: app
+        port: 80
+        method: http
+
+private-resources:
+  ssh-host:
+    name: SSH Host
+    mode: host
+    sites:
+      - my-site
+    destination: 192.168.1.10
+    tcp-ports: "22"
+
+public-policies:
+  default-member:
+    name: Default Member Policy
+    sso: true
+    apply-rules: false
+    rules: []
+
+sites:
+  my-site:
+    name: My Site
+    docker-socket-enabled: true
+```
+
+<Expandable title="Top-level object reference">
+  <ResponseField name="public-resources" type="object">
+    Public proxy resources keyed by resource ID.
+
+    YAML: `public-resources: { web-app: { ... } }`  
+    Container label: `pangolin.public-resources.web-app.name=Web App`
+  </ResponseField>
+
+  <ResponseField name="private-resources" type="object">
+    Private resources keyed by resource ID.
+
+    YAML: `private-resources: { internal-net: { ... } }`  
+    Container label: `pangolin.private-resources.internal-net.mode=cidr`
+  </ResponseField>
+
+  <ResponseField name="public-policies" type="object">
+    Reusable policy definitions keyed by policy ID.
+
+    YAML: `public-policies: { default-member: { ... } }`  
+    Container label: `pangolin.public-policies.default-member.name=Default Member Policy`
+  </ResponseField>
+
+  <ResponseField name="sites" type="object">
+    Site-level settings keyed by site ID.
+
+    YAML: `sites: { my-site: { name: My Site } }`  
+    Container label: `pangolin.sites.my-site.name=My Site`
+
+    <Expandable title="Site object">
+      <ResponseField name="name" type="string" required>
+        Display name for the site.
+
+        YAML: `name: My Site`  
+        Container label: `pangolin.sites.my-site.name=My Site`
+      </ResponseField>
+
+      <ResponseField name="docker-socket-enabled" type="boolean">
+        Enables blueprint discovery from container labels for that site.
+
+        **Default**: `true`
+
+        YAML: `docker-socket-enabled: true`  
+        Container label: `pangolin.sites.my-site.docker-socket-enabled=true`
+      </ResponseField>
+    </Expandable>
+  </ResponseField>
+</Expandable>
+
+### Public Resource Object (`public-resources`)
+
+```yaml
+public-resources:
+  web-app:
+    name: Web App
+    mode: http
+    policy: default-member
+    full-domain: app.example.com
+    enabled: true
+    labels:
+      - production
+    host-header: internal.example.local
+    tls-server-name: internal.example.local
+    headers:
+      - name: X-Env
+        value: prod
+    rules:
+      - action: allow
+        match: country
+        value: US
+      - action: deny
+        match: region
+        value: 019
+    auth:
+      pincode: 123456
+      sso-enabled: true
+      whitelist-users:
+        - admin@example.com
+    maintenance:
+      enabled: true
+      type: automatic
+    targets:
+      - site: my-site
+        hostname: app
+        port: 8080
+        method: http
+        path: /
+        path-match: prefix
+        rewrite-path: /
+        rewrite-match: prefix
+        healthcheck:
+          hostname: app
+          port: 8080
+          path: /health
+```
+
+<Expandable title="Public resource reference">
+  <ResponseField name="<resource_key>" type="object">
+    A single public resource definition.
+
+    <Expandable title="Resource fields">
+      <ResponseField name="name" type="string">
+        Human-readable resource name. Required unless the resource is targets-only.
+
+        YAML: `name: Web App`  
+        Container label: `pangolin.public-resources.web-app.name=Web App`
+      </ResponseField>
+
+      <ResponseField name="mode" type="string">
+        Resource mode. Preferred over `protocol`.
+
+        **Options**: `http`, `tcp`, `udp`, `ssh`, `rdp`, `vnc`, `inference`
+
+        `inference` turns the resource into an [AI Gateway](/manage/ai/overview) that proxies to attached `ai-providers` instead of `targets`.
+
+        YAML: `mode: http`  
+        Container label: `pangolin.public-resources.web-app.mode=http`
+      </ResponseField>
+
+      <ResponseField name="protocol" type="string">
+        Deprecated resource type field. Use `mode` instead.
+
+        **Options**: `http`, `tcp`, `udp`, `ssh`, `rdp`, `vnc`
+
+        YAML: `protocol: http`  
+        Container label: `pangolin.public-resources.web-app.protocol=http`
+      </ResponseField>
+
+      <ResponseField name="policy" type="string">
+        Policy key to attach from `public-policies`.
+
+        YAML: `policy: default-member`  
+        Container label: `pangolin.public-resources.web-app.policy=default-member`
+      </ResponseField>
+
+      <ResponseField name="ssl" type="boolean">
+        Optional SSL/TLS flag present in the schema.
+
+        YAML: `ssl: true`  
+        Container label: `pangolin.public-resources.web-app.ssl=true`
+      </ResponseField>
+
+      <ResponseField name="full-domain" type="string">
+        Public hostname for HTTP resources. Required when `protocol: http`.
+
+        YAML: `full-domain: app.example.com`  
+        Container label: `pangolin.public-resources.web-app.full-domain=app.example.com`
+      </ResponseField>
+
+      <ResponseField name="proxy-port" type="integer">
+        Public port for raw TCP or UDP resources. Required when `mode` is `tcp` or `udp`.
+
+        YAML: `proxy-port: 3000`  
+        Container label: `pangolin.public-resources.raw-api.proxy-port=3000`
+      </ResponseField>
+
+      <ResponseField name="proxy-protocol" type="boolean">
+        Enables Proxy Protocol on TCP resources.
+
+        YAML: `proxy-protocol: true`  
+        Container label: `pangolin.public-resources.raw-api.proxy-protocol=true`
+      </ResponseField>
+
+      <ResponseField name="proxy-protocol-version" type="integer">
+        Proxy Protocol version when `proxy-protocol` is enabled.
+
+        **Minimum**: `1`  
+        YAML: `proxy-protocol-version: 1`  
+        Container label: `pangolin.public-resources.raw-api.proxy-protocol-version=1`
+      </ResponseField>
+
+      <ResponseField name="enabled" type="boolean">
+        Disables the resource without removing it.
+
+        YAML: `enabled: true`  
+        Container label: `pangolin.public-resources.web-app.enabled=true`
+      </ResponseField>
+
+      <ResponseField name="labels" type="array of strings">
+        [Resource labels](#resource-labels) to attach, by name. Labels that don't already exist in the organization are created automatically. Not synced when the resource is [targets-only](#targets-only-resources).
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `labels: [production]`  
+        Container label: `pangolin.public-resources.web-app.labels[0]=production`
+      </ResponseField>
+
+      <ResponseField name="ai-providers" type="array of objects">
+        AI providers attached to an [AI Gateway](/manage/ai/overview) resource. Only allowed when `mode: inference`.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-providers: [{ provider: openai-prod, access-mode: inherit }]`  
+        Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].provider=openai-prod`
+
+        <Expandable title="AI provider attachment object">
+          <ResponseField name="provider" type="string" required>
+            Identifier of an AI provider already configured in the organization.
+
+            YAML: `provider: openai-prod`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].provider=openai-prod`
+          </ResponseField>
+
+          <ResponseField name="access-mode" type="string">
+            How the resource uses the provider's model lists. `select` requires `models` to be set; `inherit` requires `models` to be empty.
+
+            **Options**: `inherit`, `select`  
+            **Default**: `inherit`
+
+            YAML: `access-mode: select`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].access-mode=select`
+          </ResponseField>
+
+          <ResponseField name="enabled" type="boolean">
+            Enables or disables this provider attachment.
+
+            **Default**: `true`
+
+            YAML: `enabled: true`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].enabled=true`
+          </ResponseField>
+
+          <ResponseField name="models" type="array of strings">
+            Subset of the provider's allow-listed model keys exposed by this resource. Only valid when `access-mode: select`.
+
+            Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+            YAML: `models: [gpt-4o]`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-providers[0].models[0]=gpt-4o`
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="ai-budget" type="array of objects">
+        Spend or usage budgets enforced on an [AI Gateway](/manage/ai/overview) resource. Each entry must use a unique `unit`/`period` combination.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-budget: [{ amount: 100, unit: usd, period: monthly }]`  
+        Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].amount=100`
+
+        <Expandable title="AI budget object">
+          <ResponseField name="amount" type="number" required>
+            Budget limit. Must be positive.
+
+            YAML: `amount: 100`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].amount=100`
+          </ResponseField>
+
+          <ResponseField name="unit" type="string" required>
+            Unit the budget is measured in.
+
+            **Options**: `usd`, `tokens`
+
+            YAML: `unit: usd`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].unit=usd`
+          </ResponseField>
+
+          <ResponseField name="period" type="string">
+            Rolling window the budget resets on.
+
+            **Options**: `hourly`, `daily`, `weekly`, `monthly`, `yearly`, `lifetime`  
+            **Default**: `monthly`
+
+            YAML: `period: monthly`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].period=monthly`
+          </ResponseField>
+
+          <ResponseField name="enforcement" type="string">
+            What happens once the budget is exceeded. `hard` blocks further requests; `soft` allows them to continue.
+
+            **Options**: `hard`, `soft`  
+            **Default**: `hard`
+
+            YAML: `enforcement: hard`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].enforcement=hard`
+          </ResponseField>
+
+          <ResponseField name="enabled" type="boolean">
+            Enables or disables this budget.
+
+            **Default**: `true`
+
+            YAML: `enabled: true`  
+            Container label: `pangolin.public-resources.ai-gateway.ai-budget[0].enabled=true`
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="host-header" type="string">
+        Overrides the upstream `Host` header sent to the target.
+
+        YAML: `host-header: internal.example.local`  
+        Container label: `pangolin.public-resources.web-app.host-header=internal.example.local`
+      </ResponseField>
+
+      <ResponseField name="tls-server-name" type="string">
+        Overrides the TLS SNI hostname used for upstream TLS connections.
+
+        YAML: `tls-server-name: internal.example.local`  
+        Container label: `pangolin.public-resources.web-app.tls-server-name=internal.example.local`
+      </ResponseField>
+
+      <ResponseField name="headers" type="array of objects">
+        Static headers added to proxied requests.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `headers: [{ name: X-Env, value: prod }]`  
+        Container label: `pangolin.public-resources.web-app.headers[0].name=X-Env`
+
+        <Expandable title="Header object">
+          <ResponseField name="name" type="string" required>
+            Header name.
+
+            YAML: `name: X-Env`  
+            Container label: `pangolin.public-resources.web-app.headers[0].name=X-Env`
+          </ResponseField>
+
+          <ResponseField name="value" type="string" required>
+            Header value.
+
+            YAML: `value: prod`  
+            Container label: `pangolin.public-resources.web-app.headers[0].value=prod`
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="rules" type="array of objects">
+        Ordered access rules for public resources.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `rules: [{ action: allow, match: country, value: US }]`  
+        Container label: `pangolin.public-resources.web-app.rules[0].action=allow`
+
+        <Expandable title="Rule object">
+          <ResponseField name="action" type="string" required>
+            What Pangolin should do when the rule matches.
+
+            **Options**: `allow`, `deny`, `pass`
+
+            YAML: `action: allow`  
+            Container label: `pangolin.public-resources.web-app.rules[0].action=allow`
+          </ResponseField>
+
+          <ResponseField name="match" type="string" required>
+            Match type for the rule.
+
+            **Options**: `cidr`, `path`, `ip`, `country`, `asn`, `region`
+
+            YAML: `match: country`  
+            Container label: `pangolin.public-resources.web-app.rules[0].match=country`
+          </ResponseField>
+
+          <ResponseField name="value" type="string" required>
+            Value to compare against, such as an IP, CIDR, path, two letter country code, ASN, or region.
+
+            YAML: `value: US`  
+            Container label: `pangolin.public-resources.web-app.rules[0].value=US`
+              <Note>
+                When using <code>match: region</code>, the value must be a supported region code. The following region IDs are available, based on the United Nations geoscheme:
+                <ul>
+                  <li><b>002</b>: Africa</li>
+                  <ul>
+                    <li>015: Northern Africa</li>
+                    <li>014: Eastern Africa</li>
+                    <li>017: Middle Africa</li>
+                    <li>018: Southern Africa</li>
+                    <li>011: Western Africa</li>
+                  </ul>
+                  <li><b>019</b>: Americas</li>
+                  <ul>
+                    <li>029: Caribbean</li>
+                    <li>013: Central America</li>
+                    <li>005: South America</li>
+                    <li>021: Northern America</li>
+                  </ul>
+                  <li><b>142</b>: Asia</li>
+                  <ul>
+                    <li>143: Central Asia</li>
+                    <li>030: Eastern Asia</li>
+                    <li>035: South-Eastern Asia</li>
+                    <li>034: Southern Asia</li>
+                    <li>145: Western Asia</li>
+                  </ul>
+                  <li><b>150</b>: Europe</li>
+                  <ul>
+                    <li>151: Eastern Europe</li>
+                    <li>154: Northern Europe</li>
+                    <li>039: Southern Europe</li>
+                    <li>155: Western Europe</li>
+                  </ul>
+                  <li><b>009</b>: Oceania</li>
+                  <ul>
+                    <li>053: Australia and New Zealand</li>
+                    <li>054: Melanesia</li>
+                    <li>057: Micronesia</li>
+                    <li>061: Polynesia</li>
+                  </ul>
+                </ul>
+                Use the top-level code (e.g., <b>019</b> for all Americas) or a subregion code (e.g., <b>021</b> for Northern America) as needed.
+              </Note>
+          </ResponseField>
+
+          <ResponseField name="priority" type="integer">
+            Explicit rule priority. If omitted, priority is assigned from the rule order.
+
+            YAML: `priority: 10`  
+            Container label: `pangolin.public-resources.web-app.rules[0].priority=10`
+          </ResponseField>
+
+          <ResponseField name="enabled" type="boolean">
+            Enables or disables the rule.
+
+            **Default**: `true`  
+            YAML: `enabled: true`  
+            Container label: `pangolin.public-resources.web-app.rules[0].enabled=true`
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="auth" type="object">
+        Authentication settings for HTTP resources. Not allowed for `tcp` or `udp`.
+
+        <Expandable title="Auth object">
+          <ResponseField name="pincode" type="number">
+            Numeric PIN required before access is granted.
+
+            YAML: `pincode: 123456`  
+            Container label: `pangolin.public-resources.web-app.auth.pincode=123456`
+          </ResponseField>
+
+          <ResponseField name="password" type="string">
+            Shared password gate for the resource.
+
+            YAML: `password: super-secret`  
+            Container label: `pangolin.public-resources.web-app.auth.password=super-secret`
+          </ResponseField>
+
+          <ResponseField name="sso-enabled" type="boolean">
+            Enables Pangolin sign-in for the resource.
+
+            YAML: `sso-enabled: true`  
+            Container label: `pangolin.public-resources.web-app.auth.sso-enabled=true`
+          </ResponseField>
+
+          <ResponseField name="sso-roles" type="array of strings">
+            Roles allowed through SSO.
+
+            Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+            YAML: `sso-roles: [Member]`  
+            Container label: `pangolin.public-resources.web-app.auth.sso-roles[0]=Member`
+          </ResponseField>
+
+          <ResponseField name="sso-users" type="array of strings">
+            Specific user identifiers allowed through SSO.
+
+            Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+            YAML: `sso-users: [user@example.com]`  
+            Container label: `pangolin.public-resources.web-app.auth.sso-users[0]=user@example.com`
+          </ResponseField>
+
+          <ResponseField name="whitelist-users" type="array of strings">
+            Whitelisted emails or patterns allowed for email-based access flows.
+
+            Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+            YAML: `whitelist-users: [admin@example.com]`  
+            Container label: `pangolin.public-resources.web-app.auth.whitelist-users[0]=admin@example.com`
+          </ResponseField>
+
+          <ResponseField name="auto-login-idp" type="integer">
+            Identity provider ID to redirect to automatically.
+
+            YAML: `auto-login-idp: 1`  
+            Container label: `pangolin.public-resources.web-app.auth.auto-login-idp=1`
+          </ResponseField>
+
+          <ResponseField name="basic-auth" type="object">
+            HTTP basic auth settings.
+
+            <Expandable title="Basic auth">
+              <ResponseField name="user" type="string" required>
+                Basic auth username.
+
+                YAML: `user: demo`  
+                Container label: `pangolin.public-resources.web-app.auth.basic-auth.user=demo`
+              </ResponseField>
+
+              <ResponseField name="password" type="string" required>
+                Basic auth password.
+
+                YAML: `password: change-me`  
+                Container label: `pangolin.public-resources.web-app.auth.basic-auth.password=change-me`
+              </ResponseField>
+
+              <ResponseField name="extendedCompatibility" type="boolean">
+                Compatibility flag for basic auth behavior.
+
+                **Default**: `true`
+
+                YAML: `extendedCompatibility: true`  
+                Container label: `pangolin.public-resources.web-app.auth.basic-auth.extendedCompatibility=true`
+              </ResponseField>
+            </Expandable>
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="maintenance" type="object">
+        Maintenance page configuration for public resources **(EE)**.
+
+        YAML: `maintenance: { enabled: true, type: forced }`  
+        Container label: `pangolin.public-resources.web-app.maintenance.enabled=true`
+
+        <Expandable title="Maintenance object">
+          <ResponseField name="enabled" type="boolean">
+            Turns the maintenance page feature on for the resource.
+          </ResponseField>
+
+          <ResponseField name="type" type="string">
+            When Pangolin should show the page.
+
+            **Options**: `forced`, `automatic`
+          </ResponseField>
+
+          <ResponseField name="title" type="string">
+            Main heading shown on the maintenance page.
+          </ResponseField>
+
+          <ResponseField name="message" type="string">
+            Message shown to users while the resource is unavailable.
+          </ResponseField>
+
+          <ResponseField name="estimated-time" type="string">
+            Optional estimate for when the service will return.
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="auth-daemon" type="object">
+        Auth-daemon configuration for supported modes.
+
+        <Expandable title="Auth-daemon object">
+          <ResponseField name="pam" type="string">
+            PAM behavior. Passthrough will require entering the username, password, or private key when connecting. Push will sync a Pangolin user with the configuration from the roles onto the auth-daemon and not prompt a log in.
+
+            **Options**: `passthrough`, `push`  
+            **Default**: `passthrough`
+          </ResponseField>
+
+          <ResponseField name="mode" type="string">
+            Auth-daemon mode. To use the built in ssh server inside of the site connector use `native`. For external ssh servers, use `remote` or `site` depending on where the server is.
+
+            **Options**: `site`, `remote`, `native`  
+            **Default**: `site`
+          </ResponseField>
+
+          <ResponseField name="port" type="integer">
+            Remote auth-daemon port. Required when `auth-daemon.mode` is `remote`.
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="targets" type="array of objects">
+        Backend destinations for the resource. Not allowed when `mode: inference`.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `targets: [{ hostname: app, port: 8080, method: http }]`  
+        Container label: `pangolin.public-resources.web-app.targets[0].hostname=app`
+
+        <Expandable title="Target object">
+          <ResponseField name="site" type="string">
+            Site that hosts the target. Optional when deploying from a site. If omitted, the target is assigned to the site that applied the blueprint.
+
+            YAML: `site: my-site`  
+            Container label: `pangolin.public-resources.web-app.targets[0].site=my-site`
+          </ResponseField>
+
+          <ResponseField name="method" type="string">
+            Upstream protocol for HTTP resources.
+
+            **Options**: `http`, `https`, `h2c`
+
+            YAML: `method: http`  
+            Container label: `pangolin.public-resources.web-app.targets[0].method=http`
+          </ResponseField>
+
+          <ResponseField name="hostname" type="string" required>
+            Target hostname or IP address.
+
+            YAML: `hostname: app`  
+            Container label: `pangolin.public-resources.web-app.targets[0].hostname=app`
+          </ResponseField>
+
+          <ResponseField name="port" type="integer" required>
+            Target port.
+
+            YAML: `port: 8080`  
+            Container label: `pangolin.public-resources.web-app.targets[0].port=8080`
+          </ResponseField>
+
+          <ResponseField name="enabled" type="boolean">
+            Disables the target without deleting it.
+
+            YAML: `enabled: true`  
+            Container label: `pangolin.public-resources.web-app.targets[0].enabled=true`
+          </ResponseField>
+
+          <ResponseField name="internal-port" type="integer">
+            Internal port override used in container-oriented setups.
+
+            YAML: `internal-port: 8080`  
+            Container label: `pangolin.public-resources.web-app.targets[0].internal-port=8080`
+          </ResponseField>
+
+          <ResponseField name="path" type="string">
+            Path condition used for HTTP routing.
+
+            YAML: `path: /`  
+            Container label: `pangolin.public-resources.web-app.targets[0].path=/`
+          </ResponseField>
+
+          <ResponseField name="path-match" type="string">
+            Matching mode for `path`.
+
+            **Options**: `exact`, `prefix`, `regex`
+          </ResponseField>
+
+          <ResponseField name="rewrite-path" type="string">
+            Replacement path or prefix used during path rewriting.
+
+            YAML: `rewrite-path: /`  
+            Container label: `pangolin.public-resources.web-app.targets[0].rewrite-path=/`
+          </ResponseField>
+
+          <ResponseField name="rewritePath" type="string">
+            Deprecated alias for `rewrite-path`.
+          </ResponseField>
+
+          <ResponseField name="rewrite-match" type="string">
+            Rewrite mode.
+
+            **Options**: `exact`, `prefix`, `regex`, `stripPrefix`
+          </ResponseField>
+
+          <ResponseField name="priority" type="integer">
+            Target priority used in routing decisions.
+
+            **Range**: `1-1000`  
+            **Default**: `100`
+
+            YAML: `priority: 100`  
+            Container label: `pangolin.public-resources.web-app.targets[0].priority=100`
+          </ResponseField>
+
+          <ResponseField name="healthcheck" type="object">
+            Health monitoring for the target.
+
+            <Expandable title="Healthcheck object">
+              <ResponseField name="hostname" type="string" required>
+                Hostname or IP used for the health check.
+              </ResponseField>
+
+              <ResponseField name="port" type="integer" required>
+                Port used for the health check.
+              </ResponseField>
+
+              <ResponseField name="enabled" type="boolean">
+                Enables health checking for the target.
+              </ResponseField>
+
+              <ResponseField name="path" type="string" required>
+                HTTP path to check, such as `/health`.
+              </ResponseField>
+
+              <ResponseField name="scheme" type="string">
+                Scheme to use for the check.
+              </ResponseField>
+
+              <ResponseField name="mode" type="string">
+                Health check mode supported by the schema.
+              </ResponseField>
+
+              <ResponseField name="interval" type="integer">
+                Check interval while the target is healthy.
+              </ResponseField>
+
+              <ResponseField name="unhealthy-interval" type="integer">
+                Check interval while the target is unhealthy.
+              </ResponseField>
+
+              <ResponseField name="unhealthyInterval" type="integer">
+                Deprecated alias for `unhealthy-interval`.
+              </ResponseField>
+
+              <ResponseField name="timeout" type="integer">
+                Timeout for each health check attempt.
+              </ResponseField>
+
+              <ResponseField name="headers" type="array of objects">
+                Headers sent with the health check request.
+
+                Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+                YAML: `headers: [{ name: X-Health-Check, value: true }]`  
+                Container label: `pangolin.public-resources.web-app.targets[0].healthcheck.headers[0].name=X-Health-Check`
+
+                <Expandable title="Healthcheck header object">
+                  <ResponseField name="name" type="string" required>
+                    Header name.
+                  </ResponseField>
+
+                  <ResponseField name="value" type="string" required>
+                    Header value.
+                  </ResponseField>
+                </Expandable>
+              </ResponseField>
+
+              <ResponseField name="follow-redirects" type="boolean">
+                Whether redirects should be followed.
+              </ResponseField>
+
+              <ResponseField name="followRedirects" type="boolean">
+                Deprecated alias for `follow-redirects`.
+              </ResponseField>
+
+              <ResponseField name="method" type="string">
+                HTTP method for the check request.
+              </ResponseField>
+
+              <ResponseField name="status" type="integer">
+                Expected HTTP status code.
+              </ResponseField>
+            </Expandable>
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+    </Expandable>
+  </ResponseField>
+</Expandable>
+
+### Private Resource Object (`private-resources`)
+
+```yaml
+private-resources:
+  internal-net:
+    name: Internal Network
+    mode: cidr
+    sites:
+      - my-site
+    destination: 10.0.0.0/24
+    enabled: true
+    tcp-ports: "22,443"
+    udp-ports: "53"
+    disable-icmp: false
+    alias: "*.internal.example.com"
+    roles:
+      - Member
+    users:
+      - user@example.com
+    machines:
+      - machine-id-1
+    labels:
+      - production
+
+  internal-app:
+    name: Internal App
+    mode: http
+    sites:
+      - my-site
+    destination: 10.0.0.5
+    destination-port: 8080
+    full-domain: app.internal.example.com
+    ssl: true
+    scheme: https
+    enabled: true
+```
+
+<Expandable title="Private resource reference">
+  <ResponseField name="<resource_key>" type="object">
+    A single private resource definition.
+
+    <Expandable title="Resource fields">
+      <ResponseField name="name" type="string" required>
+        Display name for the resource.
+
+        YAML: `name: Internal Network`  
+        Container label: `pangolin.private-resources.internal-net.name=Internal Network`
+      </ResponseField>
+
+      <ResponseField name="mode" type="string" required>
+        Private resource type.
+
+        **Options**: `host`, `cidr`, `http`, `ssh`, `inference`
+
+        - `host`: A single host or IP. If `destination` is a domain, `alias` is required.
+        - `cidr`: An entire IPv4 or IPv6 CIDR range.
+        - `http`: An internal HTTP endpoint exposed to clients via `full-domain`.
+        - `ssh`: SSH access resource. `destination` may be omitted only when `auth-daemon.mode` is `native` (or when `auth-daemon` is omitted).
+        - `inference`: A private [AI Gateway](/manage/ai/overview) exposed to clients via `full-domain`, proxying to attached `ai-providers` instead of a `destination`.
+
+        YAML: `mode: cidr`  
+        Container label: `pangolin.private-resources.internal-net.mode=cidr`
+      </ResponseField>
+
+      <ResponseField name="sites" type="array of strings">
+        Sites that host the resource. Optional when deploying from a site. If omitted, the resource is assigned to the site that applied the blueprint.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `sites: [my-site]`  
+        Container label: `pangolin.private-resources.internal-net.sites[0]=my-site`
+      </ResponseField>
+
+      <ResponseField name="site" type="string" deprecated>
+        Deprecated. Use `sites` instead.
+
+        YAML: `site: my-site`  
+        Container label: `pangolin.private-resources.internal-net.site=my-site`
+      </ResponseField>
+
+      <ResponseField name="destination" type="string">
+        Host, IP, or CIDR block the client should reach. The accepted format depends on `mode`:
+
+        - `host`: a valid IPv4/IPv6 address, or a hostname/domain (when using a domain, `alias` must also be set)
+        - `cidr`: a valid IPv4 or IPv6 CIDR block
+        - `http`: a host or IP for the upstream HTTP endpoint
+        - `ssh`: optional only for `auth-daemon.mode: native`; required otherwise
+        - `inference`: not used; the resource proxies to `ai-providers` instead
+
+        YAML: `destination: 10.0.0.0/24`  
+        Container label: `pangolin.private-resources.internal-net.destination=10.0.0.0/24`
+      </ResponseField>
+
+      <ResponseField name="auth-daemon" type="object">
+        Auth-daemon configuration.
+
+        <Expandable title="Auth-daemon object">
+          <ResponseField name="pam" type="string">
+            PAM behavior. Passthrough will require entering the username, password, or private key when connecting. Push will sync a Pangolin user with the configuration from the roles onto the auth-daemon and not prompt a log in.
+
+            **Options**: `passthrough`, `push`  
+            **Default**: `passthrough`
+          </ResponseField>
+
+          <ResponseField name="mode" type="string">
+            Auth-daemon mode. To use the built in ssh server inside of the site connector use `native`. For external ssh servers, use `remote` or `site` depending on where the server is.
+
+            **Options**: `site`, `remote`, `native`  
+            **Default**: `site`
+          </ResponseField>
+
+          <ResponseField name="port" type="integer">
+            Remote auth-daemon port. Required when `auth-daemon.mode` is `remote`.
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="destination-port" type="integer">
+        Upstream port for the destination. Typically used with `mode: http` to point at the internal HTTP endpoint's port.
+
+        YAML: `destination-port: 8080`  
+        Container label: `pangolin.private-resources.internal-app.destination-port=8080`
+      </ResponseField>
+
+      <ResponseField name="full-domain" type="string">
+        Internal domain used to expose an HTTP private resource to clients. Applies when `mode: http`.
+
+        YAML: `full-domain: app.internal.example.com`  
+        Container label: `pangolin.private-resources.internal-app.full-domain=app.internal.example.com`
+      </ResponseField>
+
+      <ResponseField name="ssl" type="boolean">
+        Whether SSL/TLS should be used when serving the private HTTP resource.
+
+        YAML: `ssl: true`  
+        Container label: `pangolin.private-resources.internal-app.ssl=true`
+      </ResponseField>
+
+      <ResponseField name="scheme" type="string">
+        Upstream scheme used by Pangolin to reach the destination for HTTP private resources.
+
+        **Options**: `http`, `https`
+
+        YAML: `scheme: https`  
+        Container label: `pangolin.private-resources.internal-app.scheme=https`
+      </ResponseField>
+
+      <ResponseField name="enabled" type="boolean">
+        Disables the resource without removing it.
+
+        YAML: `enabled: true`  
+        Container label: `pangolin.private-resources.internal-net.enabled=true`
+      </ResponseField>
+
+      <ResponseField name="tcp-ports" type="string">
+        Allowed TCP ports or ranges. Use comma-separated values for multiple ports or ranges, such as `22,443,8000-9000` or `*` for all ports or leave empty for no ports.
+
+        **Default**: `*`
+
+        YAML: `tcp-ports: "22,443"`  
+        Container label: `pangolin.private-resources.internal-net.tcp-ports=22,443`
+      </ResponseField>
+
+      <ResponseField name="udp-ports" type="string">
+        Allowed UDP ports or ranges. Use comma-separated values for multiple ports or ranges, such as `22,443,8000-9000` or `*` for all ports or leave empty for no ports.
+
+        **Default**: `*`
+
+        YAML: `udp-ports: "53"`  
+        Container label: `pangolin.private-resources.internal-net.udp-ports=53`
+      </ResponseField>
+
+      <ResponseField name="disable-icmp" type="boolean">
+        Prevents ICMP traffic such as ping.
+
+        **Default**: `false`
+
+        YAML: `disable-icmp: false`  
+        Container label: `pangolin.private-resources.internal-net.disable-icmp=false`
+      </ResponseField>
+
+      <ResponseField name="alias" type="string">
+        Internal DNS alias for the resource. Must be a fully qualified domain name and may include wildcards (`*`, `?`), e.g. `example.com`, `*.example.com`, or `host-0?.example.internal`. Required when `mode: host` and `destination` is a domain.
+
+        YAML: `alias: "*.internal.example.com"`  
+        Container label: `pangolin.private-resources.internal-net.alias=*.internal.example.com`
+      </ResponseField>
+
+      <ResponseField name="roles" type="array of strings">
+        Roles allowed to access the resource. The `Admin` role is reserved and cannot be listed here.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `roles: [Member]`  
+        Container label: `pangolin.private-resources.internal-net.roles[0]=Member`
+      </ResponseField>
+
+      <ResponseField name="users" type="array of strings">
+        Individual users allowed to access the resource.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `users: [user@example.com]`  
+        Container label: `pangolin.private-resources.internal-net.users[0]=user@example.com`
+      </ResponseField>
+
+      <ResponseField name="machines" type="array of strings">
+        Machine identities allowed to access the resource.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `machines: [machine-id-1]`  
+        Container label: `pangolin.private-resources.internal-net.machines[0]=machine-id-1`
+      </ResponseField>
+
+      <ResponseField name="labels" type="array of strings">
+        [Resource labels](#resource-labels) to attach, by name. Labels that don't already exist in the organization are created automatically.
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `labels: [production]`  
+        Container label: `pangolin.private-resources.internal-net.labels[0]=production`
+      </ResponseField>
+
+      <ResponseField name="ai-providers" type="array of objects">
+        AI providers attached to an [AI Gateway](/manage/ai/overview) resource. Only allowed when `mode: inference`. Same shape as `ai-providers` on [public resources](#public-resource-object-public-resources).
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-providers: [{ provider: openai-prod, access-mode: inherit }]`  
+        Container label: `pangolin.private-resources.ai-gateway.ai-providers[0].provider=openai-prod`
+      </ResponseField>
+
+      <ResponseField name="ai-budget" type="array of objects">
+        Spend or usage budgets enforced on an [AI Gateway](/manage/ai/overview) resource. Each entry must use a unique `unit`/`period` combination. Same shape as `ai-budget` on [public resources](#public-resource-object-public-resources).
+
+        Container labels for arrays must include an index (`[0]`, `[1]`, ...).
+
+        YAML: `ai-budget: [{ amount: 100, unit: usd, period: monthly }]`  
+        Container label: `pangolin.private-resources.ai-gateway.ai-budget[0].amount=100`
+      </ResponseField>
+    </Expandable>
+  </ResponseField>
+</Expandable>
+
+### Resource Policy Object (`public-policies`)
+
+```yaml
+public-policies:
+  default-member:
+    name: Default Member Policy
+    sso: true
+    auto-login-idp: null
+    sso-roles:
+      - Member
+    sso-users: []
+    password: null
+    pincode: null
+    basic-auth: null
+    email-whitelist-enabled: false
+    whitelist-users:
+      - "*@example.com"
+    apply-rules: true
+    rules:
+      - action: allow
+        match: country
+        value: US
+        enabled: true
+```
+
+<Expandable title="Resource policy reference">
+  <ResponseField name="<policy_key>" type="object">
+    A reusable policy definition that can be referenced by public resources via `policy`.
+
+    <Expandable title="Policy fields">
+      <ResponseField name="name" type="string" required>
+        Display name for the policy.
+      </ResponseField>
+
+      <ResponseField name="sso" type="boolean">
+        Enables SSO for the policy.
+
+        **Default**: `true`
+      </ResponseField>
+
+      <ResponseField name="auto-login-idp" type="integer | null">
+        Identity provider ID to redirect to automatically.
+      </ResponseField>
+
+      <ResponseField name="sso-roles" type="array of strings">
+        Roles allowed by this policy. `Admin` is not allowed.
+      </ResponseField>
+
+      <ResponseField name="sso-users" type="array of strings">
+        Specific users allowed by this policy.
+      </ResponseField>
+
+      <ResponseField name="password" type="string | null">
+        Optional shared password.
+      </ResponseField>
+
+      <ResponseField name="pincode" type="string | null">
+        Optional 6-digit PIN.
+      </ResponseField>
+
+      <ResponseField name="basic-auth" type="object | null">
+        Optional basic-auth gate.
+
+        <Expandable title="Basic auth object">
+          <ResponseField name="user" type="string" required>
+            Basic auth username.
+          </ResponseField>
+
+          <ResponseField name="password" type="string" required>
+            Basic auth password.
+          </ResponseField>
+
+          <ResponseField name="extended-compatibility" type="boolean">
+            Compatibility flag for basic auth behavior.
+
+            **Default**: `true`
+          </ResponseField>
+        </Expandable>
+      </ResponseField>
+
+      <ResponseField name="email-whitelist-enabled" type="boolean">
+        Enables email whitelist matching.
+
+        **Default**: `false`
+      </ResponseField>
+
+      <ResponseField name="whitelist-users" type="array of strings">
+        Allowed email addresses or wildcard-domain entries like `*@example.com`.
+      </ResponseField>
+
+      <ResponseField name="apply-rules" type="boolean">
+        Enables rule evaluation.
+
+        **Default**: `false`
+      </ResponseField>
+
+      <ResponseField name="rules" type="array of rule objects">
+        Policy rule list using the same rule schema as public resource rules.
+      </ResponseField>
+    </Expandable>
+  </ResponseField>
+</Expandable>
+
+## Validation Rules And Constraints
+
+### Core Rules
+
+1. A public resource can be **targets-only**. In that case it may contain only `targets`, and `name` plus `mode` are not required.
+2. For full public resources, `name` plus (`mode` or deprecated `protocol`) are required.
+3. When mode/protocol is `http`, the resource must have `full-domain` and each target must include `method`.
+4. When mode/protocol is `tcp` or `udp`, the resource must have `proxy-port`, targets must not include `method`, and `auth` is not allowed.
+5. `proxy-protocol` and `proxy-protocol-version` are only valid when mode/protocol is `tcp`.
+6. If `auth-daemon.mode` is `remote`, `auth-daemon.port` is required.
+7. In private resources, `destination` is required unless `mode: ssh` with native auth-daemon mode, or `mode: inference`.
+8. `full-domain` values must be unique across public resources.
+9. `proxy-port` values must be unique per protocol within `public-resources`. TCP `3000` and UDP `3000` can coexist, but two TCP resources cannot both use `3000`.
+10. `alias` values must be unique across private resources in the blueprint.
+11. `mode: inference` (public or private) requires `full-domain`, must not have `targets`, and is the only mode that may set `ai-providers`.
+12. `ai-budget` entries on a resource must each use a unique `unit`/`period` combination.
+
+### Common Validation Errors
+
+### "Admin role cannot be included in sso-roles"
+
+`Admin` is reserved and cannot be used in `auth.sso-roles`.
+
+### "Duplicate 'full-domain' values found"
+
+Every public HTTP resource must have its own unique `full-domain`.
+
+### "Duplicate 'proxy-port' values found in public-resources"
+
+Two public resources with the same protocol cannot reuse the same `proxy-port`.
+
+### "When protocol is 'http', all targets must have a 'method' field"
+
+Each HTTP target must specify `http`, `https`, or `h2c`.
+
+### "When protocol is 'tcp' or 'udp', targets must not have a 'method' field"
+
+Raw targets do not use HTTP methods.
+
+### "When protocol is 'tcp' or 'udp', 'auth' must not be provided"
+
+Authentication settings apply only to HTTP public resources.
+
+### "'proxy-protocol' and 'proxy-protocol-version' can only be set when mode is 'tcp'"
+
+Only TCP public resources can define proxy protocol behavior.
+
+### "port is required when auth-daemon mode is 'remote'"
+
+Set `auth-daemon.port` whenever `auth-daemon.mode: remote` is used.
+
+### "destination is required unless mode is 'ssh' with auth-daemon mode 'native'"
+
+For private SSH resources, `destination` can be omitted only for native auth-daemon mode.
+
+### "Resource must either be targets-only or have both 'name' and 'protocol' fields"
+
+Provide both fields for a full public resource definition, or remove everything except `targets`.
+
+### "Duplicate 'alias' values found in private-resources"
+
+Private resource aliases must be unique within the blueprint.
+
+### "Destination must be a valid IP address or valid domain AND alias is required"
+
+In `host` mode, the destination must be a valid host or IP. If you use a domain, provide `alias` as well.
+
+### "Destination must be a valid CIDR notation for cidr mode"
+
+In `cidr` mode, `destination` must be a valid CIDR block such as `10.0.0.0/24`.
+
+### "Admin role cannot be included in roles"
+
+`Admin` is reserved and cannot be used in private resource `roles`.
+
+### "'ai-providers' can only be set when mode is 'inference'"
+
+`ai-providers` is only valid on public or private resources with `mode: inference`.
+
+### "When mode is 'inference', 'targets' must not be provided"
+
+Public resources with `mode: inference` proxy to `ai-providers` and cannot also define `targets`.
+
+### "'ai-budget' entries must not overlap: only one budget per unit/period combination is allowed"
+
+Each entry in `ai-budget` must use a distinct `unit`/`period` pair, such as one `usd`/`monthly` budget and one `tokens`/`daily` budget on the same resource.
+
+### "'models' can only be set on a provider with access-mode 'select'"
+
+Set `models` only when the `ai-providers` entry uses `access-mode: select`. Entries using `access-mode: inherit` must leave `models` empty.
