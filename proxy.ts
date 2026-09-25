@@ -41,5 +41,7 @@ export default function proxy(request: NextRequest) {
 
 export const config = {
   // skip Next internals, API routes, generated files and static assets
-  matcher: ['/((?!_next/|api/|og/|llms|images/|logo/|favicon).*)'],
+  matcher: [
+    '/((?!_next/|api/|og/|llms|images/|logo/|favicon|icon|apple-icon|manifest|web-app-manifest).*)',
+  ],
 };
