@@ -7,6 +7,7 @@ import {
   type SearchTriggerProps,
 } from 'fumadocs-ui/layouts/shared/slots/search-trigger';
 import { cn } from '@/lib/cn';
+import { buttonVariants } from '@/components/ui/button';
 import { useAISearchContext } from './ai/search';
 
 /**
@@ -33,8 +34,24 @@ function HeaderSearchFull({ className, ...props }: FullSearchTriggerProps) {
   );
 }
 
-function HeaderSearchSm(props: SearchTriggerProps) {
-  return <SearchTrigger {...props} />;
+function HeaderSearchSm({ className, ...props }: SearchTriggerProps) {
+  const { open, setOpen } = useAISearchContext();
+
+  return (
+    <>
+      <SearchTrigger {...props} className={className} />
+      <button
+        type="button"
+        className={cn(buttonVariants({ variant: 'ghost', size: 'icon-sm' }), 'p-2')}
+        aria-label="Ask AI"
+        aria-pressed={open}
+        data-state={open ? 'open' : 'closed'}
+        onClick={() => setOpen(!open)}
+      >
+        <Sparkles />
+      </button>
+    </>
+  );
 }
 
 export const headerSearchSlot = { full: HeaderSearchFull, sm: HeaderSearchSm };
