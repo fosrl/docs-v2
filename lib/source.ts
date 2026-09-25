@@ -1,5 +1,5 @@
 import { llms, loader } from 'fumadocs-core/source';
-import { docsContentRoute, docsDir, docsRoute } from './shared';
+import { docsContentRoute, docsRoute } from './shared';
 import { defineDocs } from 'fumadocs-mdx/macro';
 import { applyMdxPreset } from 'fumadocs-mdx/config';
 import { metaSchema, pageSchema } from 'fumadocs-core/source/schema';
@@ -7,7 +7,7 @@ import { transformerMetaHighlight } from '@shikijs/transformers';
 import { rehypeCodeDefaultOptions } from 'fumadocs-core/mdx-plugins';
 
 const docs = defineDocs({
-  dir: docsDir,
+  dir: 'content/docs',
   docs: {
     schema: pageSchema,
     mdxOptions: applyMdxPreset({
