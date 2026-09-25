@@ -5,8 +5,8 @@ import {
   DocsPage,
   DocsTitle,
   MarkdownCopyButton,
-  ViewOptionsPopover,
 } from 'fumadocs-ui/layouts/notebook/page';
+import { ViewOptionsPopover } from '@/components/view-options';
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
@@ -77,7 +77,10 @@ export async function generateMetadata(props: PageProps<'/[[...slug]]'>): Promis
     description: page.data.description,
     alternates: {
       canonical: page.url,
-      types: { 'text/markdown': getPageMarkdownUrl(page).url },
+      types: {
+        'text/markdown': getPageMarkdownUrl(page).url,
+        'application/xml': '/sitemap.xml',
+      },
     },
     openGraph: {
       images: '/images/home-social-graph.png',

@@ -6,6 +6,8 @@ RUN npm ci
 
 FROM node:24-alpine AS build
 WORKDIR /app
+# sitemap lastmod comes from git history
+RUN apk add --no-cache git
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SITE_URL=https://docs.pangolin.net
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL

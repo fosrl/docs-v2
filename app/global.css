@@ -323,7 +323,7 @@ body {
 .pg-ask-ai-btn svg {
   width: 1rem;
   height: 1rem;
-  color: var(--color-pg-orange);
+  color: currentColor;
 }
 
 /* logo: fixed height, width from the image's aspect ratio (never stretched) */
