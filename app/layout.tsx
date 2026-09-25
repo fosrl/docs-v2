@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { template: `%s - ${appName}`, default: appName },
   description: siteDescription,
-  icons: { icon: '/favicon.png' },
+  appleWebApp: { title: appName },
   openGraph: { siteName: appName, images: '/images/home-social-graph.png' },
   twitter: { card: 'summary_large_image' },
 };
