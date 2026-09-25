@@ -14,6 +14,7 @@ export async function GET() {
     `> ${siteDescription}`,
     '',
     `The full documentation as a single file is available at ${siteUrl}/llms-full.txt. Append \`.md\` to any page URL to get its Markdown source.`,
+    `An MCP server for searching and reading this documentation is available at ${siteUrl}/mcp.`,
     '',
   ];
   const listed = new Set<string>();

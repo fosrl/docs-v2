@@ -5,8 +5,8 @@ import {
   DocsPage,
   DocsTitle,
   MarkdownCopyButton,
-  ViewOptionsPopover,
 } from 'fumadocs-ui/layouts/notebook/page';
+import { ViewOptionsPopover } from '@/components/view-options';
 import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
@@ -15,6 +15,7 @@ import { appName, docsDir, getPageMarkdownUrl, gitConfig, siteUrl } from '@/lib/
 import { AskAIAboutPage } from '@/components/ai/ask-page';
 import { SiteFooter } from '@/components/site-footer';
 import { AskBar } from '@/components/ai/ask-bar';
+import { pageJsonLd } from '@/lib/json-ld';
 
 export default async function Page(props: PageProps<'/[[...slug]]'>) {
   const params = await props.params;
@@ -25,20 +26,22 @@ export default async function Page(props: PageProps<'/[[...slug]]'>) {
   const markdownUrl = getPageMarkdownUrl(page).url;
 
   return (
-    <DocsPage
-      toc={page.data.toc}
-      full={page.data.full}
-      tableOfContent={{ style: 'clerk' }}
-      // rendered after the previous / next page links
-      footer={{
-        children: (
-          <>
-            <SiteFooter />
-            <AskBar />
-          </>
-        ),
-      }}
-    >
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: pageJsonLd(page) }} />
+      <DocsPage
+        toc={page.data.toc}
+        full={page.data.full}
+        tableOfContent={{ style: 'clerk' }}
+        // rendered after the previous / next page links
+        footer={{
+          children: (
+            <>
+              <SiteFooter />
+              <AskBar />
+            </>
+          ),
+        }}
+      >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription className="mb-0">{page.data.description}</DocsDescription>
       <div className="flex flex-row flex-wrap gap-2 items-center border-b pb-6">
@@ -58,7 +61,8 @@ export default async function Page(props: PageProps<'/[[...slug]]'>) {
           })}
         />
       </DocsBody>
-    </DocsPage>
+      </DocsPage>
+    </>
   );
 }
 
@@ -77,7 +81,10 @@ export async function generateMetadata(props: PageProps<'/[[...slug]]'>): Promis
     description: page.data.description,
     alternates: {
       canonical: page.url,
-      types: { 'text/markdown': getPageMarkdownUrl(page).url },
+      types: {
+        'text/markdown': getPageMarkdownUrl(page).url,
+        'application/xml': '/sitemap.xml',
+      },
     },
     openGraph: {
       images: '/images/home-social-graph.png',

@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: { template: `%s | ${appName}`, default: appName },
   description: siteDescription,
   appleWebApp: { title: appName },
+  alternates: { types: { 'application/xml': '/sitemap.xml' } },
   openGraph: { siteName: appName, images: '/images/home-social-graph.png' },
   twitter: { card: 'summary_large_image' },
 };
