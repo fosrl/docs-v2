@@ -12,9 +12,12 @@ export const docsContentRoute = '/llms.mdx';
 
 export const gitConfig = {
   user: 'fosrl',
-  repo: 'docs-v2',
+  repo: 'docs',
   branch: 'main',
 };
+
+/** collection directory; `page.path` is relative to this */
+export const docsDir = 'content/docs';
 
 const getContentUrl = createGetUrl(docsContentRoute);
 

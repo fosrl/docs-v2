@@ -11,7 +11,7 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
-import { getPageImageUrl, getPageMarkdownUrl, gitConfig, siteUrl } from '@/lib/shared';
+import { appName, docsDir, getPageImageUrl, getPageMarkdownUrl, gitConfig, siteUrl } from '@/lib/shared';
 import { AskAIAboutPage } from '@/components/ai/ask-page';
 import { SiteFooter } from '@/components/site-footer';
 import { AskBar } from '@/components/ai/ask-bar';
@@ -46,7 +46,7 @@ export default async function Page(props: PageProps<'/[[...slug]]'>) {
         <ViewOptionsPopover
           markdownUrl={markdownUrl}
           pageUrl={`${siteUrl}${page.url}`}
-          githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/${page.path}`}
+          githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/${docsDir}/${page.path}`}
         />
         <AskAIAboutPage title={page.data.title} />
       </div>
@@ -73,7 +73,7 @@ export async function generateMetadata(props: PageProps<'/[[...slug]]'>): Promis
 
   const isHome = page.slugs.length === 0;
   return {
-    title: isHome ? { absolute: `${page.data.title} - Pangolin Docs` } : page.data.title,
+    title: isHome ? { absolute: `${page.data.title} | ${appName}` } : page.data.title,
     description: page.data.description,
     alternates: {
       canonical: page.url,
