@@ -21,8 +21,7 @@ export function Analytics() {
 posthog.init(${JSON.stringify(POSTHOG_KEY)},{api_host:${JSON.stringify(POSTHOG_HOST)},ui_host:'https://us.posthog.com',person_profiles:'identified_only'});`}
       </Script>
       <Script
-        src="https://rybbit.fossorial.io/api/script.js"
-        data-site-id={RYBBIT_SITE_ID}
+        src={`https://rybbit.fossorial.io/api/script.js?siteId=${RYBBIT_SITE_ID}`}
         strategy="afterInteractive"
       />
       <Script

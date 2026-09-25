@@ -7,7 +7,6 @@ export const siteDescription =
 
 /** docs are served from the site root, same URLs as the old Mintlify site */
 export const docsRoute = '/';
-export const docsImageRoute = '/og';
 export const docsContentRoute = '/llms.mdx';
 
 export const gitConfig = {
@@ -25,14 +24,6 @@ export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {
   const segments = [...page.slugs, 'content.md'];
 
   return { segments, url: getContentUrl(segments, page.locale) };
-}
-
-const getImageUrl = createGetUrl(docsImageRoute);
-
-export function getPageImageUrl(page: { slugs: string[]; locale?: string }) {
-  const segments = [...page.slugs, 'image.png'];
-
-  return { segments, url: getImageUrl(segments, page.locale) };
 }
 
 /**
