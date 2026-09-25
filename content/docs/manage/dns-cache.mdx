@@ -1,0 +1,32 @@
+---
+title: "DNS Cache"
+description: "What is a DNS cache and how to manage it with private resources"
+---
+
+## What is a DNS Cache?
+A DNS cache is a temporary storage of DNS records that allows for faster resolution of domain names to IP addresses. When a user visits a website, their device queries the DNS server to resolve the domain name to an IP address. The DNS cache stores this information so that subsequent requests for the same domain can be resolved more quickly without needing to query the DNS server again.
+
+## Why you might see the placeholder page?
+If you are seeing a placeholder page instead of the expected content, it could be due to a DNS cache issue. This can happen if the DNS cache has stored outdated or incorrect information about the domain name, leading to the wrong IP address being resolved.
+
+## How to clear my browser's DNS cache?
+**On most browsers, closing it completely and reopening it will clear the DNS cache.** However, if you want to manually clear the DNS cache without closing the browser, you can follow these steps:
+
+### Chrome:
+  1. Open a new tab and type `chrome://net-internals/#dns` in the address bar.
+  2. Click on the "Clear host cache" button.
+
+### Firefox:
+  1. Open a new tab and type `about:networking#dns` in the address bar.
+  2. Click on the "Clear DNS Cache" button.
+
+### Safari:
+  1. Open Safari and go to the "Safari" menu.
+  2. Select "Settings" and then go to the "Advanced" tab.
+  3. Check the box that says "Show Develop menu in menu bar".
+  4. Close the preferences window and go to the "Develop" menu.
+  5. Select "Empty Caches".
+
+### Edge:
+  1. Open a new tab and type `edge://net-internals/#dns` in the address bar.
+  2. Click on the "Clear host cache" button.

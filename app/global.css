@@ -1,0 +1,1023 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/* -------------------------------------------------------------------------- */
+/* Pangolin palette (ported from the Mintlify docs.json + style.css)           */
+/* -------------------------------------------------------------------------- */
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-pg-beige: #faf9f2; /* page background */
+  --color-pg-sand: #f2f0e7; /* nav, sidebar, code, cards */
+  --color-pg-line: #bbbbbb; /* hairlines, same as pangolin.net grey-light-8 */
+  --color-pg-ink: #202020; /* text + primary */
+  --color-pg-orange: #f36117; /* brand accent (dark primary in Mintlify) */
+
+  --color-fd-background: #faf9f2;
+  --color-fd-foreground: #202020;
+  --color-fd-muted: #f2f0e7;
+  --color-fd-muted-foreground: #6b6a63;
+  --color-fd-popover: #faf9f2;
+  --color-fd-popover-foreground: #202020;
+  --color-fd-card: #f2f0e7;
+  --color-fd-card-foreground: #202020;
+  --color-fd-border: #bbbbbb;
+  --color-fd-primary: #202020;
+  --color-fd-primary-foreground: #faf9f2;
+  --color-fd-secondary: #f2f0e7;
+  --color-fd-secondary-foreground: #202020;
+  --color-fd-accent: #e8e7e5;
+  --color-fd-accent-foreground: #202020;
+  --color-fd-ring: #bbbbbb;
+  --color-fd-overlay: rgba(32, 32, 32, 0.2);
+
+  --pg-code-bg: #f2f0e7;
+  --pg-code-border: #bbbbbb;
+}
+
+/* only used when `enableDarkMode` is on in lib/shared.ts */
+.dark {
+  --color-fd-background: #161614;
+  --color-fd-foreground: #ecebe6;
+  --color-fd-muted: #1f1e1b;
+  --color-fd-muted-foreground: #a3a199;
+  --color-fd-popover: #1b1a18;
+  --color-fd-popover-foreground: #ecebe6;
+  --color-fd-card: #1f1e1b;
+  --color-fd-card-foreground: #ecebe6;
+  --color-fd-border: #2d2c28;
+  --color-fd-primary: #f36117;
+  --color-fd-primary-foreground: #161614;
+  --color-fd-secondary: #1f1e1b;
+  --color-fd-secondary-foreground: #ecebe6;
+  --color-fd-accent: #2d2c28;
+  --color-fd-accent-foreground: #ecebe6;
+  --color-fd-ring: #55534c;
+
+  --pg-code-bg: #1f1e1b;
+  --pg-code-border: #3a3934;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+body {
+  background-color: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+}
+
+/* pangolin.net button typeface */
+@font-face {
+  font-family: 'Die Grotesk B';
+  src: url('/fonts/die-grotesk-b-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Die Grotesk B';
+  src: url('/fonts/die-grotesk-b-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Hairlines like pangolin.net (0.5px, #bbb). Unlayered, so these win over the 1px
+ * Tailwind border utilities used by Fumadocs; 2px accents (active tab) are untouched.
+ */
+.border {
+  border-width: 0.5px;
+}
+.border-t {
+  border-top-width: 0.5px;
+}
+.border-b {
+  border-bottom-width: 0.5px;
+}
+.border-l,
+.border-s {
+  border-inline-start-width: 0.5px;
+}
+.border-r,
+.border-e {
+  border-inline-end-width: 0.5px;
+}
+.border-x {
+  border-inline-width: 0.5px;
+}
+.border-y {
+  border-block-width: 0.5px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Chrome: navbar, sidebar, banner                                             */
+/* -------------------------------------------------------------------------- */
+
+/*
+ * Layout grid (used by app/(docs)/layout.tsx). Desktop: the sidebar is pinned to the
+ * left edge and content + TOC are centered in the remaining space, max 70rem like the
+ * old Mintlify site; the last column holds the AI chat panel when it is open.
+ */
+#nd-notebook-layout {
+  --pg-content-width: 70rem;
+  --pg-grid: 'header header' 'sidebar toc-popover' 'sidebar main' 1fr / var(--fd-sidebar-col)
+    minmax(0, 1fr);
+}
+
+@media (min-width: 1024px) {
+  #nd-notebook-layout {
+    /* width taken by the AI chat panel when it is open */
+    --pg-panel: 0px;
+    /* equal gutters that center content + TOC; they collapse to 0 on narrow screens */
+    --pg-gutter: max(
+      0px,
+      calc((100% - var(--fd-sidebar-col) - var(--pg-content-width) - var(--pg-panel)) / 2)
+    );
+    --pg-grid: 'header header header header header' 'sidebar . toc-popover toc-popover .'
+      'sidebar . main toc .' 1fr / var(--fd-sidebar-col) var(--pg-gutter) minmax(0, 1fr)
+      var(--fd-toc-width) calc(var(--pg-gutter) + var(--pg-panel));
+  }
+
+  /* set from components/ai/search.tsx while the chat panel is open */
+  #nd-notebook-layout[data-ai-open] {
+    --pg-panel: 400px;
+  }
+
+  /* slide the content along with the panel's open / close animation */
+  #nd-notebook-layout {
+    transition: grid-template-columns 200ms ease;
+  }
+}
+
+@media (min-width: 1536px) {
+  #nd-notebook-layout[data-ai-open] {
+    --pg-panel: 460px;
+  }
+}
+
+#nd-subnav {
+  background-color: color-mix(in srgb, var(--color-fd-muted) 92%, transparent);
+}
+
+#nd-subnav [data-header-body],
+#nd-subnav [data-header-tabs] {
+  border-color: var(--color-fd-border);
+}
+
+/* tab row under the navbar */
+#nd-subnav [data-header-tabs] a {
+  font-weight: 500;
+}
+
+#nd-sidebar {
+  background-color: var(--color-fd-muted);
+  border-inline-end: 0.5px solid var(--color-fd-border);
+}
+
+/* separators = Mintlify top-level group headings */
+#nd-sidebar p[data-separator],
+#nd-sidebar [data-separator] {
+  color: var(--color-fd-foreground);
+  font-weight: 600;
+}
+
+/*
+ * First group heading ("About") under the anchors: Fumadocs only drops its top margin
+ * when it is the very first element, but hidden mobile menu links come before it. Trim
+ * it so anchors -> "About" matches the gap between groups (~26px incl. viewport padding).
+ */
+#nd-sidebar p.mt-6:first-of-type {
+  margin-top: 0.625rem;
+}
+
+/* Mintlify-style sidebar anchors (Discord, Slack): icon tile + medium label */
+.pg-anchor {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-fd-muted-foreground);
+  transition: color 150ms;
+}
+
+.pg-anchor:hover {
+  color: var(--color-fd-foreground);
+}
+
+.pg-anchor-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+  border: 0.5px solid var(--color-fd-border);
+  border-radius: 0.375rem;
+  background-color: var(--color-fd-background);
+  color: var(--color-fd-muted-foreground);
+  transition:
+    color 150ms,
+    border-color 150ms,
+    background-color 150ms;
+}
+
+.pg-anchor-icon svg {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.pg-anchor:hover .pg-anchor-icon {
+  border-color: var(--color-fd-foreground);
+  background-color: var(--color-fd-foreground);
+  color: var(--color-fd-background);
+}
+
+.pg-banner {
+  background-color: var(--color-pg-ink);
+  color: #faf9f2;
+  font-size: 0.875rem;
+}
+
+.pg-banner button {
+  color: #faf9f2;
+}
+
+/* header buttons: pangolin.net `btn` / `btnSecondary` + `btnSm` */
+.pg-btn {
+  display: inline-block;
+  border-radius: 9999px;
+  border: 0;
+  background-color: #202020;
+  color: #faf9f2;
+  font-family: 'Die Grotesk B', var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  padding: 0.75rem 1.25rem;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: transform 300ms;
+}
+
+.pg-btn:hover {
+  transform: scale(1.025);
+}
+
+.pg-btn-secondary {
+  border: 1px solid #bbbbbb;
+  background-color: #faf9f2;
+  color: #202020;
+  /* 1px border: keep the same outer size as the primary button */
+  padding: calc(0.75rem - 1px) calc(1.25rem - 1px);
+}
+
+.dark .pg-btn {
+  background-color: #ecebe6;
+  color: #161614;
+}
+
+.dark .pg-btn-secondary {
+  border-color: #3a3934;
+  background-color: transparent;
+  color: #ecebe6;
+}
+
+/* "Ask AI" button to the right of the header search (Mintlify style) */
+.pg-ask-ai-btn {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.25rem;
+  padding: 0 0.85rem;
+  border: 0.5px solid var(--color-fd-border);
+  border-radius: 0.75rem;
+  background-color: color-mix(in srgb, var(--color-fd-secondary) 50%, transparent);
+  color: var(--color-fd-muted-foreground);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+
+.pg-ask-ai-btn:hover,
+.pg-ask-ai-btn[data-state='open'] {
+  background-color: var(--color-fd-accent);
+  color: var(--color-fd-accent-foreground);
+}
+
+.pg-ask-ai-btn svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-pg-orange);
+}
+
+/* logo: fixed height, width from the image's aspect ratio (never stretched) */
+.pg-logo {
+  display: block;
+  height: 1.5rem;
+  width: auto;
+  max-width: none;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.pg-logo.hidden {
+  display: none;
+}
+
+.dark .pg-logo.dark\:block {
+  display: block;
+}
+
+.dark .pg-logo.dark\:hidden {
+  display: none;
+}
+
+/* ---------- AI chat input (Mintlify style) ---------- */
+.pg-chat-input {
+  border: 0.5px solid var(--color-fd-border);
+  border-radius: 1rem;
+  background-color: var(--color-fd-background);
+  box-shadow: 0 1px 2px rgba(32, 32, 32, 0.04);
+  transition:
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.pg-chat-input:focus-within {
+  border-color: #8d8d8d;
+  box-shadow: 0 4px 16px rgba(32, 32, 32, 0.08);
+}
+
+.pg-chat-send {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 9999px;
+  background-color: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+  transition:
+    opacity 150ms,
+    background-color 150ms;
+}
+
+.pg-chat-send:disabled {
+  background-color: #e8e7e5;
+  color: #8d8d8d;
+  cursor: default;
+}
+
+.dark .pg-chat-send:disabled {
+  background-color: #2d2c28;
+}
+
+/* sticky bar at the bottom of each page */
+.pg-askbar-wrap {
+  position: sticky;
+  bottom: 1.25rem;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+  pointer-events: none;
+  transition:
+    opacity 200ms,
+    translate 200ms;
+}
+
+.pg-askbar-hidden {
+  opacity: 0;
+  translate: 0 0.75rem;
+}
+
+.pg-askbar {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: min(100%, 28rem);
+  padding: 0.4rem 0.4rem 0.4rem 1rem;
+  box-shadow: 0 8px 28px rgba(32, 32, 32, 0.1);
+}
+
+.pg-askbar-hidden .pg-askbar {
+  pointer-events: none;
+}
+
+.pg-askbar:focus-within {
+  box-shadow: 0 8px 28px rgba(32, 32, 32, 0.14);
+}
+
+.pg-askbar input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+/* iOS zooms the page when a focused field is under 16px. Search uses text-lg, so it doesn't. */
+@media (hover: none) and (pointer: coarse) {
+  .pg-chat-field,
+  .pg-askbar input {
+    font-size: 16px;
+  }
+}
+
+.pg-askbar input::placeholder {
+  color: #8d8d8d;
+}
+
+.pg-askbar-kbd {
+  border: 0.5px solid var(--color-fd-border);
+  border-radius: 0.375rem;
+  padding: 0.05rem 0.35rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+  color: var(--color-fd-muted-foreground);
+}
+
+@media (max-width: 767px) {
+  .pg-askbar-kbd {
+    display: none;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Content                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/* inline code: match pangolin.net/news */
+.prose :where(code):not(:where(pre code, .not-prose code)) {
+  background-color: var(--pg-code-bg);
+  border: 0.5px solid var(--pg-code-border);
+  border-radius: 4px;
+  color: var(--color-fd-foreground);
+  font-size: 0.875em;
+  font-weight: 400;
+  padding: 0.125rem 0.35rem;
+}
+
+/* code blocks */
+.prose figure.shiki,
+figure.shiki {
+  background-color: var(--pg-code-bg);
+  border-color: var(--color-fd-border);
+  box-shadow: none;
+}
+
+figure.shiki pre,
+figure.shiki .shiki {
+  background-color: transparent !important;
+}
+
+figure.shiki [data-line].highlighted,
+figure.shiki .line.highlighted {
+  background-color: rgba(243, 97, 23, 0.1);
+  box-shadow: inset 2px 0 0 var(--color-pg-orange);
+}
+
+/* tables */
+.prose table {
+  font-size: 0.875rem;
+}
+
+/* ---------- callouts: beige with a coloured bar on the left ---------- */
+.pg-callout {
+  --pg-callout-bar: #525252;
+  position: relative;
+  display: flex;
+  gap: 0.75rem;
+  margin-block: 1.25rem;
+  padding: 0.9rem 1rem 0.9rem 1.5rem;
+  border-radius: 0.75rem;
+  background-color: var(--pg-code-bg);
+  color: var(--color-fd-foreground);
+  font-size: 0.9rem;
+  overflow: hidden;
+}
+
+.pg-callout::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  width: 8px;
+  background-color: var(--pg-callout-bar);
+}
+
+.pg-callout[data-type='note'] {
+  --pg-callout-bar: #2563eb;
+}
+.pg-callout[data-type='info'] {
+  --pg-callout-bar: #525252;
+}
+.pg-callout[data-type='tip'] {
+  --pg-callout-bar: #16a34a;
+}
+.pg-callout[data-type='check'] {
+  --pg-callout-bar: #16a34a;
+}
+.pg-callout[data-type='warning'] {
+  --pg-callout-bar: #ca8a04;
+}
+.pg-callout[data-type='danger'] {
+  --pg-callout-bar: #dc2626;
+}
+
+.pg-callout-icon {
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+  color: var(--pg-callout-bar);
+}
+
+.pg-callout-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pg-callout-body {
+  min-width: 0;
+  flex: 1;
+  font-size: 0.9rem;
+}
+
+.pg-callout-body > :first-child {
+  margin-top: 0;
+}
+.pg-callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- cards ---------- */
+.pg-card-group {
+  display: grid;
+  gap: 1rem;
+  margin-block: 1.25rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+@media (min-width: 640px) {
+  .pg-card-group {
+    grid-template-columns: repeat(min(var(--pg-cols, 2), 2), minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .pg-card-group {
+    grid-template-columns: repeat(var(--pg-cols, 2), minmax(0, 1fr));
+  }
+}
+
+.pg-card {
+  display: block;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  background-color: var(--color-fd-card);
+  color: var(--color-fd-card-foreground);
+  margin-block: 1rem;
+  transition: background-color 150ms;
+}
+
+.pg-card-group > .pg-card {
+  margin-block: 0;
+}
+
+.pg-card-link {
+  position: relative;
+}
+
+.pg-card-link:hover {
+  background-color: var(--color-fd-accent);
+}
+
+.pg-card-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.pg-card-overlay:focus-visible {
+  outline: 2px solid var(--color-fd-ring);
+  outline-offset: 2px;
+}
+
+/* links inside a linked card stay clickable above the overlay */
+.pg-card-link .pg-card-content a {
+  position: relative;
+  z-index: 2;
+}
+
+.pg-card-img {
+  width: 100%;
+  object-fit: cover;
+}
+
+.pg-card-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+}
+
+.pg-card-horizontal {
+  flex-direction: row;
+  align-items: center;
+}
+
+.pg-card-icon {
+  display: inline-flex;
+  color: var(--color-fd-foreground);
+}
+
+.pg-card-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.pg-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.pg-card-arrow {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--color-fd-muted-foreground);
+}
+
+.pg-card-content {
+  margin-top: 0.25rem;
+  color: var(--color-fd-muted-foreground);
+  font-size: 0.875rem;
+}
+
+.pg-card-content > :first-child {
+  margin-top: 0;
+}
+.pg-card-content > :last-child {
+  margin-bottom: 0;
+}
+
+.pg-card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ---------- steps ---------- */
+.pg-steps {
+  counter-reset: pg-step;
+  margin-block: 1.5rem;
+}
+
+.pg-step {
+  counter-increment: pg-step;
+  position: relative;
+  padding-left: 2.75rem;
+  padding-bottom: 1.75rem;
+}
+
+.pg-step::after {
+  content: '';
+  position: absolute;
+  left: 0.875rem;
+  top: 2.25rem;
+  bottom: 0.25rem;
+  width: 0.5px;
+  background-color: var(--color-fd-border);
+}
+
+.pg-step:last-child {
+  padding-bottom: 0.25rem;
+}
+
+.pg-step:last-child::after {
+  display: none;
+}
+
+.pg-step-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background-color: var(--color-fd-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pg-step-marker:empty::before {
+  content: counter(pg-step);
+}
+
+.pg-step-title {
+  margin: 0 !important;
+  padding-top: 0.15rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+}
+
+.pg-step-content > :first-child {
+  margin-top: 0.5rem;
+}
+.pg-step-content > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- accordions & expandables ---------- */
+.pg-accordion-group {
+  margin-block: 1.25rem;
+  border: 0.5px solid var(--color-fd-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.pg-accordion {
+  border: 0.5px solid var(--color-fd-border);
+  border-radius: 0.75rem;
+  margin-block: 0.75rem;
+  background-color: var(--color-fd-background);
+}
+
+.pg-accordion-group > .pg-accordion {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+.pg-accordion-group > .pg-accordion + .pg-accordion {
+  border-top: 0.5px solid var(--color-fd-border);
+}
+
+.pg-accordion > summary,
+.pg-expandable > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.pg-accordion > summary::-webkit-details-marker,
+.pg-expandable > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pg-accordion > summary {
+  padding: 0.85rem 1rem;
+}
+
+.pg-accordion > summary:hover {
+  background-color: var(--color-fd-muted);
+}
+
+.pg-accordion-chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  color: var(--color-fd-muted-foreground);
+  transition: transform 150ms;
+}
+
+details[open] > summary > .pg-accordion-chevron {
+  transform: rotate(90deg);
+}
+
+.pg-accordion-content {
+  padding: 0 1rem 1rem 2.6rem;
+}
+
+.pg-accordion-content > :first-child {
+  margin-top: 0;
+}
+.pg-accordion-content > :last-child {
+  margin-bottom: 0;
+}
+
+.pg-expandable {
+  margin-top: 0.75rem;
+  border: 0.5px solid var(--color-fd-border);
+  border-radius: 0.6rem;
+}
+
+.pg-expandable > summary {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+  color: var(--color-fd-muted-foreground);
+}
+
+.pg-expandable > summary:hover {
+  color: var(--color-fd-foreground);
+}
+
+.pg-expandable .pg-expandable-open {
+  display: none;
+}
+.pg-expandable[open] > summary .pg-expandable-open {
+  display: inline;
+}
+.pg-expandable[open] > summary .pg-expandable-closed {
+  display: none;
+}
+
+.pg-expandable-content {
+  padding: 0 0.9rem 0.25rem;
+  border-top: 0.5px solid var(--color-fd-border);
+}
+
+.pg-expandable-content > .pg-field:last-child {
+  border-bottom: 0;
+}
+
+/* ---------- response fields ---------- */
+.pg-field {
+  padding-block: 1rem;
+  border-bottom: 0.5px solid var(--color-fd-border);
+}
+
+.pg-field-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+
+.pg-field-name {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--color-pg-orange);
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+.pg-field-type,
+.pg-field-pill {
+  border-radius: 0.375rem;
+  background-color: var(--color-fd-muted);
+  color: var(--color-fd-muted-foreground);
+  padding: 0.1rem 0.45rem;
+  font-size: 0.75rem;
+}
+
+.pg-field-pill code {
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  font-size: 0.75rem !important;
+}
+
+.pg-field-required {
+  color: #dc2626;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.pg-field-deprecated {
+  color: #ca8a04;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.pg-field-body {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.pg-field-body > :first-child {
+  margin-top: 0;
+}
+.pg-field-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* ---------- frames ---------- */
+.pg-frame {
+  margin-block: 1.5rem;
+}
+
+.pg-frame-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem;
+  border-radius: 0.75rem;
+  background-color: var(--pg-code-bg);
+  border: 0.5px solid var(--color-fd-border);
+}
+
+.pg-frame-inner img,
+.pg-frame-inner video,
+.pg-frame-inner iframe {
+  border-radius: 0.4rem;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+}
+
+.pg-frame-inner video,
+.pg-frame-inner iframe {
+  align-self: stretch;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.pg-frame figcaption,
+.pg-frame-hint {
+  margin: 0;
+  padding-inline: 0.35rem;
+  text-align: center;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--color-fd-muted-foreground);
+}
+
+.prose img {
+  border-radius: 0.6rem;
+}
+
+/* ---------- changelog updates ---------- */
+.pg-update {
+  display: grid;
+  gap: 1rem;
+  padding-block: 1.5rem;
+  border-bottom: 0.5px solid var(--color-fd-border);
+}
+
+@media (min-width: 768px) {
+  .pg-update {
+    grid-template-columns: 10rem 1fr;
+  }
+}
+
+/* ---------- footer ---------- */
+.pg-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 0.5px solid var(--color-fd-border);
+}
+
+.pg-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--color-fd-border);
+  background-color: #fff;
+  color: var(--color-fd-muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    color 150ms,
+    background-color 150ms;
+}
+
+.pg-download:hover {
+  background-color: var(--color-fd-accent);
+  color: var(--color-fd-foreground);
+}
+
+.dark .pg-download {
+  background-color: var(--color-fd-card);
+}

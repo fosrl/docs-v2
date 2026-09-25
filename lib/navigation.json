@@ -1,0 +1,374 @@
+{
+  "groups": [
+    {
+      "group": "About",
+      "pages": [
+        "index",
+        "about/how-pangolin-works",
+        "about/pangolin-vs-reverse-proxy-vs-vpn",
+        "about/pangolin-vs-bifrost-vs-litellm",
+        "about/pangolin-cloud-vs-self-hosted"
+      ]
+    },
+    {
+      "group": "Manage Pangolin",
+      "pages": [
+        {
+          "group": "Sites",
+          "icon": "plug",
+          "pages": [
+            "manage/sites/understanding-sites",
+            "manage/sites/install-site",
+            "manage/sites/configure-site",
+            "manage/sites/update-site",
+            "manage/sites/auto-update",
+            "manage/sites/credentials",
+            "manage/sites/site-provisioning",
+            {
+              "group": "Kubernetes",
+              "pages": [
+                "manage/sites/kubernetes/helm",
+                "manage/sites/kubernetes/kustomize",
+                "manage/sites/kubernetes/configuration",
+                "manage/sites/kubernetes/troubleshooting"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Resources",
+          "icon": "link",
+          "pages": [
+            "manage/resources/understanding-resources",
+            "manage/resource-launcher",
+            {
+              "group": "Public Resources",
+              "pages": [
+                "manage/resources/public/http-https",
+                "manage/resources/public/ai-gateway",
+                "manage/resources/public/ssh",
+                "manage/resources/public/rdp",
+                "manage/resources/public/vnc",
+                "manage/resources/public/raw-resources",
+                "manage/resources/public/authentication",
+                "manage/resources/public/resource-policies",
+                "manage/resources/public/targets",
+                "manage/resources/public/wildcard-resources",
+                "manage/resources/public/healthchecks-failover",
+                "manage/resources/public/maintenance"
+              ]
+            },
+            {
+              "group": "Private Resources",
+              "pages": [
+                "manage/resources/private/host",
+                "manage/resources/private/cidr",
+                "manage/resources/private/private-http",
+                "manage/resources/private/ai-gateway",
+                "manage/resources/private/ssh",
+                "manage/resources/private/authentication",
+                "manage/resources/private/destinations",
+                "manage/resources/private/port-restrictions",
+                "manage/resources/private/alias",
+                "manage/resources/private/multi-site-routing"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Clients",
+          "icon": "desktop",
+          "pages": [
+            "manage/clients/understanding-clients",
+            "manage/clients/nat-traversal",
+            "manage/clients/install-client",
+            "manage/clients/configure-client",
+            "manage/clients/client-logs",
+            "manage/clients/update-client",
+            "manage/clients/credentials",
+            "manage/clients/fingerprinting",
+            "manage/clients/archiving-blocking",
+            "manage/clients/firewalls",
+            {
+              "group": "Kubernetes",
+              "pages": [
+                "manage/clients/kubernetes/deployment"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "AI Gateway",
+          "icon": "sparkles",
+          "pages": [
+            "manage/ai/overview",
+            "manage/ai/multiple-gateway-resources",
+            "manage/ai/virtual-api-keys",
+            {
+              "group": "Providers",
+              "pages": [
+                "manage/ai/providers/overview",
+                "manage/ai/providers/configuration",
+                "manage/ai/providers/model-routing",
+                "manage/ai/providers/openai",
+                "manage/ai/providers/anthropic",
+                "manage/ai/providers/google-gemini",
+                "manage/ai/providers/vertex-ai",
+                "manage/ai/providers/bedrock",
+                "manage/ai/providers/microsoft-foundry",
+                "manage/ai/providers/open-router",
+                "manage/ai/providers/vercel-ai-gateway",
+                {
+                  "group": "Custom",
+                  "pages": [
+                    "manage/ai/providers/custom",
+                    "manage/ai/providers/custom/ollama",
+                    "manage/ai/providers/custom/vllm",
+                    "manage/ai/providers/custom/bifrost",
+                    "manage/ai/providers/custom/cloud-apis-through-a-site"
+                  ]
+                }
+              ]
+            },
+            {
+              "group": "Configure AI Clients and Agents",
+              "pages": [
+                "manage/ai/configure-ai-clients/claude",
+                "manage/ai/configure-ai-clients/codex",
+                "manage/ai/configure-ai-clients/opencode",
+                "manage/ai/configure-ai-clients/gemini",
+                "manage/ai/configure-ai-clients/open-webui",
+                "manage/ai/configure-ai-clients/claude-desktop",
+                "manage/ai/configure-ai-clients/openclaw"
+              ]
+            },
+            "manage/ai/budgets",
+            "manage/ai/model-catalog",
+            "manage/ai/session-logs",
+            "manage/ai/usage-analytics"
+          ]
+        },
+        "manage/domains",
+        {
+          "group": "Organizations",
+          "icon": "building",
+          "pages": [
+            "manage/organizations/manage-organizations",
+            "manage/organizations/org-id",
+            "manage/labels"
+          ]
+        },
+        {
+          "group": "Access Control",
+          "icon": "user-group",
+          "pages": [
+            "manage/access-control/create-user",
+            "manage/access-control/mfa",
+            "manage/access-control/security-keys",
+            "manage/access-control/session-length",
+            "manage/access-control/password-rotation",
+            "manage/access-control/change-password",
+            "manage/ssh",
+            "manage/access-control/rules",
+            "manage/geoblocking",
+            "manage/asnblocking",
+            "manage/access-control/links",
+            "manage/access-control/approvals",
+            "manage/access-control/forwarded-headers",
+            "manage/access-control/login-page"
+          ]
+        },
+        {
+          "group": "Identity Providers",
+          "icon": "id-card",
+          "pages": [
+            "manage/identity-providers/add-an-idp",
+            "manage/identity-providers/auto-provisioning",
+            "manage/identity-providers/openid-connect",
+            "manage/identity-providers/google",
+            "manage/identity-providers/azure"
+          ]
+        },
+        {
+          "group": "Logs & Analytics",
+          "icon": "chart-bar",
+          "pages": [
+            "manage/analytics/request",
+            "manage/analytics/access",
+            "manage/analytics/connection",
+            "manage/analytics/action",
+            "manage/ai/session-logs",
+            "manage/ai/usage-analytics",
+            {
+              "group": "Event Streaming",
+              "pages": [
+                "manage/analytics/streaming",
+                "manage/analytics/streaming/http",
+                "manage/analytics/streaming/s3"
+              ]
+            }
+          ]
+        },
+        {
+          "group": "Alerting",
+          "icon": "bell",
+          "pages": [
+            "manage/alerting/alert-rules",
+            "manage/alerting/health-checks"
+          ]
+        },
+        {
+          "group": "Blueprints",
+          "icon": "file-code",
+          "pages": [
+            "manage/blueprints",
+            "manage/community-blueprints-repo"
+          ]
+        },
+        {
+          "group": "Remote Nodes",
+          "icon": "circle-nodes",
+          "pages": [
+            "manage/remote-node/understanding-nodes",
+            "manage/remote-node/quick-install-remote",
+            "manage/remote-node/config-file",
+            "manage/remote-node/backhaul"
+          ]
+        },
+        "manage/endpoints-and-pops",
+        "manage/integration-api",
+        "manage/branding"
+      ]
+    },
+    {
+      "group": "Self-host Pangolin",
+      "pages": [
+        "self-host/quick-install",
+        "self-host/choosing-a-vps",
+        {
+          "group": "Manual Installation",
+          "pages": [
+            "self-host/manual/docker-compose",
+            "self-host/manual/unraid",
+            {
+              "group": "Kubernetes",
+              "pages": [
+                "self-host/manual/kubernetes/overview",
+                "self-host/manual/kubernetes/choose-method",
+                "self-host/manual/kubernetes/prerequisites",
+                "self-host/manual/kubernetes/helm",
+                "self-host/manual/kubernetes/kustomize",
+                "self-host/manual/kubernetes/helmfile",
+                {
+                  "group": "GitOps",
+                  "pages": [
+                    "self-host/manual/kubernetes/gitops/overview",
+                    "self-host/manual/kubernetes/gitops/argocd",
+                    "self-host/manual/kubernetes/gitops/flux"
+                  ]
+                },
+                {
+                  "group": "Pangolin",
+                  "pages": [
+                    "self-host/manual/kubernetes/pangolin/helm",
+                    "self-host/manual/kubernetes/pangolin/kustomize",
+                    "self-host/manual/kubernetes/pangolin/configuration",
+                    "self-host/manual/kubernetes/pangolin/troubleshooting"
+                  ]
+                }
+              ]
+            },
+            "self-host/manual/podman-quadlets"
+          ]
+        },
+        {
+          "group": "Clustering",
+          "pages": [
+            "self-host/clustering/understanding-clustering",
+            "self-host/clustering/requirements",
+            "self-host/clustering/deploy-a-cluster"
+          ]
+        },
+        "self-host/dns-and-networking",
+        {
+          "group": "Advanced Configuration",
+          "pages": [
+            "self-host/advanced/config-file",
+            "self-host/advanced/increasing-subnet-capacity",
+            "self-host/advanced/private-config-file",
+            "self-host/advanced/wild-card-domains",
+            "self-host/advanced/cloudflare-proxy",
+            "self-host/advanced/without-tunneling",
+            "self-host/advanced/container-cli-tool",
+            "self-host/advanced/database-options",
+            "self-host/advanced/integration-api",
+            "self-host/advanced/observability",
+            "self-host/advanced/enable-geolocation",
+            "self-host/advanced/enable-asn-lookup",
+            "self-host/advanced/traefik-log-rotation",
+            "self-host/telemetry"
+          ]
+        },
+        "self-host/how-to-update",
+        {
+          "group": "Community Guides",
+          "pages": [
+            "self-host/community-guides/overview",
+            "self-host/community-guides/rules",
+            "self-host/community-guides/remove-geoblock-plugin",
+            "self-host/community-guides/crowdsec",
+            "self-host/community-guides/metrics",
+            "self-host/community-guides/homeassistant",
+            "self-host/community-guides/middlewaremanager",
+            "self-host/community-guides/traefiklogsdashboard",
+            "self-host/community-guides/geolite2automation"
+          ]
+        },
+        "self-host/enterprise-edition"
+      ]
+    },
+    {
+      "group": "Development",
+      "pages": [
+        "development/system-architecture",
+        "development/contributing",
+        "development/feature-requests-and-bug-reports",
+        "manage/common-api-routes"
+      ]
+    }
+  ],
+  "tabs": [
+    {
+      "label": "Downloads",
+      "href": "https://pangolin.net/downloads"
+    },
+    {
+      "label": "Website",
+      "href": "https://pangolin.net/"
+    },
+    {
+      "label": "GitHub",
+      "href": "https://github.com/fosrl/pangolin"
+    },
+    {
+      "label": "Releases",
+      "href": "https://pangolin.net/news/tags/release"
+    },
+    {
+      "label": "Trust Center",
+      "href": "https://trust.pangolin.net/"
+    }
+  ],
+  "anchors": [
+    {
+      "label": "Discord",
+      "href": "https://pangolin.net/discord",
+      "icon": "discord"
+    },
+    {
+      "label": "Slack",
+      "href": "https://pangolin.net/slack",
+      "icon": "slack"
+    }
+  ]
+}
