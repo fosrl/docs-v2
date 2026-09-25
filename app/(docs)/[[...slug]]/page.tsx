@@ -11,7 +11,7 @@ import { notFound } from 'next/navigation';
 import { getMDXComponents } from '@/components/mdx';
 import type { Metadata } from 'next';
 import { createRelativeLink } from 'fumadocs-ui/mdx';
-import { appName, docsDir, getPageImageUrl, getPageMarkdownUrl, gitConfig, siteUrl } from '@/lib/shared';
+import { appName, docsDir, getPageMarkdownUrl, gitConfig, siteUrl } from '@/lib/shared';
 import { AskAIAboutPage } from '@/components/ai/ask-page';
 import { SiteFooter } from '@/components/site-footer';
 import { AskBar } from '@/components/ai/ask-bar';
@@ -80,7 +80,7 @@ export async function generateMetadata(props: PageProps<'/[[...slug]]'>): Promis
       types: { 'text/markdown': getPageMarkdownUrl(page).url },
     },
     openGraph: {
-      images: isHome ? '/images/home-social-graph.png' : getPageImageUrl(page).url,
+      images: '/images/home-social-graph.png',
     },
   };
 }
