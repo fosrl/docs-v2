@@ -3,25 +3,30 @@ title: "Home Assistant Add-on"
 ---
 
 <Note>
-This is a community add-on and is not officially supported. If you have any issues, please reach out to the [author](https://github.com/Ferdinand99/home-assistant-newt-addon).
+This is a set of community add-ons and is not officially supported. If you have any issues, please reach out to the [author](https://github.com/Ferdinand99/home-assistant-newt-addon).
 </Note>
 
-This Home Assistant add-on allows you to easily run **Newt** directly in Home Assistant. The add-on lets you configure **PANGOLIN_ENDPOINT**, **NEWT_ID**, and **NEWT_SECRET** via the Home Assistant interface.
+This Home Assistant add-on allows you to easily run **Newt** or **Pangolin-CLI** directly in Home Assistant.
 
 ## Features
 
 - Easy installation via Home Assistant Add-on Store
-- Automated setup and execution of the Newt container
+- Automated setup and execution of the Newt/Pangolin-CLI container
 - Supports `amd64`, `armv7`, `armhf`, and `aarch64` architectures
 - Automatic restart on crash
 
 ## Installation
 
+### Newt
 ### **1. Add the GitHub Repository as an Add-on Source**
 
 - Go to **Settings → Add-ons → Add-on Store**.
 - Click the menu (three dots in the top right) and select **Repositories**.
 - Add the following URL:
+  ```
+  https://github.com/boomam/home-assistant-addons
+  ```
+  or
   ```
   https://github.com/Ferdinand99/home-assistant-newt-addon
   ```
@@ -33,7 +38,16 @@ This Home Assistant add-on allows you to easily run **Newt** directly in Home As
 1. Click **Add** and wait for the repository to load.
 
 ### **2. Install and Start the Add-on**
+#### Pangolin-CLI
+1. Find **Pangolin-CLI** in the list and click **Install**.
+2. Go to the **Configuration** tab and enter your values for:
+   - **PANGOLIN_ENDPOINT** (e.g., `https://example.com`)
+   - **SITE_ID**
+   - **SITE_SECRET**
+3. Click **Save** and then **Start**.
+4. Check the **Logs** tab to verify that everything is running correctly.
 
+#### Newt
 1. Find **Newt Add-on** in the list and click **Install**.
 2. Go to the **Configuration** tab and enter your values for:
    - **PANGOLIN_ENDPOINT** (e.g., `https://example.com`)
@@ -45,7 +59,14 @@ This Home Assistant add-on allows you to easily run **Newt** directly in Home As
 ## **Configuration**
 
 After installation, you can configure the add-on via the Home Assistant UI:
+### Pangolin-CLI
+```yaml
+PANGOLIN_ENDPOINT: "https://example.com"
+SITE_ID: "your_site_id"
+SITE_SECRET: "your_site_secret"
+```
 
+### Newt
 ```yaml
 PANGOLIN_ENDPOINT: "https://example.com"
 NEWT_ID: "your_newt_id"
@@ -53,7 +74,15 @@ NEWT_SECRET: "your_newt_secret"
 ```
 
 ### **Docker Environment Variables**
+#### Pangolin-CLI
+The following environment variables are passed to the `Newt` container:
 
+- `PANGOLIN_ENDPOINT`
+- `SITE_ID`
+- `SITE_SECRET`
+
+
+#### Newt
 The following environment variables are passed to the `Newt` container:
 
 - `PANGOLIN_ENDPOINT`
